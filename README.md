@@ -7,36 +7,11 @@ Notes for  "Communications" team:
 2) build TCP server (client = website, server = robot) : use Python, send commands with HTTP (POST/GET)
 3) build and integrate AWS DynamoDB NoSQL database
 4) implement autonomous navigation and mapping of unseen mazes with integrated real-time location tracking and obstacle management: use A* algorithm for optimal maze pathfinding and craft a Pygame visual demonstration
+5) implement computer vision for obstacle detection/avoidance, gesture recognition
 
 TCP is used to communicate berween website and TCP server, UART is used to communicate between the TCP server and the microcontroller
 
 Full Architecture:
 
-Website (client)
-(React, JS, HTML)
-       ↓ (HTTP)
-Backend Web Server 
-(Node.js, Flask, Express) 
-hosted on Raspberry Pi
-       |
-  TCP socket
-       ↓ 
-  TCP server
-       |
-     UART
-       ↓ 
-     Robot 
- microcontroller
-    (ESP32)
-      ↓ 
-  Data Capture
-(Logs, images, sensor dumps)
-      ↓ 
- Upload to S3
-(store and retrieve)
-      ↓
-Trigger Lambda
-      ↓
-store metadata in
-   dynamoDB
-(CRUD architecture)
+![image](https://github.com/user-attachments/assets/aeba1356-e19b-4993-99e6-69086c825837)
+
