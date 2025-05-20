@@ -26,7 +26,7 @@ The aim of this robot is to provide an indoor assisantce to users, by guiding th
 
 
 
-
+balancing
 
 
 
