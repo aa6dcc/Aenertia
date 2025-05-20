@@ -2,30 +2,14 @@ const express = require('express');
 const { exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+
 const app = express();
+const PORT = 5000;
 
-const PORT = 5000; 
-
-// Serve static files (HTML, CSS, JS)
+// Serve static files (index.html, assets, etc.)
 app.use(express.static(path.join(__dirname)));
 
-// Route for camera image
-app.get('/snapshot', (req, res) => {
-  exec('python3 capture_image.py', (err, stdout, stderr) => {
-    if (err || stdout.trim() !== 'OK') {
-      console.error('Camera error:', stderr);
-      return res.status(500).send('Failed to capture image');
-    }
-
-    fs.readFile('snapshot.jpg', (err, data) => {
-      if (err) return res.status(500).send('Image read error');
-      res.writeHead(200, { 'Content-Type': 'image/jpeg' });
-      res.end(data);
-    });
-  });
-});
-
-// Route for flashing LED
+// Route to flash LED
 app.get('/flash-led', (req, res) => {
   exec('sudo python3 flash_led.py', (err, stdout, stderr) => {
     if (err) {
@@ -36,7 +20,27 @@ app.get('/flash-led', (req, res) => {
   });
 });
 
+// Route to take and return snapshot
+app.get('/snapshot', (req, res) => {
+  exec('python3 capture_image.py', (err, stdout, stderr) => {
+    if (err || !stdout.includes("OK")) {
+      console.error("Camera error:", stderr);
+      return res.status(500).send("Failed to capture image");
+    }
+
+    fs.readFile('snapshot.jpg', (err, data) => {
+      if (err) {
+        console.error("Image read error");
+        return res.status(500).send("Error reading image");
+      }
+
+      res.writeHead(200, { 'Content-Type': 'image/jpeg' });
+      res.end(data);
+    });
+  });
+});
+
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running at http://localhost:${PORT}`);
 });
