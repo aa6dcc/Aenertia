@@ -10,9 +10,9 @@ timescale = 1/f_s
 t = [i*timescale for i in range(0,time*f_s)]
 
 #Definition of variables in the simulation
-k_p = 100
+k_p = 50
 k_i = 0.1
-k_d = 5
+k_d = 3
 
 e_i = 0
 e_d = 0
