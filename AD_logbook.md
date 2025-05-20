@@ -8,3 +8,4 @@ Also looked at past reports, thoroughly read through the instructions and docume
 ## 20/05/2025
 
 Second day. Started researching how to build a website using JavaScript, HTML & CSS. At first I want to build a simple website with nothing much on it which just has the capacity to connect to the Raspberry Pi, then I want to add functionalities like seeing battery usage, time, being able to control the robot...
+Thinking about what pathfinding algorithm would be optimal - A*, Dijsktra or something else perhaps?
