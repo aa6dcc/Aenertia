@@ -42,6 +42,13 @@ The aim of this robot is to provide an indoor assisantce to users, by guiding th
 4) implement autonomous navigation and mapping of unseen mazes with integrated real-time location tracking and obstacle management: use A* algorithm for optimal maze pathfinding and craft a Pygame visual demonstration
 5) implement computer vision for obstacle detection/avoidance, gesture recognition
 
+To do list:
+
+- website to tune PID values
+- implement camera snapshot
+- upgrade website capabilities
+- flash LED from phone
+
 TCP is used to communicate berween website and TCP server, UART is used to communicate between the TCP server and the microcontroller
 
 Full Architecture:
