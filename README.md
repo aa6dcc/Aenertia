@@ -26,6 +26,14 @@ The aim of this robot is to provide an indoor assisantce to users, by guiding th
 
 
 
+
+
+
+
+
+
+
+
 ### Notes for  "Communications" team:
 
 1) start by building website which can communicate with the server and control the robot by providing an interface and sending control commands: use JS, CSS, HTML
