@@ -22,3 +22,8 @@ We then created a basic server.js, git cloned the repo into the raspberry pi, do
 
 ![image](https://github.com/user-attachments/assets/6f8fdb4e-5278-4caa-aeb9-7a2c6cda4053)
 
+Added a flash LED button to the website: we can click it as many times as we wish and every time we do, we flash the LED
+
+![image](https://github.com/user-attachments/assets/b0d10b7d-19a0-4b2b-8ba8-139483545fa4)
+
+

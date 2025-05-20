@@ -2,19 +2,37 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AenerShark Website</title>
-
-  <!-- Link to CSS in assets folder -->
-  <link rel="stylesheet" href="assets/css/styles.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 </head>
 <body>
   <h1>Welcome to the AenerShark Website</h1>
   <img src="assets/images/logo.png" alt="Logo" width="150"/>
   <p>This is a draft web page so far.</p>
-  <button onclick="sayHello()">Click Me</button>
 
-  <!-- Link to JS in assets folder -->
-  <script src="assets/js/script.js"></script>
+  <button onclick="sayHello()">Click Me</button>
+  <button onclick="flashLED()">Flash LED</button>
+  <button onclick="takeSnapshot()">Take Snapshot</button>
+
+  <br><br>
+  <img id="snapshot" width="480" alt="Snapshot will appear here" />
+
+  <script>
+    function sayHello() {
+      alert("Hi there! This is a JS alert.");
+    }
+
+    function flashLED() {
+      fetch('/flash-led')
+        .then(res => res.text())
+        .then(text => alert(text))
+        .catch(err => alert("Failed to flash LED: " + err));
+    }
+
+    function takeSnapshot() {
+      const img = document.getElementById('snapshot');
+      img.src = '/snapshot?' + new Date().getTime(); // bust cache
+    }
+  </script>
 </body>
 </html>

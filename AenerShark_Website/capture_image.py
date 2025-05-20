@@ -1,9 +1,10 @@
-import cv2
+import os
 
-img = cv2.imread("snapshot.jpg")
-if img is not None:
-    cv2.imshow("Snapshot", img)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+# Capture image using libcamera
+exit_code = os.system("libcamera-still -n -o snapshot.jpg")
+
+# Print OK or ERROR for Node.js to read
+if exit_code == 0:
+    print("OK")
 else:
-    print("ERROR loading image")
+    print("ERROR")
