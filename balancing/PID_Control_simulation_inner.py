@@ -10,9 +10,9 @@ timescale = 1/f_s
 t = [i*timescale for i in range(0,time*f_s)]
 
 #Definition of variables in the simulation
-k_p = 200
+k_p = 100
 k_i = 0.1
-k_d = 7
+k_d = 5
 
 e_i = 0
 e_d = 0
@@ -31,7 +31,7 @@ g = 9.81
 r = 0.05
 
 #Definition of Initial Values of the simulation
-theta_init = radians(10)
+theta_init = radians(0)
 torque = [0]
 omega = [0]
 correction_angle = [0]
@@ -56,7 +56,7 @@ for i in range(1,time*f_s):
     # theta_d = radians(5) * sin(2 * 3.1416 * 10 * i * timescale)
     # theta_d = radians(5) * chirp_signal[i]
     # if i == 1000:
-    #     theta_d = 20
+    #     theta_d = radians(20)
     # else:
     #     theta_d = 0
     
