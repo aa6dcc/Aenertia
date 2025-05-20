@@ -48,13 +48,13 @@ chirp_signal = chirp(np.array(t), f0=0.1, f1=10, t1=time, method='linear')
 #Simulation Loop
 for i in range(1,time*f_s):
 
-    # if((int(i/(time*f_s/6)))%2==0):
-    #     theta_d = radians(5)
-    # else:
-    #     theta_d = radians(-5)
+    if((int(i/(time*f_s/6)))%2==0):
+        theta_d = radians(5)
+    else:
+        theta_d = radians(-5)
 
-    theta_d = radians(5) * sin(2 * 3.1416 * 10 * i * timescale)
-    theta_d = radians(5) * chirp_signal[i]
+    # theta_d = radians(5) * sin(2 * 3.1416 * 10 * i * timescale)
+    # theta_d = radians(5) * chirp_signal[i]
     # if i == 1000:
     #     theta_d = 20
     # else:
