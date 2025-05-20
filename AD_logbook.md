@@ -17,3 +17,8 @@ Created a test website to see if it can communicate with the Raspberry Pi:
 only option is click me:
 
 ![image](https://github.com/user-attachments/assets/1fc2818f-bbc8-41ce-8aca-879aa63aaf54)
+
+We then created a basic server.js, git cloned the repo into the raspberry pi, downloaded Node.js and Express onto it, checked the IP via hostname -I and was able to successfully run the website onto the raspberry pi (both PC and raspberry pi connected to hotspot)
+
+![image](https://github.com/user-attachments/assets/6f8fdb4e-5278-4caa-aeb9-7a2c6cda4053)
+
