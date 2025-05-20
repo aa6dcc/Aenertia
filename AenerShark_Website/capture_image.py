@@ -1,13 +1,9 @@
-# capture_image.py
 import cv2
 
-cap = cv2.VideoCapture(0, cv2.CAP_V4L2)
-ret, frame = cap.read()
-cap.release()
-
-if ret:
-    cv2.imwrite("snapshot.jpg", frame)
-    print("OK")
+img = cv2.imread("snapshot.jpg")
+if img is not None:
+    cv2.imshow("Snapshot", img)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 else:
-    print("ERROR")
-
+    print("ERROR loading image")
