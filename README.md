@@ -1,7 +1,40 @@
-# AenerShark
+# Ænertia
+
 EEE2 Balancing Robot End of Year Project
 
-Notes for  "Communications" team:
+## Introduction
+
+The aim of this robot is to provide an indoor assisantce to users, by guiding them through a perviously mapped area. 
+
+**The bot should satisfy the following requirements:**
+
+  - Balance and allow manual control of the acceleration and direction,
+
+  - Map the area it exists in and remember key locations,
+
+  - Detect humans and follow them when required,
+    
+  - Autonomously go to a key location
+    
+<ins> Advanced optional features </ins>
+
+  - Allow vocal commands to control the bot,
+
+  - Determine the fastest path to a given location when required,
+    
+  - Have a speaker for user friendly interactions
+
+
+
+balancing
+
+
+
+
+
+
+
+### Notes for  "Communications" team:
 
 1) start by building website which can communicate with the server and control the robot by providing an interface and sending control commands: use JS, CSS, HTML
 2) build TCP server (client = website, server = robot) : use Python, send commands with HTTP (POST/GET)
