@@ -48,6 +48,7 @@ To do list:
 - implement camera snapshot
 - upgrade website capabilities
 - flash LED from phone
+- list instructions for how to connect website to Raspberry Pi
 
 TCP is used to communicate berween website and TCP server, UART is used to communicate between the TCP server and the microcontroller
 
