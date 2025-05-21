@@ -29,3 +29,23 @@ function showTab(tabId) {
   currentTab = tabId;
   isDirty = false;
 }
+
+// Populate PID tables with previously submitted values
+function populatePIDTables() {
+  fetch('/pid-values')
+    .then(res => res.json())
+    .then(data => {
+      ['inner', 'outer'].forEach(loop => {
+        const table = document.getElementById(loop + 'Table');
+        data[loop].forEach(rowValues => {
+          const row = table.insertRow(-1);
+          rowValues.forEach(val => row.insertCell().textContent = val);
+        });
+      });
+    });
+}
+
+// Call populate on page load
+document.addEventListener('DOMContentLoaded', () => {
+  populatePIDTables();
+});
