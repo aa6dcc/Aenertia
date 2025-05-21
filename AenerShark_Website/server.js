@@ -6,6 +6,11 @@ const app = express();
 
 const PORT = 5000; 
 
+let pidValues = {
+  inner: [],
+  outer: []
+};
+
 // Serve static files (HTML, CSS, JS)
 app.use(express.static(path.join(__dirname)));
 
@@ -36,13 +41,20 @@ app.get('/flash-led', (req, res) => {
   });
 });
 
+// Route for receiving PID values
 app.get('/pid', (req, res) => {
   const loop = req.query.loop;
   const values = req.query.values;
 
   console.log(`Received PID values for ${loop} loop: ${values}`);
 
-  // Optional: Write to a file or trigger an action here
+  if (!['inner', 'outer'].includes(loop)) {
+    return res.status(400).send('Invalid loop type');
+  }
+
+  const parts = values.split(',');
+  pidValues[loop].push(parts);
+
   fs.appendFile('pid_log.txt', `${loop}: ${values}\n`, (err) => {
     if (err) {
       console.error('Failed to write PID values:', err);
@@ -50,6 +62,11 @@ app.get('/pid', (req, res) => {
     }
     res.send(`PID values received for ${loop} loop`);
   });
+});
+
+// Route to fetch all stored PID values
+app.get('/pid-values', (req, res) => {
+  res.json(pidValues);
 });
 
 // Start server
