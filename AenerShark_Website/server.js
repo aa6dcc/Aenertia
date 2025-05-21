@@ -46,7 +46,7 @@ app.get('/pid', (req, res) => {
   const loop = req.query.loop;
   const values = req.query.values;
 
-  console.log(`Received PID values for ${loop} loop: ${values}`);
+  console.log(`Set_PID for ${loop} loop: ${values}`);
 
   if (!['inner', 'outer'].includes(loop)) {
     return res.status(400).send('Invalid loop type');
