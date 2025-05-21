@@ -2,9 +2,8 @@ const express = require('express');
 const { exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const mqtt = require('mqtt');
-
 const app = express();
+
 const PORT = 5000;
 
 let pidValues = {
@@ -12,43 +11,66 @@ let pidValues = {
   outer: []
 };
 
-// Static file serving
+// Serve static files (HTML, CSS, JS)
 app.use(express.static(path.join(__dirname)));
 
-// MQTT setup
-const mqttClient = mqtt.connect('mqtt://localhost');
+// Route for camera image
+app.get('/snapshot', (req, res) => {
+  exec('python3 capture_image.py', (err, stdout, stderr) => {
+    if (err || stdout.trim() !== 'OK') {
+      console.error('Camera error:', stderr);
+      return res.status(500).send('Failed to capture image');
+    }
 
-mqttClient.on('connect', () => {
-  console.log(' MQTT connected');
-  mqttClient.subscribe(['robot/pid', 'robot/led']);
+    fs.readFile('snapshot.jpg', (err, data) => {
+      if (err) return res.status(500).send('Image read error');
+      res.writeHead(200, { 'Content-Type': 'image/jpeg' });
+      res.end(data);
+    });
+  });
 });
 
-mqttClient.on('message', (topic, message) => {
-  const msg = message.toString();
+// Route for flashing LED
+app.get('/flash-led', (req, res) => {
+  exec('sudo python3 flash_led.py', (err, stdout, stderr) => {
+    if (err) {
+      console.error('LED Error:', stderr);
+      return res.status(500).send('Failed to flash LED');
+    }
+    res.send('LED flashed!');
+  });
+});
 
-  if (topic === 'robot/pid') {
-    const [loop, values] = msg.split(':');
-    const parts = values.split(',');
-    console.log(`MQTT PID for ${loop}:`, parts);
-    if (!['inner', 'outer'].includes(loop)) return;
-    pidValues[loop].push(parts);
+// Route for receiving PID values
+app.get('/pid', (req, res) => {
+  const loop = req.query.loop;
+  const values = req.query.values;
 
-    fs.appendFile('pid_log.txt', `${loop}: ${values}\n`, err => {
-      if (err) console.error('Log write error:', err);
-    });
-  } else if (topic === 'robot/led' && msg === 'flash') {
-    exec('sudo python3 flash_led.py', (err, stdout, stderr) => {
-      if (err) console.error('LED Error:', stderr);
-      else console.log('💡 LED flashed');
-    });
+  if (!['inner', 'outer'].includes(loop)) {
+    return res.status(400).send('Invalid loop type');
   }
+
+  const parts = values.split(','); // FIX: split on commas
+  pidValues[loop].push(parts);
+
+  const pidString = `SET_PID_${loop} ${parts.join(' ')}`; // Desired format
+  console.log(pidString);
+
+  fs.appendFile('pid_log.txt', `${pidString}\n`, (err) => {
+    if (err) {
+      console.error('Failed to write PID values:', err);
+      return res.status(500).send('Failed to log PID values');
+    }
+    res.send(`PID values received for ${loop} loop`);
+  });
 });
 
-// Optional route to fetch stored PID values
+// Route to fetch all stored PID values
 app.get('/pid-values', (req, res) => {
   res.json(pidValues);
 });
 
+// Start server
 app.listen(PORT, () => {
-  console.log(` Express server running at http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });
