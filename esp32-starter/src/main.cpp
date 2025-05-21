@@ -25,13 +25,9 @@ const int PRINT_INTERVAL    = 500;
 const int LOOP_INTERVAL     = 10;
 const int STEPPER_INTERVAL_US = 20;
 
-<<<<<<< HEAD
 const float kx = 200;
 const float ki = 0;
 const float kd = 10;
-=======
-const float kx = 20.0;
->>>>>>> 9633bf4e8aa3233d303be371eb1680cb6deb586a
 const float VREF = 4.096;
 
 //Global objects
@@ -59,7 +55,6 @@ bool TimerHandler(void * timerNo)
 }
 
 uint16_t readADC(uint8_t channel) {
-<<<<<<< HEAD
   uint8_t tx0 = 0x06 | (channel >> 2);  // Command Byte 0 = Start bit + single-ended mode + MSB of channel
   uint8_t tx1 = (channel & 0x03) << 6;  // Command Byte 1 = Remaining 2 bits of channel
 
@@ -72,20 +67,6 @@ uint16_t readADC(uint8_t channel) {
   digitalWrite(ADC_CS_PIN, HIGH); 
 
   uint16_t result = ((rx0 & 0x0F) << 8) | rx1; // Combine high and low byte into 12-bit result
-=======
-  uint8_t TX0 = 0x06 | (channel >> 2);  // Command Byte 0 = Start bit + single-ended mode + MSB of channel
-  uint8_t TX1 = (channel & 0x03) << 6;  // Command Byte 1 = Remaining 2 bits of channel
-
-  digitalWrite(ADC_CS_PIN, LOW); 
-
-  SPI.transfer(TX0);                    // Send Command Byte 0
-  uint8_t RX0 = SPI.transfer(TX1);      // Send Command Byte 1 and receive high byte of result
-  uint8_t RX1 = SPI.transfer(0x00);     // Send dummy byte and receive low byte of result
-
-  digitalWrite(ADC_CS_PIN, HIGH); 
-
-  uint16_t result = ((RX0 & 0x0F) << 8) | RX1; // Combine high and low byte into 12-bit result
->>>>>>> 9633bf4e8aa3233d303be371eb1680cb6deb586a
   return result;
 }
 
@@ -121,11 +102,7 @@ void setup()
   //Enable the stepper motor drivers
   pinMode(STEPPER_EN_PIN,OUTPUT);
   digitalWrite(STEPPER_EN_PIN, false);
-<<<<<<< HEAD
  
-=======
-
->>>>>>> 9633bf4e8aa3233d303be371eb1680cb6deb586a
   //Set up ADC and SPI
   pinMode(ADC_CS_PIN, OUTPUT);
   digitalWrite(ADC_CS_PIN, HIGH);
@@ -133,7 +110,6 @@ void setup()
 
 }
 
-<<<<<<< HEAD
 const float tilt_target = 20/1000;
 const float m = 0.7;
 const float r = 0.035;
@@ -145,8 +121,6 @@ float tilt_ed = 0;
 float tilt_ei = 0;
 float corrected_v = 0;
 
-=======
->>>>>>> 9633bf4e8aa3233d303be371eb1680cb6deb586a
 void loop()
 {
   //Static variables are initialised once and then the value is remembered betweeen subsequent calls to this function
@@ -164,7 +138,6 @@ void loop()
 
     //Calculate Tilt using accelerometer and sin x = x approximation for a small tilt angle
     tiltx = a.acceleration.z/9.67;
-<<<<<<< HEAD
     tilt_error = tilt_target - tiltx;
     tilt_ed = (tilt_error - last_tilt_error) / LOOP_INTERVAL;
     tilt_ei = tilt_ei + last_tilt_error * LOOP_INTERVAL;
@@ -177,13 +150,6 @@ void loop()
     //Note: this is for demonstrating accelerometer and motors - it won't work as a balance controller
     step1.setTargetSpeedRad(corrected_v);
     step2.setTargetSpeedRad(-corrected_v);
-=======
-
-    //Set target motor speed proportional to tilt angle
-    //Note: this is for demonstrating accelerometer and motors - it won't work as a balance controller
-    step1.setTargetSpeedRad(tiltx*kx);
-    step2.setTargetSpeedRad(-tiltx*kx);
->>>>>>> 9633bf4e8aa3233d303be371eb1680cb6deb586a
   }
   
   //Print updates every PRINT_INTERVAL ms
@@ -192,7 +158,6 @@ void loop()
     printTimer += PRINT_INTERVAL;
     Serial.print(tiltx*1000);
     Serial.print(' ');
-<<<<<<< HEAD
     Serial.print(tilt_error*1000);
     Serial.print(' ');
     Serial.print(step1.getSpeedRad());
@@ -202,11 +167,6 @@ void loop()
     Serial.print(tilt_ed*1000);
     Serial.print(' ');
     Serial.print(corrected_v);
-=======
-    Serial.print(step1.getSpeedRad());
-    Serial.print(' ');
-    Serial.print((readADC(0) * VREF)/4095.0);
->>>>>>> 9633bf4e8aa3233d303be371eb1680cb6deb586a
     Serial.println();
   }
 }
