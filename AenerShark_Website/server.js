@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const app = express();
 
-const PORT = 5000; 
+const PORT = 5000;
 
 let pidValues = {
   inner: [],
@@ -46,16 +46,17 @@ app.get('/pid', (req, res) => {
   const loop = req.query.loop;
   const values = req.query.values;
 
-  console.log(`Set_PID for ${loop} loop: ${values}`);
-
   if (!['inner', 'outer'].includes(loop)) {
     return res.status(400).send('Invalid loop type');
   }
 
-  const parts = values.split(' ');
+  const parts = values.split(','); // FIX: split on commas
   pidValues[loop].push(parts);
 
-  fs.appendFile('pid_log.txt', `${loop}: ${values}\n`, (err) => {
+  const pidString = `SET_PID_${loop} ${parts.join(' ')}`; // Desired format
+  console.log(pidString);
+
+  fs.appendFile('pid_log.txt', `${pidString}\n`, (err) => {
     if (err) {
       console.error('Failed to write PID values:', err);
       return res.status(500).send('Failed to log PID values');
