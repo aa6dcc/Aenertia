@@ -36,6 +36,22 @@ app.get('/flash-led', (req, res) => {
   });
 });
 
+app.get('/pid', (req, res) => {
+  const loop = req.query.loop;
+  const values = req.query.values;
+
+  console.log(`Received PID values for ${loop} loop: ${values}`);
+
+  // Optional: Write to a file or trigger an action here
+  fs.appendFile('pid_log.txt', `${loop}: ${values}\n`, (err) => {
+    if (err) {
+      console.error('Failed to write PID values:', err);
+      return res.status(500).send('Failed to log PID values');
+    }
+    res.send(`PID values received for ${loop} loop`);
+  });
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
