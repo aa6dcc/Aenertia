@@ -64,7 +64,9 @@
     <button onclick="flashLED()">Flash LED</button>
   </div>
 
-  <script src="assets/js/script.js"></script>
+  <!-- REMOVE script.js for now -->
+  <!-- <script src="assets/js/script.js"></script> -->
+
   <script>
     function showTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -82,15 +84,26 @@
 
       fetch(`/pid?loop=${loopType}&values=${values}`)
         .then(res => res.text())
-        .then(data => {
+        .then(() => {
           const table = document.getElementById(prefix + 'Table');
           const row = table.insertRow(-1);
-          [P, D, I, Set].forEach(v => row.insertCell().textContent = v);
+          [P, D, I, Set].forEach(val => row.insertCell().textContent = val);
         })
-        .catch(error => console.error('Error submitting PID values:', error));
+        .catch(error => alert("Error: " + error));
     }
 
-    showTab('pidTab'); // Default tab
+    function sayHello() {
+      alert("Hi there! This is a JS alert.");
+    }
+
+    function flashLED() {
+      fetch('/flash-led')
+        .then(res => res.text())
+        .then(data => alert(data))
+        .catch(error => alert("Failed to flash LED: " + error));
+    }
+
+    showTab('pidTab');
   </script>
 </body>
 </html>
