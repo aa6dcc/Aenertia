@@ -5,12 +5,12 @@ import numpy as np
 from scipy.fft import fft, fftfreq
 #Definition of samping frequency and simulation time
 f_s = 500
-time = 5
+time = 10
 timescale = 1/f_s
 t = [i*timescale for i in range(0,time*f_s)]
 
 #Definition of variables in the simulation
-k_p = 50
+k_p = 1000
 k_i = 0
 k_d = 5
 
@@ -19,6 +19,7 @@ e_d = 0
 theta_d = radians(0)
 e_theta = 0
 e_dist = 0
+w_real = 0
 sensor_bias = radians(0)
 delay_sensor_ms = 0
 delay_torque_ms = 0
@@ -29,18 +30,23 @@ mass = 0.7
 height = 0.1
 g = 9.81
 r = 0.035
+mass_wheel = 0.05
+acc_max = 20
+moi = mass*height**2
 
 #Definition of Initial Values of the simulation
-theta_init = radians(10)
+theta_init = radians(3)
 torque = [0]
 omega = [0]
 correction_angle = [0]
 theta = [theta_init]
 w = [0]
+w_desired = [0]
 motor_torque = [0]
 velocity = [0]
 distance = [0]
 theta_desired = [0]
+realVelocity = [0]
 
 chirp_signal = chirp(np.array(t), f0=0.1, f1=10, t1=time, method='linear')
 
@@ -59,17 +65,21 @@ for i in range(1,time*f_s):
     if(i-delay_s < 0):
         e_theta = 0
     else:
-        e_theta = theta_d - (theta[i - 1 - int(delay_s)]+sensor_bias)  # error in angle
-    e_i += e_theta
+        e_theta =  (theta[i - 1 - int(delay_s)]+sensor_bias) - theta_d  # error in angle
+    e_i += e_theta*timescale
     e_d = (e_theta-e_d)/timescale
 
-    w_new = k_p*e_theta + k_i*e_i + k_d*e_d
-    acc_new = (w_new-w[i-1])/timescale
+    w_d = k_p*e_theta + k_i*e_i + k_d*e_d
+    if(w_real < w_d):
+        acc = acc_max
+    else:
+        acc = -acc_max
+    w_real += acc*timescale
 
-    torque_control = w_new*r
+    torque_control = acc*r*cos(theta[i-1])*mass*height
     
     # Total torque = gravity torque + wheel reaction torque
-    torque_new = mass * g * height * sin(theta[i - 1]) + torque_control
+    torque_new = mass * g * height * sin(theta[i - 1]) - torque_control
 
     # Angular acceleration
     alpha = torque_new / (mass * height ** 2)
@@ -77,7 +87,7 @@ for i in range(1,time*f_s):
     # Integrate
     omega_new = omega[i - 1] + alpha * timescale
     theta_new = theta[i - 1] + omega_new * timescale
-    velocity_new = w_new*r
+    velocity_new = w_real*r
     distance_new = distance[i-1]+velocity_new * timescale
 
     # Optional fallover clamp
@@ -89,7 +99,8 @@ for i in range(1,time*f_s):
     torque.append(torque_new)
     omega.append(omega_new)
     theta.append(theta_new)
-    w.append(w_new)
+    w.append(w_real)
+    w_desired.append(w_d)
     velocity.append(velocity_new)
     distance.append(distance_new)
     theta_desired.append(theta_d)
@@ -102,11 +113,12 @@ plt.xlabel("Time (s)")
 plt.grid()
 plt.show()
 
-# plt.plot(t[100:-1], w[100:-1])
-# plt.title("Wheel Angular Velocity (rad/s)")
-# plt.xlabel("Time (s)")
-# plt.grid()
-# plt.show()
+plt.plot(t[100:-1], w[100:-1])
+plt.plot(t[100:-1], w_desired[100:-1])
+plt.title("Wheel Angular Velocity (rad/s)")
+plt.xlabel("Time (s)")
+plt.grid()
+plt.show()
 
 # plt.plot(t[100:-1], distance[100:-1])
 # plt.title("Distance (m)")
