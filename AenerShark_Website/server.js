@@ -52,7 +52,7 @@ app.get('/pid', (req, res) => {
     return res.status(400).send('Invalid loop type');
   }
 
-  const parts = values.split(',');
+  const parts = values.split(' ');
   pidValues[loop].push(parts);
 
   fs.appendFile('pid_log.txt', `${loop}: ${values}\n`, (err) => {
