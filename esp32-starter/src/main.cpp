@@ -4,6 +4,7 @@
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
 #include <step.h>
+#include <PID_v1.h>
 
 // The Stepper pins
 const int STEPPER1_DIR_PIN  = 16;
@@ -25,14 +26,31 @@ const int PRINT_INTERVAL    = 500;
 const int LOOP_INTERVAL     = 10;
 const int STEPPER_INTERVAL_US = 20;
 
-const float kx = 200;
-const float ki = 0;
-const float kd = 10;
-const float VREF = 4.096;
-
 //Global objects
 ESP32Timer ITimer(3);
 Adafruit_MPU6050 mpu;         //Default pins for I2C are SCL: IO22, SDA: IO21
+
+double setpoint = 0;
+double input, output;
+
+double Kp = 525.0;
+double Ki = 17.0;
+double Kd = 19.0;
+
+PID myPID(&input, &output, &setpoint, Kp, Ki, Kd, DIRECT);
+
+unsigned long lastPIDUpdate = 0;
+const unsigned long PIDInterval = 15;
+
+float motorSpeed = 0;
+unsigned long lastStepTime1 = 0;
+unsigned long lastStepTime2 = 0;
+
+TaskHandle_t pidTaskHandle;
+
+void pidLoop(void *parameter);
+void motorControl();
+
 
 step step1(STEPPER_INTERVAL_US,STEPPER1_STEP_PIN,STEPPER1_DIR_PIN );
 step step2(STEPPER_INTERVAL_US,STEPPER2_STEP_PIN,STEPPER2_DIR_PIN );
@@ -73,6 +91,7 @@ uint16_t readADC(uint8_t channel) {
 void setup()
 {
   Serial.begin(115200);
+  Wire.begin();
   pinMode(TOGGLE_PIN,OUTPUT);
 
   // Try to initialize Accelerometer/Gyroscope
@@ -108,65 +127,48 @@ void setup()
   digitalWrite(ADC_CS_PIN, HIGH);
   SPI.begin(ADC_SCK_PIN, ADC_MISO_PIN, ADC_MOSI_PIN, ADC_CS_PIN);
 
+  myPID.SetMode(AUTOMATIC);
+  myPID.SetOutputLimits(-1000,10000);
+  xTaskCreatePinnedToCore(pidLoop, "PID Task", 10000, NULL, 2, &pidTaskHandle, 0);
+  delay(4000);
+
 }
 
-const float tilt_target = 20/1000;
-const float m = 0.7;
-const float r = 0.035;
-const float inertia = m*pow(r, 2) + 1/2*0.05*pow(0.2, 2);
-float tilt_error = 0;
-float corrected_torque = 0;
-float last_tilt_error = 0;
-float tilt_ed = 0;
-float tilt_ei = 0;
-float corrected_v = 0;
+void loop(){
+  motorControl();
+}
 
-void loop()
-{
-  //Static variables are initialised once and then the value is remembered betweeen subsequent calls to this function
-  static unsigned long printTimer = 0;  //time of the next print
-  static unsigned long loopTimer = 0;   //time of the next control update
-  static float tiltx = 0.0;             //current tilt angle
-  
-  //Run the control loop every LOOP_INTERVAL ms
-  if (millis() > loopTimer) {
-    loopTimer += LOOP_INTERVAL;
-    
-    // Fetch data from MPU6050
-    sensors_event_t a, g, temp;
-    mpu.getEvent(&a, &g, &temp);
+void pidLoop(void *parameter){
+  while(true){
+      unsigned long currentMillis = millis();
+      if(currentMillis - lastPIDUpdate >= PIDInterval){
+        
+        lastPIDUpdate = currentMillis;
 
-    //Calculate Tilt using accelerometer and sin x = x approximation for a small tilt angle
-    tiltx = a.acceleration.z/9.67;
-    tilt_error = tilt_target - tiltx;
-    tilt_ed = (tilt_error - last_tilt_error) / LOOP_INTERVAL;
-    tilt_ei = tilt_ei + last_tilt_error * LOOP_INTERVAL;
-    corrected_v= -(kx * tilt_error + ki * tilt_ei + kd * tilt_ed);
-    // corrected_v = corrected_v + corrected_torque / inertia * LOOP_INTERVAL;
-    last_tilt_error = tilt_error;
+        sensors_event_t a, g, temp;
+        mpu.getEvent(&a, &g, &temp);
+        double angle = a.acceleration.z/9.67;
 
+        static double smoothedAngle = 0.0;
+        smoothedAngle += 0.3 * (angle-smoothedAngle);
 
-    //Set target motor speed proportional to tilt angle
-    //Note: this is for demonstrating accelerometer and motors - it won't work as a balance controller
-    step1.setTargetSpeedRad(corrected_v);
-    step2.setTargetSpeedRad(-corrected_v);
+        input = smoothedAngle;
+        myPID.Compute();
+
+        motorSpeed = output;
+
+        Serial.print("Angle: ");
+        Serial.print(smoothedAngle);
+        Serial.print("Motor Speed: ");
+        Serial.println(motorSpeed);
+        Serial.print(step1.getSpeedRad());
+        Serial.print(' ');
+    }
+    delay(1);
   }
-  
-  //Print updates every PRINT_INTERVAL ms
-  //Line format: X-axis tilt, Motor speed, A0 Voltage
-  if (millis() > printTimer) {
-    printTimer += PRINT_INTERVAL;
-    Serial.print(tiltx*1000);
-    Serial.print(' ');
-    Serial.print(tilt_error*1000);
-    Serial.print(' ');
-    Serial.print(step1.getSpeedRad());
-    Serial.print(' ');
-    Serial.print((readADC(0) * VREF)/4095.0);
-    Serial.print(' ');
-    Serial.print(tilt_ed*1000);
-    Serial.print(' ');
-    Serial.print(corrected_v);
-    Serial.println();
-  }
+}
+
+void motorControl() {
+  step1.setTargetSpeedRad(motorSpeed);
+  step2.setTargetSpeedRad(-motorSpeed);
 }
