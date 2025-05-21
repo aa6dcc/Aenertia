@@ -4,17 +4,92 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Aenertia Website</title>
-
-  <!-- Link to CSS in assets folder -->
   <link rel="stylesheet" href="assets/css/styles.css" />
+  <style>
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .tab-buttons { margin-bottom: 20px; }
+    .tab-buttons button { margin: 0 10px; }
+    table, th, td {
+      border: 1px solid black;
+      border-collapse: collapse;
+      padding: 5px;
+    }
+    input {
+      margin: 5px;
+    }
+  </style>
 </head>
 <body>
   <h1>Welcome to the Aenertia Website</h1>
   <img src="assets/images/logo.png" alt="Logo" width="150"/>
-  <p>This is a draft web page so far.</p>
-  <button onclick="sayHello()">Click Me</button>
-  <button onclick="flashLED()">Flash LED</button> <!-- New -->
-  <script src="assets/js/script.js"></script>
-</body>
 
+  <div class="tab-buttons">
+    <button onclick="showTab('pidTab')">PID Values</button>
+    <button onclick="showTab('testTab')">Testing</button>
+  </div>
+
+  <div id="pidTab" class="tab-content">
+    <h2>Inner Loop</h2>
+    <form onsubmit="submitPID('inner'); return false;">
+      <label>Proportional Gain <input type="number" step="any" id="innerP" required></label><br>
+      <label>Derivative Gain <input type="number" step="any" id="innerD"></label><br>
+      <label>Integral Gain <input type="number" step="any" id="innerI"></label><br>
+      <label>Setpoint <input type="number" step="any" id="innerSet"></label><br>
+      <button type="submit">Submit</button>
+    </form>
+    <h3>Received PID Tuning Values</h3>
+    <table id="innerTable">
+      <tr><th>Proportional Gain</th><th>Derivative Gain</th><th>Integral Gain</th><th>Setpoint</th></tr>
+    </table>
+
+    <h2>Outer Loop</h2>
+    <form onsubmit="submitPID('outer'); return false;">
+      <label>Proportional Gain <input type="number" step="any" id="outerP" required></label><br>
+      <label>Derivative Gain <input type="number" step="any" id="outerD"></label><br>
+      <label>Integral Gain <input type="number" step="any" id="outerI"></label><br>
+      <label>Setpoint <input type="number" step="any" id="outerSet"></label><br>
+      <label>Rotation Setpoint <input type="number" step="any" id="outerRot"></label><br>
+      <button type="submit">Submit</button>
+    </form>
+    <h3>Received PID Tuning Values</h3>
+    <table id="outerTable">
+      <tr><th>Proportional Gain</th><th>Derivative Gain</th><th>Integral Gain</th><th>Setpoint</th></tr>
+    </table>
+  </div>
+
+  <div id="testTab" class="tab-content">
+    <p>This is a draft web page so far.</p>
+    <button onclick="sayHello()">Click Me</button>
+    <button onclick="flashLED()">Flash LED</button>
+  </div>
+
+  <script src="assets/js/script.js"></script>
+  <script>
+    function showTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+    }
+
+    function submitPID(loopType) {
+      const prefix = loopType === 'inner' ? 'inner' : 'outer';
+      const P = document.getElementById(prefix + 'P').value;
+      const D = document.getElementById(prefix + 'D').value || 0;
+      const I = document.getElementById(prefix + 'I').value || 0;
+      const Set = document.getElementById(prefix + 'Set').value || 0;
+
+      const values = `${P},${D},${I},${Set}`;
+
+      fetch(`/pid?loop=${loopType}&values=${values}`)
+        .then(res => res.text())
+        .then(data => {
+          const table = document.getElementById(prefix + 'Table');
+          const row = table.insertRow(-1);
+          [P, D, I, Set].forEach(v => row.insertCell().textContent = v);
+        });
+    }
+
+    showTab('pidTab'); // Default tab
+  </script>
+</body>
 </html>
