@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Aenertia Website</title>
   <link rel="stylesheet" href="assets/css/styles.css" />
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <style>
     .tab-content { display: none; }
     .tab-content.active { display: block; }
@@ -60,14 +61,16 @@
 
   <div id="testTab" class="tab-content">
     <p>This is a draft web page so far.</p>
-    <button onclick="sayHello()">Click Me</button>
-    <button onclick="flashLED()">Flash LED</button>
+    <button onclick="client.publish('robot/led', 'flash')">Flash LED</button>
   </div>
 
-  <!-- REMOVE script.js for now -->
-  <!-- <script src="assets/js/script.js"></script> -->
-
   <script>
+    const client = mqtt.connect('ws://localhost:9001'); // Ensure Mosquitto supports WebSockets
+
+    client.on('connect', () => {
+      console.log('Connected to MQTT broker');
+    });
+
     function showTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
       document.getElementById(tabId).classList.add('active');
@@ -76,34 +79,19 @@
     function submitPID(loopType) {
       const prefix = loopType === 'inner' ? 'inner' : 'outer';
       const P = document.getElementById(prefix + 'P').value || '0';
-      const D = document.getElementById(prefix + 'D').value || '1';
+      const D = document.getElementById(prefix + 'D').value || '0';
       const I = document.getElementById(prefix + 'I').value || '0';
       const Set = document.getElementById(prefix + 'Set').value || '0';
+      const values = `${loopType}:${P},${D},${I},${Set}`;
 
-      const values = `${P},${D},${I},${Set}`;
+      client.publish('robot/pid', values);
 
-      fetch(`/pid?loop=${loopType}&values=${values}`)
-        .then(res => res.text())
-        .then(() => {
-          const table = document.getElementById(prefix + 'Table');
-          const row = table.insertRow(-1);
-          [P, D, I, Set].forEach(val => row.insertCell().textContent = val);
-        })
-        .catch(error => alert("Error: " + error));
+      const table = document.getElementById(prefix + 'Table');
+      const row = table.insertRow(-1);
+      [P, D, I, Set].forEach(v => row.insertCell().textContent = v);
     }
 
-    function sayHello() {
-      alert("Hi there! This is a JS alert.");
-    }
-
-    function flashLED() {
-      fetch('/flash-led')
-        .then(res => res.text())
-        .then(data => alert(data))
-        .catch(error => alert("Failed to flash LED: " + error));
-    }
-
-    showTab('pidTab');
+    showTab('pidTab'); // Default tab
   </script>
 </body>
 </html>
