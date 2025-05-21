@@ -26,4 +26,14 @@ Added a flash LED button to the website: we can click it as many times as we wis
 
 ![image](https://github.com/user-attachments/assets/b0d10b7d-19a0-4b2b-8ba8-139483545fa4)
 
+## 21/05/2025
+
+In order to connect the Raspberry pi and make it run the website:
+  - Download Python, Node, Express onto the Raspberry Pi (already done in our case)
+  - No need to git clone this repo as it is already done, instead
+    "cd AenerShark" => "git pull" => "cd AenerShark_Website"
+  - type "hostname -I" and you will get an IP of the form: 172.20.10.2
+  - type "node server.js" and you will get a message of the form: Server running at http://localhost:5000
+  - on your PC, type "http://172.20.10.2:5000" (or replace 172.20.10.2 by the IP you were given and 5000 by the port number you were given after typing node server.js"
+  - make sure the Raspberry Pi / laptop are connected to the same WiFi/mobile hotspot
 
