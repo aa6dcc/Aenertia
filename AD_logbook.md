@@ -37,3 +37,8 @@ In order to connect the Raspberry pi and make it run the website:
   - on your PC, type "http://172.20.10.2:5000" (or replace 172.20.10.2 by the IP you were given and 5000 by the port number you were given after typing node server.js"
   - make sure the Raspberry Pi / laptop are connected to the same WiFi/mobile hotspot
 
+Updated the website to have two tabs: PID values & Testing
+
+![image](https://github.com/user-attachments/assets/3a9b5ea3-0a4b-4858-a5f0-938df428e5cf)
+
+When connected to the Raspberry Pi, the website will give the user the ability to type in integer values for the different PID parameters and will have a table which stores these past inputs. 
