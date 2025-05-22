@@ -60,3 +60,16 @@ function populatePIDTables() {
 document.addEventListener('DOMContentLoaded', () => {
   populatePIDTables();
 });
+
+function startMove(direction) {
+  if (client.connected) {
+    client.publish('robot/serial', direction);
+  }
+}
+
+function stopMove() {
+  if (client.connected) {
+    client.publish('robot/serial', 'STOP');
+  }
+}
+
