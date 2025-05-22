@@ -71,9 +71,9 @@ We then needed to update our web backend so we made a comparison of the relevant
 
 | **Feature**            | **FastAPI**                           | **Python REST API (Generic)**       | **Node.js**                         | **Flask**                            |
 |------------------------|---------------------------------------|-------------------------------------|-------------------------------------|--------------------------------------|
-| **Type**               | Web framework (Python)                | API toolkit/framework (e.g. DRF)   | Runtime + frameworks (e.g. Express)| Web framework (Python)               |
+| **Type**               | Web framework (Python)                | API toolkit/framework               | Runtime + frameworks (e.g. Express)| Web framework (Python)               |
 | **Language**           | Python                                | Python                              | JavaScript / TypeScript             | Python                               |
-| **Performance**        | Very high                             | Moderate                            | High (non-blocking I/O)             | Moderate                             |
+| **Performance**        | Very high                             | Moderate                            | High                                | Moderate                             |
 | **Ease of Use**        | High                                  | Moderate                            | Moderate                            | Very high                            |
 | **Community Support**  | Growing rapidly                       | Mature (Django/DRF very popular)    | Massive                             | Mature                               |
 | **Built-in Routing**   | Yes                                   | Yes (DRF / Flask-RESTful, etc.)     | Yes (Express, Fastify)              | Yes                                  |
