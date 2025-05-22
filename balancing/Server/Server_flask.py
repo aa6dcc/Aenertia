@@ -3,7 +3,7 @@ import serial
 
 app = Flask(__name__)
 
-SERIAL_PORT = 'COM4'
+SERIAL_PORT = '/dev/ttyAMA0'
 BAUDRATE = 9600
 
 HTML_TEMPLATE = '''
