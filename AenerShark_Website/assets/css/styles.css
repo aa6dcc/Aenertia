@@ -1,7 +1,7 @@
-/* ===== Global Page Styles ===== */
+/* ===== Global Styles ===== */
 body {
   background-color: #f9f9f9;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
   text-align: center;
   padding: 40px;
   margin: 0;
@@ -25,71 +25,27 @@ input {
   border-radius: 6px;
 }
 
-button {
-  padding: 16px 32px;
-  font-size: 20px;
-  cursor: pointer;
-  background-color: #e6e6e6;
-  border: 2px solid #999;
-  border-radius: 10px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  transition: all 0.15s ease-in-out;
+/* ===== D-Pad Cross Layout ===== */
+.dpad-cross {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  margin-top: 60px;
 }
 
-button:disabled {
-  background-color: #ccc;
-  border-color: #aaa;
-  cursor: not-allowed;
-}
-
-button:hover:not(:disabled) {
-  background-color: #dcdcdc;
-}
-
-/* ===== PID Table Styles ===== */
-table, th, td {
-  border: 1px solid #444;
-  border-collapse: collapse;
-  padding: 10px 14px;
-  margin: auto;
-  font-size: 18px;
-  margin-top: 20px;
-}
-
-/* ===== D-pad Layout Using Your Coordinates ===== */
-.dpad-coord {
-  display: grid;
-  grid-template-columns: 200px 200px 200px;
-  grid-template-rows: 200px 200px 200px;
-  gap: 20px;
+.middle-row {
+  display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 60px;
-  position: relative;
+  gap: 120px; /* space between left and right */
 }
 
-/* Coordinate placement per your spec */
-.btn.dir.up {
-  grid-column: 2;
-  grid-row: 3;
+.spacer {
+  width: 200px; /* to keep left and right spaced apart */
 }
 
-.btn.dir.down {
-  grid-column: 2;
-  grid-row: 2;
-}
-
-.btn.dir.left {
-  grid-column: 1;
-  grid-row: 2;
-}
-
-.btn.dir.right {
-  grid-column: 3;
-  grid-row: 2;
-}
-
-/* ===== D-pad Button Styling ===== */
+/* ===== D-Pad Buttons ===== */
 .btn.dir {
   font-size: 80px;
   width: 200px;
@@ -115,18 +71,20 @@ table, th, td {
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25);
 }
 
-/* ===== Responsive Layout for Smaller Screens ===== */
+/* ===== Responsive Layout ===== */
 @media (max-width: 768px) {
-  .dpad-coord {
-    grid-template-columns: 120px 120px 120px;
-    grid-template-rows: 120px 120px 120px;
-    gap: 12px;
-  }
-
   .btn.dir {
     width: 120px;
     height: 120px;
     font-size: 48px;
+  }
+
+  .middle-row {
+    gap: 60px;
+  }
+
+  .spacer {
+    width: 120px;
   }
 
   input {
