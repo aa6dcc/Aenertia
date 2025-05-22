@@ -6,12 +6,30 @@
   <title>Aenertia Robot UI</title>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <style>
-    body { font-family: Arial; padding: 20px; }
-    input, button { margin: 5px; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+
+    input, button {
+      margin: 5px;
+    }
+
     table, th, td {
       border: 1px solid black;
       border-collapse: collapse;
       padding: 5px;
+    }
+
+    #directional-controls {
+      margin-top: 20px;
+    }
+
+    #directional-controls button {
+      width: 120px;
+      height: 50px;
+      font-size: 16px;
+      margin: 5px;
     }
   </style>
 </head>
@@ -21,20 +39,29 @@
   <h2>PID Tuning</h2>
   <form onsubmit="submitPID('inner'); return false;">
     <h3>Inner Loop</h3>
-    P: <input type="number" id="innerP"> D: <input type="number" id="innerD"> I: <input type="number" id="innerI"> Setpoint: <input type="number" id="innerSet">
+    P: <input type="number" id="innerP"> 
+    D: <input type="number" id="innerD"> 
+    I: <input type="number" id="innerI"> 
+    Setpoint: <input type="number" id="innerSet">
     <button type="submit" id="submitInner" disabled>Submit Inner PID</button>
   </form>
 
   <form onsubmit="submitPID('outer'); return false;">
     <h3>Outer Loop</h3>
-    P: <input type="number" id="outerP"> D: <input type="number" id="outerD"> I: <input type="number" id="outerI"> Setpoint: <input type="number" id="outerSet">
+    P: <input type="number" id="outerP"> 
+    D: <input type="number" id="outerD"> 
+    I: <input type="number" id="outerI"> 
+    Setpoint: <input type="number" id="outerSet">
     <button type="submit" id="submitOuter" disabled>Submit Outer PID</button>
   </form>
 
-  <h2>Actions</h2>
-  <button onclick="publishCommand('robot/led', 'flash')" id="btnLED" disabled>Flash LED</button>
-  <button onclick="publishCommand('robot/serial', 'MOVE_FORWARD')" id="btnMove" disabled>Move Forward</button>
-  <button onclick="publishCommand('robot/serial', 'STOP')" id="btnStop" disabled>Stop</button>
+  <h2>Directional Control (Hold to Move)</h2>
+  <div id="directional-controls">
+    <button onmousedown="startMove('FORWARD')" onmouseup="stopMove()" onmouseleave="stopMove()">↑ Forward</button><br>
+    <button onmousedown="startMove('LEFT')" onmouseup="stopMove()" onmouseleave="stopMove()">← Left</button>
+    <button onmousedown="startMove('RIGHT')" onmouseup="stopMove()" onmouseleave="stopMove()">→ Right</button><br>
+    <button onmousedown="startMove('BACKWARD')" onmouseup="stopMove()" onmouseleave="stopMove()">↓ Backward</button>
+  </div>
 
   <script>
     const client = mqtt.connect('ws://' + location.hostname + ':9001');
@@ -67,6 +94,14 @@
       const Set = document.getElementById(loopType + 'Set').value || '0';
       const msg = `${loopType}:${P},${D},${I},${Set}`;
       client.publish('robot/pid', msg);
+    }
+
+    function startMove(direction) {
+      publishCommand('robot/serial', direction);
+    }
+
+    function stopMove() {
+      publishCommand('robot/serial', 'STOP');
     }
   </script>
 </body>
