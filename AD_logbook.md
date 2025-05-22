@@ -71,16 +71,11 @@ We then needed to update our web backend so we made a comparison of the relevant
 
 | **Feature**            | **FastAPI**                           | **Python REST API (Generic)**       | **Node.js**                         | **Flask**                            |
 |------------------------|---------------------------------------|-------------------------------------|-------------------------------------|--------------------------------------|
-| **Type**               | Web framework (Python)                | API toolkit/framework (e.g., DRF)   | Runtime + frameworks (e.g., Express)| Web framework (Python)               |
+| **Type**               | Web framework (Python)                | API toolkit/framework (e.g. DRF)   | Runtime + frameworks (e.g. Express)| Web framework (Python)               |
 | **Language**           | Python                                | Python                              | JavaScript / TypeScript             | Python                               |
-| **Async Support**      | Excellent (native async/await)        | Varies (DRF is mostly sync)         | Excellent (event-driven model)      | Limited (needs `quart` or tweaks)    |
 | **Performance**        | Very high                             | Moderate                            | High (non-blocking I/O)             | Moderate                             |
-| **Ease of Use**        | High (with auto docs & type hints)    | Moderate (DRF has learning curve)   | Moderate                            | Very high                            |
-| **Learning Curve**     | Low–Moderate                          | Moderate                            | Moderate                            | Very low                             |
-| **Documentation**      | Auto-generated (Swagger/OpenAPI)      | Manual or via plugins               | Manual or tools like Swagger        | Manual                               |
+| **Ease of Use**        | High                                  | Moderate                            | Moderate                            | Very high                            |
 | **Community Support**  | Growing rapidly                       | Mature (Django/DRF very popular)    | Massive                             | Mature                               |
 | **Built-in Routing**   | Yes                                   | Yes (DRF / Flask-RESTful, etc.)     | Yes (Express, Fastify)              | Yes                                  |
-| **Scalability**        | Good (Uvicorn + async)                | Moderate (WSGI-bound)               | Excellent (cluster & async I/O)     | Limited (unless using async variants)|
-| **Use Case**           | Modern APIs, microservices, ML APIs   | RESTful APIs, web apps              | Real-time apps, APIs, fullstack     | Lightweight apps, prototyping        |
-| **Auto Validation**    | Yes (Pydantic)                        | No (manual or use DRF serializers)  | No (manual or middleware)           | No (manual or Marshmallow)           |
-| **Deployment Options** | Uvicorn, Gunicorn, Docker             | Gunicorn, Docker, WSGI servers      | Node runtime, Docker                | Gunicorn, Docker                     |
+| **Scalability**        | Good                                  | Moderate                            | Excellent                           | Limited 
+                |
