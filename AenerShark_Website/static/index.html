@@ -56,17 +56,12 @@
   </form>
 
   <h2>Directional Control (Hold to Move)</h2>
-<div class="crosspad">
-  <div class="cross-row cross-up">
-    <button class="btn dir up" onmousedown="startMove('FORWARD')" onmouseup="stopMove()" onmouseleave="stopMove()">↑</button>
-  </div>
-  <div class="cross-row cross-mid">
-    <button class="btn dir left" onmousedown="startMove('LEFT')" onmouseup="stopMove()" onmouseleave="stopMove()">←</button>
-    <button class="btn dir down" onmousedown="startMove('BACKWARD')" onmouseup="stopMove()" onmouseleave="stopMove()">↓</button>
-    <button class="btn dir right" onmousedown="startMove('RIGHT')" onmouseup="stopMove()" onmouseleave="stopMove()">→</button>
-  </div>
+<div class="arrow-grid">
+  <button class="btn dir up"    onpointerdown="startMove('FORWARD')"  onpointerup="stopMove()" onpointerleave="stopMove()">↑</button>
+  <button class="btn dir left"  onpointerdown="startMove('LEFT')"     onpointerup="stopMove()" onpointerleave="stopMove()">←</button>
+  <button class="btn dir down"  onpointerdown="startMove('BACKWARD')" onpointerup="stopMove()" onpointerleave="stopMove()">↓</button>
+  <button class="btn dir right" onpointerdown="startMove('RIGHT')"    onpointerup="stopMove()" onpointerleave="stopMove()">→</button>
 </div>
-
 
   <script>
     const client = mqtt.connect('ws://' + location.hostname + ':9001');
