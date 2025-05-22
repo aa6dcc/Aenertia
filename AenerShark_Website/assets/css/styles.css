@@ -1,7 +1,7 @@
-/* General page styling */
+/* ===== Global Styles ===== */
 body {
   background-color: #f9f9f9;
-  font-family: Arial, sans-serif;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   text-align: center;
   padding: 40px;
   margin: 0;
@@ -12,31 +12,54 @@ h1, h2, h3 {
   margin-bottom: 10px;
 }
 
+/* ===== Form & Inputs ===== */
 form {
-  margin-bottom: 20px;
+  margin-bottom: 25px;
 }
 
-/* Input and button styles */
 input {
-  padding: 6px;
+  padding: 8px;
   margin: 5px;
   font-size: 16px;
   width: 100px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }
 
 button {
   padding: 12px 24px;
   font-size: 16px;
   cursor: pointer;
+  background-color: #e6e6e6;
+  border: 2px solid #999;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: all 0.15s ease-in-out;
 }
 
-/* PID Submit buttons */
 button:disabled {
   background-color: #ccc;
+  border-color: #aaa;
   cursor: not-allowed;
 }
 
-/* D-Pad control layout */
+button:hover:not(:disabled) {
+  background-color: #dcdcdc;
+}
+
+/* ===== PID Table ===== */
+table, th, td {
+  border: 1px solid #444;
+  border-collapse: collapse;
+  padding: 6px 10px;
+  margin: auto;
+}
+
+table {
+  margin-top: 15px;
+}
+
+/* ===== D-Pad Grid Layout ===== */
 .dpad {
   display: grid;
   grid-template-areas:
@@ -50,26 +73,49 @@ button:disabled {
   margin-top: 30px;
 }
 
+/* ===== D-Pad Button Styles ===== */
 .btn.dir {
-  font-size: 24px;
+  font-size: 32px;
   width: 80px;
   height: 80px;
+  background-color: #f5f5f5;
+  border: 2px solid #555;
+  border-radius: 12px;
+  box-shadow: inset 0 -4px 0 rgba(0,0,0,0.2);
+  transition: all 0.1s ease;
 }
 
-/* Grid area assignments */
+.btn.dir:hover {
+  background-color: #e0e0e0;
+  transform: translateY(1px);
+  box-shadow: inset 0 -2px 0 rgba(0,0,0,0.15);
+}
+
+.btn.dir:active {
+  background-color: #d0d0d0;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Grid area mapping */
 .up    { grid-area: up; }
 .down  { grid-area: down; }
 .left  { grid-area: left; }
 .right { grid-area: right; }
 
-/* Table styling for PID logs (optional) */
-table, th, td {
-  border: 1px solid #444;
-  border-collapse: collapse;
-  padding: 6px;
-  margin: auto;
-}
+/* ===== Responsive (optional tweak for mobile) ===== */
+@media (max-width: 600px) {
+  .dpad {
+    grid-template-columns: 60px 60px 60px;
+    grid-template-rows: 60px 60px;
+  }
 
-table {
-  margin-top: 15px;
+  .btn.dir {
+    width: 60px;
+    height: 60px;
+    font-size: 24px;
+  }
+
+  input {
+    width: 80px;
+  }
 }
