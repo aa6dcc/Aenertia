@@ -6,8 +6,8 @@
 #include <step.h>
 #include <PID_v1.h>
 
-#define RXD2 16
-#define TXD2 17
+#define TXD2 23
+#define RXD2 19
 
 // The Stepper pins
 const int STEPPER1_DIR_PIN  = 23;
@@ -213,8 +213,7 @@ void pidLoop(void *parameter){
         input = filteredAngle;
         myPID.Compute();
 
-        step1.setTargetSpeedRad(motorSpeed);
-        step2.setTargetSpeedRad(-motorSpeed);
+        motorSpeed = output;
 
         Serial.print("Angle: ");
         Serial.print(input);
@@ -228,6 +227,6 @@ void pidLoop(void *parameter){
 }
 
 void motorControl() {
-  // step1.setTargetSpeedRad(motorSpeed);
-  // step2.setTargetSpeedRad(-motorSpeed);
+  step1.setTargetSpeedRad(10);
+  step2.setTargetSpeedRad(-10);
 }
