@@ -40,6 +40,16 @@ double Kp = 525.0;
 double Ki = 17.0;
 double Kd = 19.0;
 
+float angle = 0; // 卡尔曼输出角度
+float bias = 0;
+float rate;
+
+float P[2][2] = { {0, 0}, {0, 0} };
+
+float Q_angle = 0.001;  // 加速度计噪声
+float Q_bias = 0.003;   // 陀螺仪噪声
+float R_measure = 0.03;
+
 PID myPID(&input, &output, &setpoint, Kp, Ki, Kd, DIRECT);
 
 unsigned long lastPIDUpdate = 0;
@@ -75,6 +85,38 @@ bool TimerHandler(void * timerNo)
 	return true;
 }
 
+float kalmanFilter(float newAngle, float newRate, float dt) {
+    // 预测
+    rate = newRate - bias;
+    angle += dt * rate;
+
+    P[0][0] += dt * (dt*P[1][1] - P[0][1] - P[1][0] + Q_angle);
+    P[0][1] -= dt * P[1][1];
+    P[1][0] -= dt * P[1][1];
+    P[1][1] += Q_bias * dt;
+
+    // 更新
+    float S = P[0][0] + R_measure;
+    float K[2];
+    K[0] = P[0][0] / S;
+    K[1] = P[1][0] / S;
+
+    float y = newAngle - angle;
+    angle += K[0] * y;
+    bias += K[1] * y;
+
+    float P00_temp = P[0][0];
+    float P01_temp = P[0][1];
+
+    P[0][0] -= K[0] * P00_temp;
+    P[0][1] -= K[0] * P01_temp;
+    P[1][0] -= K[1] * P00_temp;
+    P[1][1] -= K[1] * P01_temp;
+
+    return angle;
+}
+
+
 uint16_t readADC(uint8_t channel) {
   uint8_t tx0 = 0x06 | (channel >> 2);  // Command Byte 0 = Start bit + single-ended mode + MSB of channel
   uint8_t tx1 = (channel & 0x03) << 6;  // Command Byte 1 = Remaining 2 bits of channel
@@ -102,17 +144,17 @@ void setup()
   Serial.println("ESP32 ready to receive messages...");
 
   // Try to initialize Accelerometer/Gyroscope
-  // if (!mpu.begin()) {
-  //   Serial.println("Failed to find MPU6050 chip");
-  //   while (1) {
-  //     delay(10);
-  //   }
-  // }
-  // Serial.println("MPU6050 Found!");
+  if (!mpu.begin()) {
+    Serial.println("Failed to find MPU6050 chip");
+    while (1) {
+      delay(10);
+    }
+  }
+  Serial.println("MPU6050 Found!");
 
-  // mpu.setAccelerometerRange(MPU6050_RANGE_2_G);
-  // mpu.setGyroRange(MPU6050_RANGE_250_DEG);
-  // mpu.setFilterBandwidth(MPU6050_BAND_44_HZ);
+  mpu.setAccelerometerRange(MPU6050_RANGE_2_G);
+  mpu.setGyroRange(MPU6050_RANGE_250_DEG);
+  mpu.setFilterBandwidth(MPU6050_BAND_44_HZ);
 
   //Attach motor update ISR to timer to run every STEPPER_INTERVAL_US μs
   if (!ITimer.attachInterruptInterval(STEPPER_INTERVAL_US, TimerHandler)) {
@@ -122,13 +164,8 @@ void setup()
   Serial.println("Initialised Interrupt for Stepper");
 
   //Set motor acceleration values
-<<<<<<< HEAD
-  step1.setAccelerationRad(50.0);
-  step2.setAccelerationRad(50.0);
-=======
-  step1.setAccelerationRad(20.0);
-  step2.setAccelerationRad(20.0);
->>>>>>> 4c3e1b28409521d969ff41a1ec1ccef3a6e6c6cc
+  step1.setAccelerationRad(100.0);
+  step2.setAccelerationRad(100.0);
 
   //Enable the stepper motor drivers
   pinMode(STEPPER_EN_PIN,OUTPUT);
@@ -156,6 +193,7 @@ void loop() {
     sscanf(incoming.c_str(), "%lf %lf %lf %lf", &Kp, &Ki, &Kd, &setpoint);
     Serial.println("Values Set to: ");
     Serial.printf("Kp = %.2f, Ki = %.2f, Kd = %.2f, Setpoint = %.2f\n", Kp, Ki, Kd, setpoint);
+    myPID.SetTunings(Kp, Ki, Kd);
   }
 }
 
@@ -166,41 +204,30 @@ void pidLoop(void *parameter){
         
         lastPIDUpdate = currentMillis;
 
-        // sensors_event_t a, g, temp;
-        // mpu.getEvent(&a, &g, &temp);
-        // double angle = a.acceleration.z/9.67;
+        sensors_event_t a, g, temp;
+        mpu.getEvent(&a, &g, &temp);
+        float accAngle = atan2(a.acceleration.y, a.acceleration.z) * 180 / PI;
+        float gyroRate = g.gyro.x * 180 / PI;
+        float filteredAngle = kalmanFilter(accAngle, gyroRate, 0.001);
 
-        double angle = 1.0;
-
-        static double smoothedAngle = 0.0;
-        smoothedAngle += 0.3 * (angle-smoothedAngle);
-
-        input = smoothedAngle;
+        input = filteredAngle;
         myPID.Compute();
 
         step1.setTargetSpeedRad(motorSpeed);
         step2.setTargetSpeedRad(-motorSpeed);
 
-        // Serial.print("Angle: ");
-        // Serial.print(input);
-        // Serial.print("  Motor Speed: ");
-        // Serial.print(motorSpeed);
-        // Serial.print(step1.getSpeedRad());
-        // Serial.println(' ');
+        Serial.print("Angle: ");
+        Serial.print(input);
+        Serial.print("  Motor Speed: ");
+        Serial.print(motorSpeed);
+        Serial.print(step1.getSpeedRad());
+        Serial.println(' ');
     }
     delay(1);
   }
 }
 
 void motorControl() {
-<<<<<<< HEAD
-  if (isnan(motorSpeed)) {
-    Serial.println("motorSpeed is NAN!");
-  }
-  step1.setTargetSpeedRad(motorSpeed);
-  step2.setTargetSpeedRad(-motorSpeed);
-=======
   // step1.setTargetSpeedRad(motorSpeed);
   // step2.setTargetSpeedRad(-motorSpeed);
->>>>>>> 4c3e1b28409521d969ff41a1ec1ccef3a6e6c6cc
 }
