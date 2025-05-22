@@ -85,9 +85,9 @@ bool PID::Compute()
       double pTerm = kp * error;
       double dTerm = -kd * dInput;
 
-      *pDebug = pTerm;
-      *iDebug = ITerm;
-      *dDebug = dTerm;
+      // *pDebug = pTerm;
+      // *iDebug = ITerm;
+      // *dDebug = dTerm;
 
       double output = pTerm + ITerm + dTerm;
       
