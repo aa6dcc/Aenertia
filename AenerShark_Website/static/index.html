@@ -56,11 +56,14 @@
   </form>
 
   <h2>Directional Control (Hold to Move)</h2>
-<div class="dpad-coord">
+<div class="dpad-cross">
   <button class="btn dir up" onpointerdown="startMove('FORWARD')" onpointerup="stopMove()" onpointerleave="stopMove()">↑</button>
+  <div class="middle-row">
+    <button class="btn dir left" onpointerdown="startMove('LEFT')" onpointerup="stopMove()" onpointerleave="stopMove()">←</button>
+    <div class="spacer"></div>
+    <button class="btn dir right" onpointerdown="startMove('RIGHT')" onpointerup="stopMove()" onpointerleave="stopMove()">→</button>
+  </div>
   <button class="btn dir down" onpointerdown="startMove('BACKWARD')" onpointerup="stopMove()" onpointerleave="stopMove()">↓</button>
-  <button class="btn dir left" onpointerdown="startMove('LEFT')" onpointerup="stopMove()" onpointerleave="stopMove()">←</button>
-  <button class="btn dir right" onpointerdown="startMove('RIGHT')" onpointerup="stopMove()" onpointerleave="stopMove()">→</button>
 </div>
 
 
