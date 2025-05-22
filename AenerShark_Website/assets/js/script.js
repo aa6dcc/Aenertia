@@ -1,7 +1,15 @@
+// Client-side JavaScript to handle UI interactions and communicate with the backend
+// - Displays alerts
+// - Triggers hardware actions (e.g. flash LED)
+// - Manages tab switching with unsaved changes warning
+// - Loads and displays stored PID values in tables
+
+
 function sayHello() {
   alert("Hi there! This is a JS alert.");
 }
 
+// Send request to server to flash LED and show the result in an alert
 function flashLED() {
   fetch('/flash-led')
     .then(response => response.text())
@@ -9,10 +17,11 @@ function flashLED() {
     .catch(error => alert("Failed to flash LED: " + error));
 }
 
+// Track the currently active tab and whether the form has unsaved changes
 let currentTab = 'pidTab';
 let isDirty = false;
 
-// Mark as dirty when any input changes
+// Mark page as "dirty" when any input is modified (used to warn before switching tabs)
 document.addEventListener('input', () => {
   isDirty = true;
 });
@@ -31,6 +40,7 @@ function showTab(tabId) {
 }
 
 // Populate PID tables with previously submitted values
+// Fetch and display saved PID values in inner and outer tables
 function populatePIDTables() {
   fetch('/pid-values')
     .then(res => res.json())
@@ -46,6 +56,7 @@ function populatePIDTables() {
 }
 
 // Call populate on page load
+// Populate PID tables when the page finishes loading
 document.addEventListener('DOMContentLoaded', () => {
   populatePIDTables();
 });
