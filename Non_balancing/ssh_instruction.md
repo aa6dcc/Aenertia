@@ -2,7 +2,7 @@ To connect to the Raspberry PI remotely using SSH we follow the following proced
 
 ### 1. On pi (if not done already:
 
-```sudo raspi-config``` --> And from there enable SSH
+```sudo raspi-config``` --> And from there enable SSH in Interface
 
 Use: ```hostname -I``` To find the IP address
 
