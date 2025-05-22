@@ -37,31 +37,28 @@
   <button onclick="publishCommand('robot/serial', 'STOP')" id="btnStop" disabled>Stop</button>
 
   <script>
-    let isConnected = false;
     const client = mqtt.connect('ws://' + location.hostname + ':9001');
 
     client.on('connect', () => {
       console.log('🔌 MQTT connected');
-      isConnected = true;
-      // Enable buttons
       document.querySelectorAll('button').forEach(btn => btn.disabled = false);
     });
 
-    client.on('error', err => {
+    client.on('error', (err) => {
       console.error('MQTT error:', err);
     });
 
     function publishCommand(topic, message) {
-      if (!isConnected) {
-        alert('MQTT not connected yet!');
-        return;
+      if (client.connected) {
+        client.publish(topic, message);
+      } else {
+        alert("MQTT not connected yet.");
       }
-      client.publish(topic, message);
     }
 
     function submitPID(loopType) {
-      if (!isConnected) {
-        alert('MQTT not connected yet!');
+      if (!client.connected) {
+        alert("MQTT not connected yet.");
         return;
       }
       const P = document.getElementById(loopType + 'P').value || '0';
