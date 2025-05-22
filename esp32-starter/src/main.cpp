@@ -115,8 +115,8 @@ void setup()
   Serial.println("Initialised Interrupt for Stepper");
 
   //Set motor acceleration values
-  step1.setAccelerationRad(10.0);
-  step2.setAccelerationRad(10.0);
+  step1.setAccelerationRad(50.0);
+  step2.setAccelerationRad(50.0);
 
   //Enable the stepper motor drivers
   pinMode(STEPPER_EN_PIN,OUTPUT);
@@ -169,6 +169,9 @@ void pidLoop(void *parameter){
 }
 
 void motorControl() {
+  if (isnan(motorSpeed)) {
+    Serial.println("motorSpeed is NAN!");
+  }
   step1.setTargetSpeedRad(motorSpeed);
   step2.setTargetSpeedRad(-motorSpeed);
 }
