@@ -1,3 +1,4 @@
+/* ========== GENERAL PAGE STYLING ========== */
 body {
   background-color: #f9f9f9;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -16,10 +17,10 @@ form {
 }
 
 input {
-  padding: 10px;
+  padding: 12px;
   margin: 5px;
   font-size: 20px;
-  width: 140px;
+  width: 160px;
   border: 1px solid #ccc;
   border-radius: 6px;
 }
@@ -35,78 +36,67 @@ button {
   transition: all 0.15s ease-in-out;
 }
 
-button:disabled {
-  background-color: #ccc;
-  border-color: #aaa;
-  cursor: not-allowed;
-}
-
-button:hover:not(:disabled) {
-  background-color: #dcdcdc;
-}
-
-/* D-Pad Layout (True cross layout) */
+/* ========== D-PAD STYLING ========== */
 .dpad {
   display: grid;
   grid-template-areas:
-    ".    up    ."
-    "left stop right"
-    ".   down   .";
-  grid-template-columns: 160px 160px 160px;
-  grid-template-rows: 160px 160px 160px;
-  gap: 20px;
+    ".      up      ."
+    "left  stop   right"
+    ".     down     .";
+  grid-template-columns: 220px 220px 220px;
+  grid-template-rows: 220px 220px 220px;
+  gap: 30px;
   justify-content: center;
   align-items: center;
-  margin-top: 40px;
+  margin-top: 60px;
 }
 
-/* D-Pad Buttons */
+/* Shared D-pad button styles */
 .btn.dir {
-  font-size: 64px;
-  width: 160px;
-  height: 160px;
+  font-size: 80px;
+  width: 220px;
+  height: 220px;
   background-color: #f0f0f0;
-  border: 4px solid #555;
-  border-radius: 20px;
-  box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.2);
+  border: 4px solid #444;
+  border-radius: 24px;
+  box-shadow: inset 0 -8px 0 rgba(0, 0, 0, 0.2);
   transition: all 0.1s ease;
 }
 
 .btn.dir:hover {
   background-color: #e0e0e0;
   transform: translateY(2px);
-  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.15);
+  box-shadow: inset 0 -5px 0 rgba(0, 0, 0, 0.15);
 }
 
 .btn.dir:active {
   background-color: #d0d0d0;
-  transform: translateY(4px);
-  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.25);
+  transform: translateY(5px);
+  box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.3);
 }
 
-/* STOP button with image */
+/* STOP button styling */
 .btn.dir.stop {
   grid-area: stop;
-  background-color: #fff;
   padding: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  background-color: transparent;
   border: none;
+  box-shadow: none;
 }
 
 .btn.dir.stop img {
-  width: 100px;
-  height: 100px;
+  width: 160px;
+  height: 160px;
+  object-fit: contain;
 }
 
-/* Grid area mapping */
+/* Grid area assignments */
 .up    { grid-area: up; }
 .down  { grid-area: down; }
 .left  { grid-area: left; }
 .right { grid-area: right; }
 
-/* PID Table */
+/* PID Table Styling */
 table, th, td {
   border: 1px solid #444;
   border-collapse: collapse;
@@ -116,22 +106,23 @@ table, th, td {
   margin-top: 20px;
 }
 
-/* Mobile scaling */
+/* ========== RESPONSIVE (Smaller Screens) ========== */
 @media (max-width: 768px) {
   .dpad {
-    grid-template-columns: 100px 100px 100px;
-    grid-template-rows: 100px 100px 100px;
+    grid-template-columns: 140px 140px 140px;
+    grid-template-rows: 140px 140px 140px;
+    gap: 15px;
   }
 
   .btn.dir {
-    width: 100px;
-    height: 100px;
-    font-size: 36px;
+    width: 140px;
+    height: 140px;
+    font-size: 48px;
   }
 
   .btn.dir.stop img {
-    width: 64px;
-    height: 64px;
+    width: 100px;
+    height: 100px;
   }
 
   input {
