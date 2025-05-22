@@ -78,4 +78,4 @@ We then needed to update our web backend so we made a comparison of the relevant
 | **Community Support**  | Growing rapidly                       | Mature (Django/DRF very popular)    | Massive                             | Mature                               |
 | **Built-in Routing**   | Yes                                   | Yes (DRF / Flask-RESTful, etc.)     | Yes (Express, Fastify)              | Yes                                  |
 | **Scalability**        | Good                                  | Moderate                            | Excellent                           | Limited 
-                |
+                
