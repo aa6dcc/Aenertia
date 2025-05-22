@@ -1,12 +1,27 @@
+/* General page styling */
 body {
   background-color: #f9f9f9;
   font-family: Arial, sans-serif;
   text-align: center;
   padding: 40px;
+  margin: 0;
 }
 
-h1 {
+h1, h2, h3 {
   color: #222;
+  margin-bottom: 10px;
+}
+
+form {
+  margin-bottom: 20px;
+}
+
+/* Input and button styles */
+input {
+  padding: 6px;
+  margin: 5px;
+  font-size: 16px;
+  width: 100px;
 }
 
 button {
@@ -15,25 +30,24 @@ button {
   cursor: pointer;
 }
 
-#directional-controls button {
-  width: 100px;
-  height: 50px;
-  margin: 5px;
-  font-size: 16px;
+/* PID Submit buttons */
+button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
 }
 
-.grid {
+/* D-Pad control layout */
+.dpad {
   display: grid;
   grid-template-areas:
     ".    up    ."
-    "left .    right"
-    ".    down  .";
+    "left down right";
   grid-template-columns: 80px 80px 80px;
-  grid-template-rows: 80px 80px 80px;
+  grid-template-rows: 80px 80px;
   gap: 10px;
   justify-content: center;
   align-items: center;
-  margin-top: 20px;
+  margin-top: 30px;
 }
 
 .btn.dir {
@@ -42,3 +56,20 @@ button {
   height: 80px;
 }
 
+/* Grid area assignments */
+.up    { grid-area: up; }
+.down  { grid-area: down; }
+.left  { grid-area: left; }
+.right { grid-area: right; }
+
+/* Table styling for PID logs (optional) */
+table, th, td {
+  border: 1px solid #444;
+  border-collapse: collapse;
+  padding: 6px;
+  margin: auto;
+}
+
+table {
+  margin-top: 15px;
+}
