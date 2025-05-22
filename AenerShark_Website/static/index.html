@@ -56,12 +56,15 @@
   </form>
 
   <h2>Directional Control (Hold to Move)</h2>
-  <div id="directional-controls">
-    <button onmousedown="startMove('FORWARD')" onmouseup="stopMove()" onmouseleave="stopMove()">↑ Forward</button><br>
-    <button onmousedown="startMove('LEFT')" onmouseup="stopMove()" onmouseleave="stopMove()">← Left</button>
-    <button onmousedown="startMove('RIGHT')" onmouseup="stopMove()" onmouseleave="stopMove()">→ Right</button><br>
-    <button onmousedown="startMove('BACKWARD')" onmouseup="stopMove()" onmouseleave="stopMove()">↓ Backward</button>
+<div id="directional-controls">
+  <div class="grid">
+    <button class="btn dir" style="grid-area: up;" onmousedown="startMove('FORWARD')" onmouseup="stopMove()" onmouseleave="stopMove()">↑</button>
+    <button class="btn dir" style="grid-area: left;" onmousedown="startMove('LEFT')" onmouseup="stopMove()" onmouseleave="stopMove()">←</button>
+    <button class="btn dir" style="grid-area: right;" onmousedown="startMove('RIGHT')" onmouseup="stopMove()" onmouseleave="stopMove()">→</button>
+    <button class="btn dir" style="grid-area: down;" onmousedown="startMove('BACKWARD')" onmouseup="stopMove()" onmouseleave="stopMove()">↓</button>
   </div>
+</div>
+
 
   <script>
     const client = mqtt.connect('ws://' + location.hostname + ':9001');
