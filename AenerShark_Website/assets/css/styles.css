@@ -46,21 +46,50 @@ button:hover:not(:disabled) {
   background-color: #dcdcdc;
 }
 
-/* ===== D-Pad Arrow Grid ===== */
-.arrow-grid {
-  display: grid;
-  grid-template-areas:
-    ".    up    ."
-    "left down right";
-  grid-template-columns: 200px 200px 200px;
-  grid-template-rows: 200px 200px;
-  justify-content: center;
-  align-items: center;
-  gap: 20px;
-  margin-top: 60px;
+/* ===== PID Table Styles ===== */
+table, th, td {
+  border: 1px solid #444;
+  border-collapse: collapse;
+  padding: 10px 14px;
+  margin: auto;
+  font-size: 18px;
+  margin-top: 20px;
 }
 
-/* D-pad Button Styling */
+/* ===== D-pad Layout Using Your Coordinates ===== */
+.dpad-coord {
+  display: grid;
+  grid-template-columns: 200px 200px 200px;
+  grid-template-rows: 200px 200px 200px;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 60px;
+  position: relative;
+}
+
+/* Coordinate placement per your spec */
+.btn.dir.up {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.btn.dir.down {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.btn.dir.left {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.btn.dir.right {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+/* ===== D-pad Button Styling ===== */
 .btn.dir {
   font-size: 80px;
   width: 200px;
@@ -78,7 +107,6 @@ button:hover:not(:disabled) {
 .btn.dir:hover {
   background-color: #e0e0e0;
   transform: translateY(2px);
-  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.15);
 }
 
 .btn.dir:active {
@@ -87,27 +115,11 @@ button:hover:not(:disabled) {
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25);
 }
 
-/* Grid area assignments */
-.up    { grid-area: up; }
-.down  { grid-area: down; }
-.left  { grid-area: left; }
-.right { grid-area: right; }
-
-/* ===== PID Table ===== */
-table, th, td {
-  border: 1px solid #444;
-  border-collapse: collapse;
-  padding: 10px 14px;
-  margin: auto;
-  font-size: 18px;
-  margin-top: 20px;
-}
-
-/* ===== Responsive for Small Screens ===== */
+/* ===== Responsive Layout for Smaller Screens ===== */
 @media (max-width: 768px) {
-  .arrow-grid {
+  .dpad-coord {
     grid-template-columns: 120px 120px 120px;
-    grid-template-rows: 120px 120px;
+    grid-template-rows: 120px 120px 120px;
     gap: 12px;
   }
 
