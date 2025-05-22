@@ -1,7 +1,7 @@
-/* ===== Global Styles ===== */
+/* ===== General Styling ===== */
 body {
   background-color: #f9f9f9;
-  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-family: Arial, sans-serif;
   text-align: center;
   padding: 40px;
   margin: 0;
@@ -10,10 +10,6 @@ body {
 h1, h2, h3 {
   color: #222;
   margin-bottom: 10px;
-}
-
-form {
-  margin-bottom: 30px;
 }
 
 input {
@@ -25,8 +21,8 @@ input {
   border-radius: 6px;
 }
 
-/* ===== D-Pad Cross Layout ===== */
-.dpad-cross {
+/* ===== Image D-Pad Layout ===== */
+.image-dpad {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -34,56 +30,48 @@ input {
   margin-top: 60px;
 }
 
-.middle-row {
+.dpad-middle-row {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 120px; /* space between left and right */
+  gap: 100px;
 }
 
-.spacer {
-  width: 200px; /* to keep left and right spaced apart */
+.dpad-spacer {
+  width: 200px;
 }
 
-/* ===== D-Pad Buttons ===== */
-.btn.dir {
-  font-size: 80px;
+/* ===== Button Images ===== */
+.dpad-btn {
   width: 200px;
   height: 200px;
-  background-color: #f0f0f0;
-  border: 4px solid #444;
-  border-radius: 20px;
-  box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.2);
-  transition: all 0.1s ease;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  object-fit: contain;
+  cursor: pointer;
+  transition: transform 0.1s ease, filter 0.2s ease;
 }
 
-.btn.dir:hover {
-  background-color: #e0e0e0;
-  transform: translateY(2px);
+.dpad-btn:hover {
+  transform: scale(1.05);
+  filter: brightness(1.1);
 }
 
-.btn.dir:active {
-  background-color: #d0d0d0;
-  transform: translateY(4px);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25);
+.dpad-btn:active {
+  transform: scale(0.95);
+  filter: brightness(0.9);
 }
 
-/* ===== Responsive Layout ===== */
+/* ===== Responsive ===== */
 @media (max-width: 768px) {
-  .btn.dir {
+  .dpad-btn {
     width: 120px;
     height: 120px;
-    font-size: 48px;
   }
 
-  .middle-row {
+  .dpad-middle-row {
     gap: 60px;
   }
 
-  .spacer {
+  .dpad-spacer {
     width: 120px;
   }
 
