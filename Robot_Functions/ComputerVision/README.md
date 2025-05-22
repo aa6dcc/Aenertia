@@ -8,3 +8,5 @@ Yolo probably needed because of likely partial detection
   TFLite SSD MobileNet model (optimized for Pi)
   
   Or YOLOv5 with ONNX or TorchScript
+
+Only change to deep learning if needed
