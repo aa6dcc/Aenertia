@@ -17,6 +17,9 @@ app = FastAPI()
 # Mount static folder for serving Web UI
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
+app.mount("/assets", StaticFiles(directory="assets"), name="assets")
+
+
 # PID storage
 pid_values = {
     'inner': [],
