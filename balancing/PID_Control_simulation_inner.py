@@ -11,8 +11,8 @@ t = [i*timescale for i in range(0,time*f_s)]
 
 #Definition of variables in the simulation
 k_p = 50
-k_i = 0.1
-k_d = 3
+k_i = 0
+k_d = 0
 
 e_i = 0
 e_d = 0
@@ -29,9 +29,10 @@ mass = 2
 height = 0.3
 g = 9.81
 r = 0.05
+max_w = 20
 
 #Definition of Initial Values of the simulation
-theta_init = radians(0)
+theta_init = radians(5)
 torque = [0]
 omega = [0]
 correction_angle = [0]
@@ -48,10 +49,10 @@ chirp_signal = chirp(np.array(t), f0=0.1, f1=10, t1=time, method='linear')
 #Simulation Loop
 for i in range(1,time*f_s):
 
-    if((int(i/(time*f_s/6)))%2==0):
-        theta_d = radians(5)
-    else:
-        theta_d = radians(-5)
+    # if((int(i/(time*f_s/6)))%2==0):
+    #     theta_d = radians(5)
+    # else:
+    #     theta_d = radians(-5)
 
     # theta_d = radians(5) * sin(2 * 3.1416 * 10 * i * timescale)
     # theta_d = radians(5) * chirp_signal[i]
@@ -71,6 +72,10 @@ for i in range(1,time*f_s):
     motor_torque_new = -(k_p*e_theta + k_i*e_i + k_d*e_d)
     acc_new = motor_torque_new/(mass*r**2+1/2*0.05*r**2)
     w_new = w[i-1]+acc_new*timescale
+    if(w_new > 20):
+        w_new = 20
+    elif(w_new < -20):
+        w_new = -20
 
     if(i-delay_t < 0):
         torque_control = 0
@@ -111,11 +116,11 @@ plt.xlabel("Time (s)")
 plt.grid()
 plt.show()
 
-# plt.plot(t[100:-1], w[100:-1])
-# plt.title("Wheel Angular Velocity (rad/s)")
-# plt.xlabel("Time (s)")
-# plt.grid()
-# plt.show()
+plt.plot(t[100:-1], w[100:-1])
+plt.title("Wheel Angular Velocity (rad/s)")
+plt.xlabel("Time (s)")
+plt.grid()
+plt.show()
 
 # plt.plot(t[100:-1], distance[100:-1])
 # plt.title("Distance (m)")
