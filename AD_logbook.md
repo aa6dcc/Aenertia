@@ -78,4 +78,18 @@ We then needed to update our web backend so we made a comparison of the relevant
 | **Community Support**  | Growing rapidly                       | Mature (Django/DRF very popular)    | Massive                             | Mature                               |
 | **Built-in Routing**   | Yes                                   | Yes (DRF / Flask-RESTful, etc.)     | Yes (Express, Fastify)              | Yes                                  |
 | **Scalability**        | Good                                  | Moderate                            | Excellent                           | Limited 
-                
+
+
+I also got to do some research on different pathfinding algorithms:
+
+| Algorithm         | Handles Weights? | Uses Heuristic? | Optimal?                        | Notes                               |
+| ----------------- | ---------------- | --------------- | ------------------------------- | ----------------------------------- |
+| BFS               | No               | No              | Yes (unweighted)                | Good for unweighted grids           |
+| DFS               | No               | No              | No                              | Can go deep but take bad paths      |
+| Dijkstra          | Yes              | No              | Yes                             | Slower than A\* with heuristics     |
+| Greedy Best-First | Yes              | Yes             | No                              | Fast, not optimal                   |
+| A\*               | Yes              | Yes             | Yes (with admissible heuristic) | Best general-purpose algorithm      |
+| Bidirectional     | Depends          | Optional        | Depends                         | Faster in certain structured graphs |
+| Floyd-Warshall    | Yes              | No              | Yes                             | All-pairs, slow                     |
+
+This led me to the conclusion that A* is the best pathfiding algorithm, especially in the context of a robot which has the ability to find paths and follow people.
