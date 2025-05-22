@@ -56,15 +56,29 @@
   </form>
 
   <h2>Directional Control (Hold to Move)</h2>
-<div class="dpad">
-  <button class="btn dir up"    onmousedown="startMove('FORWARD')"  onmouseup="stopMove()" onmouseleave="stopMove()">↑</button>
-  <button class="btn dir left"  onmousedown="startMove('LEFT')"     onmouseup="stopMove()" onmouseleave="stopMove()">←</button>
-  <button class="btn dir stop"  onmousedown="stopMove()">
-    <img src="assets/images/stop.png" alt="STOP" />
-  </button>
-  <button class="btn dir right" onmousedown="startMove('RIGHT')"    onmouseup="stopMove()" onmouseleave="stopMove()">→</button>
-  <button class="btn dir down"  onmousedown="startMove('BACKWARD')" onmouseup="stopMove()" onmouseleave="stopMove()">↓</button>
+<div class="tpad">
+  <div class="tpad-row up">
+    <button class="btn dir up"
+            onmousedown="startMove('FORWARD')"
+            onmouseup="stopMove()"
+            onmouseleave="stopMove()">↑</button>
+  </div>
+  <div class="tpad-row middle">
+    <button class="btn dir left"
+            onmousedown="startMove('LEFT')"
+            onmouseup="stopMove()"
+            onmouseleave="stopMove()">←</button>
+    <button class="btn dir stop"
+            onmousedown="stopMove()">
+      <img src="assets/images/stop.png" alt="STOP">
+    </button>
+    <button class="btn dir right"
+            onmousedown="startMove('RIGHT')"
+            onmouseup="stopMove()"
+            onmouseleave="stopMove()">→</button>
+  </div>
 </div>
+
 
   <script>
     const client = mqtt.connect('ws://' + location.hostname + ':9001');
