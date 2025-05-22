@@ -1,6 +1,14 @@
+<!--
+  Main webpage for Aenertia system interface
+  - Allows users to input and submit PID tuning parameters
+  - Displays received PID values in tables
+  - Provides testing utilities like flashing an LED and showing alerts
+-->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Basic styles and layout for tabbed interface and tables -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Aenertia Website</title>
@@ -21,6 +29,7 @@
   </style>
 </head>
 <body>
+  <!-- Buttons to toggle between PID input tab and Testing tab -->
   <div class="tab-buttons">
     <button onclick="showTab('pidTab')">PID Values</button>
     <button onclick="showTab('testTab')">Testing</button>
@@ -29,6 +38,7 @@
   <h1>Welcome to the Aenertia Website</h1>
   <img src="assets/images/logo.png" alt="Logo" width="150"/>
 
+  <!-- PID input forms and data tables for Inner and Outer control loops -->
   <div id="pidTab" class="tab-content">
     <h2>Inner Loop</h2>
     <form onsubmit="submitPID('inner'); return false;">
@@ -58,6 +68,7 @@
     </table>
   </div>
 
+  <!-- Testing tools: show alert and trigger LED via backend -->
   <div id="testTab" class="tab-content">
     <p>This is a draft web page so far.</p>
     <button onclick="sayHello()">Click Me</button>
