@@ -22,3 +22,23 @@ button {
   font-size: 16px;
 }
 
+.grid {
+  display: grid;
+  grid-template-areas:
+    ".    up    ."
+    "left .    right"
+    ".    down  .";
+  grid-template-columns: 80px 80px 80px;
+  grid-template-rows: 80px 80px 80px;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.btn.dir {
+  font-size: 24px;
+  width: 80px;
+  height: 80px;
+}
+
