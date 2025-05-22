@@ -5,6 +5,9 @@
 #include <Adafruit_Sensor.h>
 #include <step.h>
 
+#define RXD2 25
+#define TXD2 26
+
 // The Stepper pins
 const int STEPPER1_DIR_PIN  = 16;
 const int STEPPER1_STEP_PIN = 17;
@@ -13,7 +16,7 @@ const int STEPPER2_STEP_PIN = 14;
 const int STEPPER_EN_PIN    = 15; 
 
 //ADC pins
-const int ADC_CS_PIN        = 5;
+const int ADC_CS_PIN        = 5;  
 const int ADC_SCK_PIN       = 18;
 const int ADC_MISO_PIN      = 19;
 const int ADC_MOSI_PIN      = 23;
@@ -25,10 +28,23 @@ const int PRINT_INTERVAL    = 500;
 const int LOOP_INTERVAL     = 10;
 const int STEPPER_INTERVAL_US = 20;
 
-const float kx = 2000;
-const float ki = 10;
-const float kd = 0;
 const float VREF = 4.096;
+
+const float dt = LOOP_INTERVAL / 1000;
+const float C = 0.98;
+float theta_prev = 0;
+
+float tilt_target = -0.022;
+float tilt_error = 0;
+float tilt_last_error = 0;
+float tilt_derivative = 0;
+float tilt_integral = 0; 
+float acc = 0;
+
+float kp = 5000;
+float kd = 0;
+float ki = 0;
+const float kx = -200.0;
 
 //Global objects
 ESP32Timer ITimer(3);
@@ -55,24 +71,25 @@ bool TimerHandler(void * timerNo)
 }
 
 uint16_t readADC(uint8_t channel) {
-  uint8_t tx0 = 0x06 | (channel >> 2);  // Command Byte 0 = Start bit + single-ended mode + MSB of channel
+  uint8_t TX0 = 0x06 | (channel >> 2);  // Command Byte 0 = Start bit + single-ended mode + MSB of channel
   uint8_t tx1 = (channel & 0x03) << 6;  // Command Byte 1 = Remaining 2 bits of channel
 
   digitalWrite(ADC_CS_PIN, LOW); 
 
-  SPI.transfer(tx0);                    // Send Command Byte 0
-  uint8_t rx0 = SPI.transfer(tx1);      // Send Command Byte 1 and receive high byte of result
+  SPI.transfer(TX0);                    // Send Command Byte 0
+  uint8_t RX0 = SPI.transfer(TX1);      // Send Command Byte 1 and receive high byte of result
   uint8_t rx1 = SPI.transfer(0x00);     // Send dummy byte and receive low byte of result
 
   digitalWrite(ADC_CS_PIN, HIGH); 
 
-  uint16_t result = ((rx0 & 0x0F) << 8) | rx1; // Combine high and low byte into 12-bit result
+  uint16_t result = ((RX0 & 0x0F) << 8) | rx1; // Combine high and low byte into 12-bit result
   return result;
 }
 
 void setup()
 {
   Serial.begin(115200);
+  Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);
   pinMode(TOGGLE_PIN,OUTPUT);
 
   // Try to initialize Accelerometer/Gyroscope
@@ -96,13 +113,12 @@ void setup()
   Serial.println("Initialised Interrupt for Stepper");
 
   //Set motor acceleration values
-  step1.setAccelerationRad(40.0);
-  step2.setAccelerationRad(40.0);
+
 
   //Enable the stepper motor drivers
   pinMode(STEPPER_EN_PIN,OUTPUT);
   digitalWrite(STEPPER_EN_PIN, false);
- 
+
   //Set up ADC and SPI
   pinMode(ADC_CS_PIN, OUTPUT);
   digitalWrite(ADC_CS_PIN, HIGH);
@@ -110,16 +126,11 @@ void setup()
 
 }
 
-const float tilt_target = 0;
-const float m = 0.7;
-const float r = 0.035;
-const float inertia = m*pow(r, 2) + 1/2*0.05*pow(0.2, 2);
-float tilt_error = 0;
-float corrected_torque = 0;
-float last_tilt_error = 0;
-float tilt_ed = 0;
-float tilt_ei = 0;
-float corrected_v = 0;
+float complementaryFilter(float theta_a, float gyro_rate, float theta_prev, float dt, float C) {
+    float theta_n = (1 - C) * theta_a + C * (gyro_rate * dt + theta_prev);
+    return theta_n;
+}
+
 
 void loop()
 {
@@ -136,21 +147,49 @@ void loop()
     sensors_event_t a, g, temp;
     mpu.getEvent(&a, &g, &temp);
 
-
     //Calculate Tilt using accelerometer and sin x = x approximation for a small tilt angle
-    tiltx = a.acceleration.z/9.67-0.22;
+    float theta_a = a.acceleration.z/9.67;
+    float gyro_rate = g.gyro.x;
+    float theta_n = complementaryFilter(theta_a, gyro_rate, theta_prev, dt, C);
+    theta_prev = theta_n;
+    tiltx = theta_n;
+
     tilt_error = tilt_target - tiltx;
-    tilt_ed = (tilt_error - last_tilt_error) / LOOP_INTERVAL;
-    tilt_ei = tilt_ei + last_tilt_error * LOOP_INTERVAL;
-    corrected_v= -(kx * tilt_error + ki * tilt_ei + kd * tilt_ed);
-    // corrected_v = corrected_v + corrected_torque / inertia * LOOP_INTERVAL;
-    last_tilt_error = tilt_error;
+    tilt_derivative = (tilt_error - tilt_last_error) / LOOP_INTERVAL;
+    tilt_integral = tilt_integral + tilt_error * LOOP_INTERVAL;
+    tilt_last_error = tilt_error;
+
+    acc = tilt_error * kp + tilt_derivative * kd + tilt_error * ki;
+    if(acc >= 500){
+      acc = 500;
+    }
+    else if (acc <= -500){
+      acc = -500;
+    }
+    else{
+      acc = acc;
+    }
 
 
-    //Set target motor speed proportional to tilt angle
-    //Note: this is for demonstrating accelerometer and motors - it won't work as a balance controller
-    step1.setTargetSpeedRad(corrected_v);
-    step2.setTargetSpeedRad(-corrected_v);
+    step1.setAccelerationRad(acc);
+    step2.setAccelerationRad(acc);
+
+    if(tiltx >= 0){
+      step1.setTargetSpeedRad(kx*tilt_error);
+      step2.setTargetSpeedRad(-kx*tilt_error);
+    }
+    else{
+      step1.setTargetSpeedRad(kx*tilt_error);
+      step2.setTargetSpeedRad(-kx*tilt_error);
+    }
+  }
+  if (Serial2.available()) {
+    String incoming = Serial2.readStringUntil('\n');
+    Serial.print("Received Parameters: ");
+    Serial.println(incoming);
+    sscanf(incoming.c_str(), "%f %f %f %f", &kp, &ki, &kd, &tilt_target);
+    Serial.println("Values Set to: ");
+    Serial.printf("Kp = %.2f, Ki = %.2f, Kd = %.2f, Setpoint = %.2f\n", kx, ki, kd, tilt_target);
   }
   
   //Print updates every PRINT_INTERVAL ms
@@ -159,15 +198,11 @@ void loop()
     printTimer += PRINT_INTERVAL;
     Serial.print(tiltx*1000);
     Serial.print(' ');
-    Serial.print(tilt_error*1000);
+    Serial.print(acc);
     Serial.print(' ');
     Serial.print(step1.getSpeedRad());
     Serial.print(' ');
     Serial.print((readADC(0) * VREF)/4095.0);
-    Serial.print(' ');
-    Serial.print(tilt_ed*1000);
-    Serial.print(' ');
-    Serial.print(corrected_v);
     Serial.println();
   }
 }
