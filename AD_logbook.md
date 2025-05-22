@@ -42,3 +42,7 @@ Updated the website to have two tabs: PID values & Testing
 ![image](https://github.com/user-attachments/assets/3a9b5ea3-0a4b-4858-a5f0-938df428e5cf)
 
 When connected to the Raspberry Pi, the website will give the user the ability to type in integer values for the different PID parameters and will have a table which stores these past inputs. 
+
+## 22/05/2025
+
+The draft website currently implemented is mostly comprised of index.html (the website is opened by simply clicking on index.html), as well as server.js, script.js and styles.css. 
