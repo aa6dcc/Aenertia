@@ -46,3 +46,21 @@ When connected to the Raspberry Pi, the website will give the user the ability t
 ## 22/05/2025
 
 The draft website currently implemented is mostly comprised of index.html (the website is opened by simply clicking on index.html), as well as server.js, script.js and styles.css. 
+
+Researched MQTT, why use it over HTTP, and how to implement it. 
+We needed a broker to establish MQTT connections, such as a free-tier EC2 t2.micro running Mosquitto or HiveMQ. 
+We measure the average RTT for a large number of messages in order to measure the performance of MQTT. 
+
+| Feature                | MQTT                                | HTTP                                 | WebSocket                           |
+|------------------------|-------------------------------------|--------------------------------------|-------------------------------------|
+| **Communication Type** | Publish/Subscribe                   | Request/Response                     | Full-duplex, Bidirectional          |
+| **Connection**         | Persistent (TCP)                    | Stateless (new TCP for each request) | Persistent (over TCP)               |
+| **Latency**            | Low                                 | Moderate                             | Low                                 |
+| **Efficiency**         | High (small packets, low overhead)  | Low (larger headers, repeated setup) | Moderate                            |
+| **Security**           | SSL/TLS                             | SSL/TLS                              | SSL/TLS                             |
+| **Resource Usage**     | Very Low                            | High                                 | Moderate                            |
+| **Requirement**        | Broker (e.g., Mosquitto)            | Web Server                           | WebSocket Server                    |
+| **QoS Support**        | Yes                                 | No                                   | No                                  |
+| **Built-in Ack**       | Yes                                 | Yes (via status codes)              | Limited (application-defined)       |
+| **Mobile Support**     | Good                                | Good                                 | Good                                |
+
