@@ -1,3 +1,5 @@
+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
+
 # Ænertia
 
 EEE2 Balancing Robot End of Year Project
