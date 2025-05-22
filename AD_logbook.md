@@ -47,9 +47,11 @@ When connected to the Raspberry Pi, the website will give the user the ability t
 
 The draft website currently implemented is mostly comprised of index.html (the website is opened by simply clicking on index.html), as well as server.js, script.js and styles.css. 
 
-Researched MQTT, why use it over HTTP, and how to implement it. 
+Researched MQTT, why use it over HTTP, and how to implement it. In our case we will use the Paho library in Python to implement MQTT. 
 We needed a broker to establish MQTT connections, such as a free-tier EC2 t2.micro running Mosquitto or HiveMQ. 
 We measure the average RTT for a large number of messages in order to measure the performance of MQTT. 
+
+MQTT (Message Queuing Telemetry Transport) is a publish-subscribe application layer protocol designed for constrained devices and low-bandwidth, high-latency, or unreliable networks. It is optimized for low power, low memory, and low network usage environments. It uses TCP/IP as its transport protocol. Nonetheless, MQTT can sometimes suffer from memory leaks, connection failures or message delivery problems. We can try and deal with these issues by using well-established and maintained libraries such as Paho, monitor memory usage, keep queues short, enable session persistence, use keep-alive pings, and enable automatic reconnect on the client-side (reconnect_delay_set() in Paho). HiveMQ allows us to do load balancing and we should try and minimise message size.
 
 | Feature                | MQTT                                | HTTP                                 | WebSocket                           |
 |------------------------|-------------------------------------|--------------------------------------|-------------------------------------|
@@ -61,6 +63,24 @@ We measure the average RTT for a large number of messages in order to measure th
 | **Resource Usage**     | Very Low                            | High                                 | Moderate                            |
 | **Requirement**        | Broker (e.g., Mosquitto)            | Web Server                           | WebSocket Server                    |
 | **QoS Support**        | Yes                                 | No                                   | No                                  |
-| **Built-in Ack**       | Yes                                 | Yes (via status codes)              | Limited (application-defined)       |
+| **Built-in Ack**       | Yes                                 | Yes (via status codes)               | Limited (application-defined)       |
 | **Mobile Support**     | Good                                | Good                                 | Good                                |
 
+
+We then needed to update our web backend so we made a comparison of the relevant framework and APIs:
+
+| **Feature**            | **FastAPI**                           | **Python REST API (Generic)**       | **Node.js**                         | **Flask**                            |
+|------------------------|---------------------------------------|-------------------------------------|-------------------------------------|--------------------------------------|
+| **Type**               | Web framework (Python)                | API toolkit/framework (e.g., DRF)   | Runtime + frameworks (e.g., Express)| Web framework (Python)               |
+| **Language**           | Python                                | Python                              | JavaScript / TypeScript             | Python                               |
+| **Async Support**      | Excellent (native async/await)        | Varies (DRF is mostly sync)         | Excellent (event-driven model)      | Limited (needs `quart` or tweaks)    |
+| **Performance**        | Very high                             | Moderate                            | High (non-blocking I/O)             | Moderate                             |
+| **Ease of Use**        | High (with auto docs & type hints)    | Moderate (DRF has learning curve)   | Moderate                            | Very high                            |
+| **Learning Curve**     | Low–Moderate                          | Moderate                            | Moderate                            | Very low                             |
+| **Documentation**      | Auto-generated (Swagger/OpenAPI)      | Manual or via plugins               | Manual or tools like Swagger        | Manual                               |
+| **Community Support**  | Growing rapidly                       | Mature (Django/DRF very popular)    | Massive                             | Mature                               |
+| **Built-in Routing**   | Yes                                   | Yes (DRF / Flask-RESTful, etc.)     | Yes (Express, Fastify)              | Yes                                  |
+| **Scalability**        | Good (Uvicorn + async)                | Moderate (WSGI-bound)               | Excellent (cluster & async I/O)     | Limited (unless using async variants)|
+| **Use Case**           | Modern APIs, microservices, ML APIs   | RESTful APIs, web apps              | Real-time apps, APIs, fullstack     | Lightweight apps, prototyping        |
+| **Auto Validation**    | Yes (Pydantic)                        | No (manual or use DRF serializers)  | No (manual or middleware)           | No (manual or Marshmallow)           |
+| **Deployment Options** | Uvicorn, Gunicorn, Docker             | Gunicorn, Docker, WSGI servers      | Node runtime, Docker                | Gunicorn, Docker                     |
