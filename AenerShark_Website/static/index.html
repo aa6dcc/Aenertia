@@ -56,14 +56,20 @@
   </form>
 
   <h2>Directional Control (Hold to Move)</h2>
-<div class="dpad-cross">
-  <button class="btn dir up" onpointerdown="startMove('FORWARD')" onpointerup="stopMove()" onpointerleave="stopMove()">↑</button>
-  <div class="middle-row">
-    <button class="btn dir left" onpointerdown="startMove('LEFT')" onpointerup="stopMove()" onpointerleave="stopMove()">←</button>
-    <div class="spacer"></div>
-    <button class="btn dir right" onpointerdown="startMove('RIGHT')" onpointerup="stopMove()" onpointerleave="stopMove()">→</button>
-  </div>
-  <button class="btn dir down" onpointerdown="startMove('BACKWARD')" onpointerup="stopMove()" onpointerleave="stopMove()">↓</button>
+<div class="image-dpad">
+<img src="assets/images/up.png"    alt="Up"    class="dpad-btn up"
+     onpointerdown="startMove('FORWARD')" onpointerup="stopMove()" onpointerleave="stopMove()" />
+
+<div class="dpad-middle-row">
+  <img src="assets/images/left.png"  alt="Left"  class="dpad-btn left"
+       onpointerdown="startMove('LEFT')" onpointerup="stopMove()" onpointerleave="stopMove()" />
+  <div class="dpad-spacer"></div>
+  <img src="assets/images/right.png" alt="Right" class="dpad-btn right"
+       onpointerdown="startMove('RIGHT')" onpointerup="stopMove()" onpointerleave="stopMove()" />
+</div>
+
+<img src="assets/images/down.png"   alt="Down"  class="dpad-btn down"
+     onpointerdown="startMove('BACKWARD')" onpointerup="stopMove()" onpointerleave="stopMove()" />
 </div>
 
 
