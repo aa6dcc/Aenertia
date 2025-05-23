@@ -14,10 +14,11 @@ import paho.mqtt.client as mqtt
 
 app = FastAPI()
 
-# Mount static folder for serving Web UI
+# 1) assets first
+app.mount("/assets", StaticFiles(directory="assets"), name="assets")
+# 2) then the catch-all
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
-app.mount("/assets", StaticFiles(directory="assets"), name="assets")
 
 
 # PID storage
