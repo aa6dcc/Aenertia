@@ -41,9 +41,10 @@ def arrow_pad():
     <html>
       <head>
         <title>Arrow Pad Control</title>
-        <link rel="stylesheet" type="text/css" href="/static/style.css">
+        <link rel="stylesheet" type="text/css" href="/static/style.css?v=2">
       </head>
       <body>
+        <img src="/static/images/logo.png" alt="Logo" class="logo">
         <h1>Arrow Pad Control</h1>
         <div class="controller">
           <img id="up"    src="/static/images/up.png" class="up">
@@ -56,3 +57,4 @@ def arrow_pad():
       </body>
     </html>
     """
+
