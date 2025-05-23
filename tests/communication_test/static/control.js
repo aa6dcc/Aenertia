@@ -23,7 +23,7 @@ window.onload = () => {
         let intervalId = null;
 
         btn.onmousedown = () => {
-            btn.classList.add("active");
+            setActive(btn);
             intervalId = holdCommand(commandMap[action]);
         };
 
@@ -51,10 +51,7 @@ window.onload = () => {
             lastKey = e.key;
             const [id, cmd] = action;
             const btn = document.getElementById(id);
-
-            // highlight and keep active
-            if (btn) btn.classList.add("active");
-
+            setActive(btn);
             sendCommand(cmd);
             if (cmd !== 0) {
                 keyIntervalId = setInterval(() => sendCommand(cmd), 300);
@@ -68,6 +65,14 @@ window.onload = () => {
         lastKey = null;
     });
 };
+
+// only set active if not already
+function setActive(btn) {
+    if (!btn.classList.contains("active")) {
+        clearActive();
+        btn.classList.add("active");
+    }
+}
 
 function clearActive() {
     document.querySelectorAll(".arrow.active").forEach(el => el.classList.remove("active"));
