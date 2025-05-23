@@ -93,3 +93,10 @@ I also got to do some research on different pathfinding algorithms:
 | Floyd-Warshall    | Yes              | No              | Yes                             | All-pairs, slow                     |
 
 This led me to the conclusion that A* is the best pathfiding algorithm, especially in the context of a robot which has the ability to find paths and follow people.
+
+## 23/05/2025
+
+Finally managed to create the UI for an arrow pad with a stop button in the middle. 
+I implemented a click and hold logic. 
+
+![image](https://github.com/user-attachments/assets/b5d8ff19-0729-44ed-8c55-d3886cb05dff)
