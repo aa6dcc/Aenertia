@@ -26,30 +26,6 @@ float angle_offset = 0.0;  // Angle offset for calibration
 unsigned long lastLoopTime = 0;
 const int LOOP_INTERVAL_US = 4000;
 
-float getPitch() {
-  sensors_event_t a, g, temp;
-  mpu.getEvent(&a, &g, &temp);
-  float theta_a = a.acceleration.z/9.67;
-  float gyro_rate = g.gyro.x;
-  float theta_n = complementaryFilter(theta_a, gyro_rate, theta_prev, dt, C);
-  theta_prev = theta_n;
-  tiltx = theta_n;
-  return theta_n;
-}
-
-// Simple PID controller
-void pidController(float current_angle) {
-  float error = current_angle;
-  pid_i_mem += pid_i_gain * error;
-  pid_i_mem = constrain(pid_i_mem, -400, 400);
-
-  float d_error = error - pid_last_d_error;
-  pid_output = pid_p_gain * error + pid_i_mem + pid_d_gain * d_error;
-  pid_output = constrain(pid_output, -1000, 1000); // Limit for motor speed
-
-  pid_last_d_error = error;
-}
-
 void setup() {
   Serial.begin(115200);
   Wire.begin();
@@ -90,7 +66,7 @@ void loop() {
 
     // Set motor speeds based on PID output
     leftMotor.setTargetSpeed((int)pid_output);
-    rightMotor.setTargetSpeed(-(int)pid_output);
+    rightMotor.setTargetSpeed((int)pid_output);
 
     // Update motors
     leftMotor.runStepper();
@@ -99,3 +75,22 @@ void loop() {
 }
 
 // Returns pitch angle from MPU6050
+float getPitch() {
+  sensors_event_t a, g, temp;
+  mpu.getEvent(&a, &g, &temp);
+  float angle = atan2(a.acceleration.y, a.acceleration.z) * 180.0 / PI;
+  return angle;
+}
+
+// Simple PID controller
+void pidController(float current_angle) {
+  float error = current_angle;
+  pid_i_mem += pid_i_gain * error;
+  pid_i_mem = constrain(pid_i_mem, -400, 400);
+
+  float d_error = error - pid_last_d_error;
+  pid_output = pid_p_gain * error + pid_i_mem + pid_d_gain * d_error;
+  pid_output = constrain(pid_output, -1000, 1000); // Limit for motor speed
+
+  pid_last_d_error = error;
+}
