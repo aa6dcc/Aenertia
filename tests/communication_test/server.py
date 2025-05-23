@@ -41,9 +41,17 @@ def arrow_pad():
     <html>
       <head>
         <title>Arrow Pad Control</title>
-        <link rel="stylesheet" href="/static/style.css?v=3">
+        <link rel="stylesheet" href="/static/style.css?v=5">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
       </head>
       <body>
+        <!-- Floating info bar -->
+        <div class="info-bar">
+          <div id="time">--:--</div>
+          <div id="battery">Battery: --%</div>
+        </div>
+
+        <!-- Main control card -->
         <div class="card">
           <img src="/static/images/logo.png" alt="Logo" class="logo">
           <h1>Arrow Pad Control</h1>
@@ -54,23 +62,14 @@ def arrow_pad():
             <div class="arrow right" onclick="press('4')">→</div>
             <div class="arrow stop"  onclick="press('0')">■</div>
           </div>
-          <div id="status" class="status fade-in">Waiting for input...</div>
         </div>
+
+        <!-- Script -->
         <script>
           let intervalId = null;
 
           function sendCommand(id) {
-            fetch(`/led/${id}`)
-              .then(() => {
-                const name = {
-                  0: "Stopped",
-                  1: "Moving Up",
-                  2: "Moving Down",
-                  3: "Moving Left",
-                  4: "Moving Right"
-                }[id];
-                document.getElementById("status").innerText = "Currently: " + name;
-              });
+            fetch(`/led/${id}`);
           }
 
           function press(id) {
@@ -83,6 +82,42 @@ def arrow_pad():
 
           document.addEventListener("mouseup", () => clearInterval(intervalId));
           document.addEventListener("mouseleave", () => clearInterval(intervalId));
+
+          // Keyboard support
+          document.addEventListener("keydown", (e) => {
+            const keyMap = {
+              ArrowUp: '1',
+              ArrowDown: '2',
+              ArrowLeft: '3',
+              ArrowRight: '4',
+              ' ': '0'
+            };
+            if (keyMap[e.key]) {
+              press(keyMap[e.key]);
+            }
+          });
+
+          // Time and Battery display
+          function updateTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById("time").innerText = `${hours}:${minutes}`;
+          }
+
+          function updateBattery() {
+            if (navigator.getBattery) {
+              navigator.getBattery().then(battery => {
+                const percent = Math.round(battery.level * 100);
+                document.getElementById("battery").innerText = `Battery: ${percent}%`;
+              });
+            }
+          }
+
+          updateTime();
+          updateBattery();
+          setInterval(updateTime, 10000);
+          setInterval(updateBattery, 60000);
         </script>
       </body>
     </html>
