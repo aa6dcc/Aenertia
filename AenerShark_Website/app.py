@@ -4,37 +4,39 @@ import threading
 from pathlib import Path
 
 import serial
+import cv2
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
+from camera_stream import gen_frames
 import paho.mqtt.client as mqtt
 import logging
 
 # --- Configuration ---
-MQTT_BROKER    = os.getenv("MQTT_BROKER", "localhost")
-MQTT_PORT      = int(os.getenv("MQTT_PORT", 1883))
-SERIAL_PORT    = os.getenv("SERIAL_PORT", "/dev/ttyUSB0")
-BAUDRATE       = int(os.getenv("BAUDRATE", 115200))
-SNAPSHOT_SCRIPT= Path(__file__).parent / "capture_image.py"
+MQTT_BROKER     = os.getenv("MQTT_BROKER", "localhost")
+MQTT_PORT       = int(os.getenv("MQTT_PORT", 1883))
+SERIAL_PORT     = os.getenv("SERIAL_PORT", "/dev/ttyUSB0")
+BAUDRATE        = int(os.getenv("BAUDRATE", 115200))
 FLASH_LED_SCRIPT= Path(__file__).parent / "flash_led.py"
-PID_LOG        = Path(__file__).parent / "pid_log.txt"
+PID_LOG         = Path(__file__).parent / "pid_log.txt"
 
 # --- Logging Setup ---
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logging.basicConfig(level=logging.INFO,
+                    format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
 # --- FastAPI App ---
 app = FastAPI(
     title="Aenertia Robot Control API",
-    description="REST & MQTT interface for Raspberry Pi + ESP32 robot"
+    description="REST, MQTT & MJPEG interface for Raspberry Pi robot"
 )
 
-# --- In‐memory state / connections ---
+# --- In-Memory State & Connections ---
 pid_values = {"inner": [], "outer": []}
 serial_conn = None
 mqtt_client = mqtt.Client()
 
-# --- Serial Init ---
+# --- Serial Initialization ---
 def init_serial():
     global serial_conn
     try:
@@ -57,7 +59,6 @@ def on_message(client, userdata, msg):
     logger.debug(f"MQTT msg on {topic}: {payload}")
 
     if topic == "robot/pid":
-        # format: "<inner|outer>:P,D,I,Set"
         try:
             loop_key, values = payload.split(":", 1)
             parts = values.split(",")
@@ -77,8 +78,8 @@ def on_message(client, userdata, msg):
         logger.info(f"Serial → ESP32: {payload}")
 
 def run_script(script_path: Path, sudo: bool=False):
-    cmd = (["sudo", "python3", str(script_path)] if sudo
-           else ["python3", str(script_path)])
+    cmd = (["sudo", "python3", str(script_path)]
+           if sudo else ["python3", str(script_path)])
     try:
         subprocess.run(cmd, check=True)
         logger.info(f"Executed script: {' '.join(cmd)}")
@@ -97,21 +98,19 @@ def startup_event():
     init_serial()
     start_mqtt_loop()
 
-# --- API Routes ---
 
+
+@app.get("/video_feed", summary="Live camera stream (MJPEG)")
+def video_feed():
+    return StreamingResponse(
+        gen_frames(),
+        media_type="multipart/x-mixed-replace; boundary=frame"
+    )
+
+# --- API Routes ---
 @app.get("/pid-values", summary="Get all PID tuning values")
 def get_pid_values():
     return JSONResponse(content=pid_values)
-
-@app.get("/snapshot", summary="Capture and return a camera snapshot")
-def snapshot():
-    if not SNAPSHOT_SCRIPT.exists():
-        raise HTTPException(500, "Snapshot script not found")
-    run_script(SNAPSHOT_SCRIPT)
-    img = Path("snapshot.jpg")
-    if img.exists():
-        return FileResponse(str(img))
-    raise HTTPException(500, "Failed to generate snapshot")
 
 @app.get("/flash-led", summary="Flash the onboard LED")
 def flash_led():

@@ -19,6 +19,14 @@
     input, button {
       margin: 5px;
     }
+    /* Live video styling */
+    #videoStream {
+      width: 100%;
+      max-width: 640px;
+      border: 1px solid #ccc;
+      margin-bottom: 20px;
+    }
+    /* D-pad grid */
     #dpad {
       display: grid;
       grid-template-columns: 80px 80px 80px;
@@ -28,7 +36,6 @@
       align-items: center;
       margin-top: 20px;
     }
-    /* position the arrows */
     #up    { grid-column: 2; grid-row: 1; }
     #left  { grid-column: 1; grid-row: 2; }
     #right { grid-column: 3; grid-row: 2; }
@@ -43,6 +50,10 @@
 </head>
 <body>
   <h1>Aenertia Robot Control Panel</h1>
+
+  <!-- Live Camera Feed -->
+  <h2>Live Camera</h2>
+  <img id="videoStream" src="/video_feed" alt="Live Camera Feed" />
 
   <!-- PID Tuning -->
   <h2>PID Tuning</h2>
@@ -83,17 +94,17 @@
   </div>
 
   <script>
-    // Connect to Mosquitto over WebSocket
+    // MQTT over WebSocket
     const client = mqtt.connect('ws://' + location.hostname + ':9001');
 
     client.on('connect', () => {
       console.log('🔌 MQTT connected');
-      // enable all buttons once ready
+      // enable all buttons once connected
       document.querySelectorAll('button').forEach(btn => btn.disabled = false);
     });
     client.on('error', err => console.error('MQTT error:', err));
 
-    // Generic MQTT publisher
+    // Publish utility
     function publishCommand(topic, message) {
       if (client.connected) {
         client.publish(topic, message);
@@ -116,11 +127,11 @@
       client.publish('robot/pid', msg);
     }
 
-    // Flash LED via HTTP
+    // Flash LED via HTTP endpoint
     function flashLED() {
       fetch('/flash-led')
         .then(resp => resp.json())
-        .then(obj  => alert(obj.message || JSON.stringify(obj)))
+        .then(obj => alert(obj.message || JSON.stringify(obj)))
         .catch(err => alert("Failed to flash LED: " + err));
     }
 
