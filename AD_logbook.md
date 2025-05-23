@@ -100,3 +100,12 @@ Finally managed to create the UI for an arrow pad with a stop button in the midd
 I implemented a click and hold logic. 
 
 ![image](https://github.com/user-attachments/assets/b5d8ff19-0729-44ed-8c55-d3886cb05dff)
+
+I then added the Aenertia logo to the website so it looks like this:
+
+![image](https://github.com/user-attachments/assets/2a834e82-afbf-470f-b8cd-7558645d683e)
+
+The server is implemented using FastAPI, and the link to access the website I am using is set as http://localhost:8000/pad
+
+The next step will be to control the robot not only by clicking buttons on the website but also by using the arrows on my keyboard, which would lead to a slight animation of the arrows on the website.
+I will also try and make the website look better by enhancing some of the effects and adding some color.
