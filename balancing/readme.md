@@ -56,12 +56,12 @@ bool TimerHandler(void * timerNo)
 
 uint16_t readADC(uint8_t channel) {
   uint8_t TX0 = 0x06 | (channel >> 2);  // Command Byte 0 = Start bit + single-ended mode + MSB of channel
-  uint8_t tx1 = (channel & 0x03) << 6;  // Command Byte 1 = Remaining 2 bits of channel
+  uint8_t TXA = (channel & 0x03) << 6;  // Command Byte 1 = Remaining 2 bits of channel
 
   digitalWrite(ADC_CS_PIN, LOW); 
 
   SPI.transfer(TX0);                    // Send Command Byte 0
-  uint8_t RX0 = SPI.transfer(TX1);      // Send Command Byte 1 and receive high byte of result
+  uint8_t RX0 = SPI.transfer(TXA);      // Send Command Byte 1 and receive high byte of result
   uint8_t rx1 = SPI.transfer(0x00);     // Send dummy byte and receive low byte of result
 
   digitalWrite(ADC_CS_PIN, HIGH); 
@@ -114,7 +114,7 @@ float complementaryFilter(float theta_a, float gyro_rate, float theta_prev, floa
     float theta_n = (1 - C) * theta_a + C * (gyro_rate * dt + theta_prev);
     return theta_n;
 }
-const float dt = LOOP_INTERVAL / 1000;
+const float dt = LOOP_INTERVAL / 1000.0f;
 const float C = 0.98;
 float theta_prev = 0;
 
@@ -123,7 +123,7 @@ float tilt_error = 0;
 float tilt_last_error = 0;
 float tilt_derivative = 0;
 float tilt_integral = 0; 
-float acc_est = 20;
+float acc_est = 0;
 float speed_target_rad = 0;
 const float speed_max_rad = 55;
 const float max_acc = 200;
@@ -149,15 +149,17 @@ void loop()
     mpu.getEvent(&a, &g, &temp);
 
     //Calculate Tilt using accelerometer and sin x = x approximation for a small tilt angle
-    float theta_a = atan2(a.acceleration.z, a.acceleration.x);
-    float gyro_rate = g.gyro.x;
+// Compute pitch angle (rad) from accel:
+    float theta_a = atan2(a.acceleration.x, a.acceleration.z);
+// Read pitch rate (rad/s) from gyro:
+    float gyro_rate  = g.gyro.y * DEG_TO_RAD;  // if you need radians/sec
     float theta_n = complementaryFilter(theta_a, gyro_rate, theta_prev, dt, C);
     theta_prev = theta_n;
     tiltx = theta_n;
 
     tilt_error = tilt_target - tiltx;
-    tilt_derivative = (tilt_error - tilt_last_error) / LOOP_INTERVAL;
-    tilt_integral = tilt_integral + tilt_error * LOOP_INTERVAL;
+    tilt_derivative = (tilt_error - tilt_last_error) / dt;
+    tilt_integral = tilt_integral + tilt_error * dt;
     tilt_last_error = tilt_error;
 
     if(tilt_error <= 0.01 && tilt_error >= -0.01){
@@ -172,10 +174,10 @@ void loop()
     step1.setTargetSpeedRad(speed_target_rad);
     step2.setTargetSpeedRad(-speed_target_rad);
 
-    //acc_est = (speed_target_rad - step1.getSpeedRad()) / LOOP_INTERVAL * kx;  // rad/s^2
+    acc_est = (speed_target_rad - step1.getSpeedRad()) / dt;
     // acc_est = kx * tilt_error;
-    // if (acc_est > max_acc) acc_est = max_acc;
-    // if (acc_est < -max_acc) acc_est = -max_acc;
+    if (acc_est > max_acc) acc_est = max_acc;
+    if (acc_est < -max_acc) acc_est = -max_acc;
 
     step1.setAccelerationRad(acc_est);
     step2.setAccelerationRad(acc_est);
