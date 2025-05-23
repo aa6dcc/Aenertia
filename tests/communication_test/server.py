@@ -41,14 +41,18 @@ def arrow_pad():
     <html>
       <head>
         <title>Arrow Pad Control</title>
-        <link rel="stylesheet" href="/static/style.css?v=4">
+        <link rel="stylesheet" href="/static/style.css?v=5">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
       </head>
       <body>
+        <!-- Floating info bar -->
+        <div class="info-bar">
+          <div id="time">--:--</div>
+          <div id="battery">Battery: --%</div>
+        </div>
+
+        <!-- Main control card -->
         <div class="card">
-          <div class="info-bar">
-            <div id="time">--:--</div>
-            <div id="battery">Battery: --%</div>
-          </div>
           <img src="/static/images/logo.png" alt="Logo" class="logo">
           <h1>Arrow Pad Control</h1>
           <div class="controller">
@@ -59,6 +63,8 @@ def arrow_pad():
             <div class="arrow stop"  onclick="press('0')">■</div>
           </div>
         </div>
+
+        <!-- Script -->
         <script>
           let intervalId = null;
 
@@ -84,14 +90,14 @@ def arrow_pad():
               ArrowDown: '2',
               ArrowLeft: '3',
               ArrowRight: '4',
-              ' ': '0' // spacebar to stop
+              ' ': '0'
             };
             if (keyMap[e.key]) {
               press(keyMap[e.key]);
             }
           });
 
-          // Time and Battery updates
+          // Time and Battery display
           function updateTime() {
             const now = new Date();
             const hours = String(now.getHours()).padStart(2, '0');
@@ -116,3 +122,4 @@ def arrow_pad():
       </body>
     </html>
     """
+
