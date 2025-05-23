@@ -100,3 +100,9 @@ Finally managed to create the UI for an arrow pad with a stop button in the midd
 I implemented a click and hold logic. 
 
 ![image](https://github.com/user-attachments/assets/b5d8ff19-0729-44ed-8c55-d3886cb05dff)
+
+I then added the Aenertia logo to the website so it looks like this:
+
+![image](https://github.com/user-attachments/assets/2a834e82-afbf-470f-b8cd-7558645d683e)
+
+The server is implemented using FastAPI, and the link to access the website I am using is set as http://localhost:8000/pad
