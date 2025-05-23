@@ -1,3 +1,5 @@
+#This code receives a value from 
+
 import paho.mqtt.client as mqtt
 from gpiozero import LED
 
@@ -21,7 +23,7 @@ def on_message(client, userdata, msg):
         led2.on()
 
 # Set up MQTT
-client = mqtt.Client()
+client = mqtt.Client(protocol=mqtt.MQTTv311)
 client.connect("localhost", 1883)
 client.subscribe("led/control")
 client.on_message = on_message
