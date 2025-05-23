@@ -25,7 +25,7 @@ const int ADC_MOSI_PIN      = 23;
 const int TOGGLE_PIN        = 32;
 
 const int PRINT_INTERVAL    = 500;
-const int LOOP_INTERVAL     = 10;
+const int LOOP_INTERVAL     = 5;
 const int STEPPER_INTERVAL_US = 20;
 
 const float VREF = 4.096;
@@ -39,12 +39,13 @@ float tilt_error = 0;
 float tilt_last_error = 0;
 float tilt_derivative = 0;
 float tilt_integral = 0; 
-float acc = 0;
+float corrected_a = 0;
+float gyro_rate=0;
+int direction;
 
-float kp = 5000;
-float kd = 0;
+float kp = -1000;
+float kd = -20;
 float ki = 0;
-const float kx = -200.0;
 
 //Global objects
 ESP32Timer ITimer(3);
@@ -148,8 +149,8 @@ void loop()
     mpu.getEvent(&a, &g, &temp);
 
     //Calculate Tilt using accelerometer and sin x = x approximation for a small tilt angle
-    float theta_a = a.acceleration.z/9.67;
-    float gyro_rate = g.gyro.x;
+    float theta_a = atan2(a.acceleration.z,  a.acceleration.x);
+    gyro_rate = g.gyro.x-0.15;
     float theta_n = complementaryFilter(theta_a, gyro_rate, theta_prev, dt, C);
     theta_prev = theta_n;
     tiltx = theta_n;
@@ -159,38 +160,29 @@ void loop()
     tilt_integral = tilt_integral + tilt_error * LOOP_INTERVAL;
     tilt_last_error = tilt_error;
 
-    acc = tilt_error * kp + tilt_derivative * kd + tilt_error * ki;
-    if(acc >= 500){
-      acc = 500;
-    }
-    else if (acc <= -500){
-      acc = -500;
-    }
-    else{
-      acc = acc;
+    corrected_a = -(tilt_error * kp + tilt_derivative * kd + tilt_error * ki);
+    if(corrected_a > 0){
+      direction = 1;
+    }else{
+      direction = -1;
     }
 
+    step1.setAccelerationRad(corrected_a);
+    step2.setAccelerationRad(corrected_a);
+    step1.setTargetSpeedRad(direction*10);
+    step2.setTargetSpeedRad(-direction*10);
 
-    step1.setAccelerationRad(acc);
-    step2.setAccelerationRad(acc);
-
-    if(tiltx >= 0){
-      step1.setTargetSpeedRad(kx*tilt_error);
-      step2.setTargetSpeedRad(-kx*tilt_error);
-    }
-    else{
-      step1.setTargetSpeedRad(kx*tilt_error);
-      step2.setTargetSpeedRad(-kx*tilt_error);
-    }
   }
+
   if (Serial2.available()) {
     String incoming = Serial2.readStringUntil('\n');
     Serial.print("Received Parameters: ");
     Serial.println(incoming);
     sscanf(incoming.c_str(), "%f %f %f %f", &kp, &ki, &kd, &tilt_target);
     Serial.println("Values Set to: ");
-    Serial.printf("Kp = %.2f, Ki = %.2f, Kd = %.2f, Setpoint = %.2f\n", kx, ki, kd, tilt_target);
+    Serial.printf("Kp = %.2f, Ki = %.2f, Kd = %.2f, Setpoint = %.2f\n", kp, ki, kd, tilt_target);
   }
+
   
   //Print updates every PRINT_INTERVAL ms
   //Line format: X-axis tilt, Motor speed, A0 Voltage
@@ -198,11 +190,13 @@ void loop()
     printTimer += PRINT_INTERVAL;
     Serial.print(tiltx*1000);
     Serial.print(' ');
-    Serial.print(acc);
+    Serial.print(corrected_a);
     Serial.print(' ');
     Serial.print(step1.getSpeedRad());
     Serial.print(' ');
     Serial.print((readADC(0) * VREF)/4095.0);
     Serial.println();
+    Serial.print(gyro_rate);
+    Serial.print(' ');
   }
 }
