@@ -4,7 +4,7 @@ EEE2 Balancing Robot End of Year Project
 
 ## Introduction
 
-The aim of this robot is to provide an indoor assisantce to users, by guiding them through a perviously mapped area. 
+The aim of this robot is to provide an indoor assistance to users, by guiding them through a perviously mapped area. 
 
 **The bot should satisfy the following requirements:**
 

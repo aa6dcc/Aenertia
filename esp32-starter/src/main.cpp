@@ -25,9 +25,9 @@ const int PRINT_INTERVAL    = 500;
 const int LOOP_INTERVAL     = 10;
 const int STEPPER_INTERVAL_US = 20;
 
-const float kx = 200;
-const float ki = 0;
-const float kd = 10;
+const float kx = 2000;
+const float ki = 10;
+const float kd = 0;
 const float VREF = 4.096;
 
 //Global objects
@@ -96,8 +96,8 @@ void setup()
   Serial.println("Initialised Interrupt for Stepper");
 
   //Set motor acceleration values
-  step1.setAccelerationRad(10.0);
-  step2.setAccelerationRad(10.0);
+  step1.setAccelerationRad(40.0);
+  step2.setAccelerationRad(40.0);
 
   //Enable the stepper motor drivers
   pinMode(STEPPER_EN_PIN,OUTPUT);
@@ -110,7 +110,7 @@ void setup()
 
 }
 
-const float tilt_target = 20/1000;
+const float tilt_target = 0;
 const float m = 0.7;
 const float r = 0.035;
 const float inertia = m*pow(r, 2) + 1/2*0.05*pow(0.2, 2);
@@ -136,8 +136,9 @@ void loop()
     sensors_event_t a, g, temp;
     mpu.getEvent(&a, &g, &temp);
 
+
     //Calculate Tilt using accelerometer and sin x = x approximation for a small tilt angle
-    tiltx = a.acceleration.z/9.67;
+    tiltx = a.acceleration.z/9.67-0.22;
     tilt_error = tilt_target - tiltx;
     tilt_ed = (tilt_error - last_tilt_error) / LOOP_INTERVAL;
     tilt_ei = tilt_ei + last_tilt_error * LOOP_INTERVAL;
