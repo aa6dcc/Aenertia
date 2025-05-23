@@ -17,23 +17,24 @@ window.onload = () => {
         stop: 0
     };
 
-    // Mouse hold functionality
+    // Mouse control
     actions.forEach(action => {
-        const img = document.getElementById(action);
+        const btn = document.getElementById(action);
         let intervalId = null;
 
-        img.onmousedown = () => {
-            highlightButton(img);
+        btn.onmousedown = () => {
+            setActive(btn);
             intervalId = holdCommand(commandMap[action]);
         };
 
-        img.onmouseup = img.onmouseleave = () => {
+        btn.onmouseup = btn.onmouseleave = () => {
+            btn.classList.remove("active");
             clearInterval(intervalId);
         };
     });
 
-    // Keyboard input handling
-    let intervalId = null;
+    // Keyboard control
+    let keyIntervalId = null;
     let lastKey = null;
 
     document.addEventListener("keydown", (e) => {
@@ -50,25 +51,26 @@ window.onload = () => {
             lastKey = e.key;
             const [id, cmd] = action;
             const btn = document.getElementById(id);
-            highlightButton(btn);
+            setActive(btn);
             sendCommand(cmd);
             if (cmd !== 0) {
-                intervalId = setInterval(() => sendCommand(cmd), 300);
+                keyIntervalId = setInterval(() => sendCommand(cmd), 300);
             }
         }
     });
 
     document.addEventListener("keyup", () => {
-        clearInterval(intervalId);
+        clearInterval(keyIntervalId);
+        clearActive();
         lastKey = null;
     });
 };
 
-// Visual flash for button
-function highlightButton(btn) {
-    if (!btn) return;
-    btn.classList.add("active");
-    setTimeout(() => {
-        btn.classList.remove("active");
-    }, 200);
+function setActive(btn) {
+    clearActive(); // remove from any other buttons
+    if (btn) btn.classList.add("active");
+}
+
+function clearActive() {
+    document.querySelectorAll(".arrow.active").forEach(el => el.classList.remove("active"));
 }
