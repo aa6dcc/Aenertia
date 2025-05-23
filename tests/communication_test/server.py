@@ -41,7 +41,7 @@ def arrow_pad():
     <html>
       <head>
         <title>Arrow Pad Control</title>
-        <link rel="stylesheet" href="/static/style.css?v=5">
+        <link rel="stylesheet" href="/static/style.css?v=6">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
       </head>
       <body>
@@ -80,20 +80,29 @@ def arrow_pad():
             }
           }
 
+          function highlightArrow(className) {
+            const btn = document.querySelector(`.arrow.${className}`);
+            if (!btn) return;
+            btn.classList.add("active");
+            setTimeout(() => btn.classList.remove("active"), 200);
+          }
+
           document.addEventListener("mouseup", () => clearInterval(intervalId));
           document.addEventListener("mouseleave", () => clearInterval(intervalId));
 
-          // Keyboard support
+          // Keyboard support + animation
           document.addEventListener("keydown", (e) => {
             const keyMap = {
-              ArrowUp: '1',
-              ArrowDown: '2',
-              ArrowLeft: '3',
-              ArrowRight: '4',
-              ' ': '0'
+              ArrowUp: ['1', 'up'],
+              ArrowDown: ['2', 'down'],
+              ArrowLeft: ['3', 'left'],
+              ArrowRight: ['4', 'right'],
+              ' ': ['0', 'stop']
             };
-            if (keyMap[e.key]) {
-              press(keyMap[e.key]);
+            const action = keyMap[e.key];
+            if (action) {
+              press(action[0]);
+              highlightArrow(action[1]);
             }
           });
 
