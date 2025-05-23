@@ -119,3 +119,4 @@ In the top right corner I also added a battery feature (the battery of my comput
 
 I would like for this website to have 3 separate tabs (PID control, flash LED and control robot pad) in the future to make the website more neat and organized.
 
+For the camera access via the Raspberry Pi, we must unpower the Raspberry Pi, connect the camera and then power it up again, otherwise the camera will not be detected. 
