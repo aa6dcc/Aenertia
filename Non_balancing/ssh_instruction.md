@@ -9,7 +9,7 @@ Use: ```hostname -I``` To find the IP address
 
 ### 2. On laptop's terminal
 
-```ping raspberrypi.local``` To find the IP address from the laptop
+```ping raspberrypi.local -4``` To find the IP address from the laptop (-4 allows to get the traditional format for IP)
 
 ```ssh pi@<pi-ip-address>``` eg: ```ssh pi@192.168.1.42```
 
