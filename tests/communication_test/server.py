@@ -41,19 +41,49 @@ def arrow_pad():
     <html>
       <head>
         <title>Arrow Pad Control</title>
-        <link rel="stylesheet" type="text/css" href="/static/style.css?v=2">
+        <link rel="stylesheet" href="/static/style.css?v=3">
       </head>
       <body>
-        <img src="/static/images/logo.png" alt="Logo" class="logo">
-        <h1>Arrow Pad Control</h1>
-        <div class="controller">
-          <img id="up"    src="/static/images/up.png" class="up">
-          <img id="down"  src="/static/images/down.png" class="down">
-          <img id="left"  src="/static/images/left.png" class="left">
-          <img id="right" src="/static/images/right.png" class="right">
-          <img id="stop"  src="/static/images/stop.png" class="stop">
+        <div class="card">
+          <img src="/static/images/logo.png" alt="Logo" class="logo">
+          <h1>Arrow Pad Control</h1>
+          <div class="controller">
+            <div class="arrow up"    onclick="press('1')">↑</div>
+            <div class="arrow down"  onclick="press('2')">↓</div>
+            <div class="arrow left"  onclick="press('3')">←</div>
+            <div class="arrow right" onclick="press('4')">→</div>
+            <div class="arrow stop"  onclick="press('0')">■</div>
+          </div>
+          <div id="status" class="status fade-in">Waiting for input...</div>
         </div>
-        <script src="/static/control.js"></script>
+        <script>
+          let intervalId = null;
+
+          function sendCommand(id) {
+            fetch(`/led/${id}`)
+              .then(() => {
+                const name = {
+                  0: "Stopped",
+                  1: "Moving Up",
+                  2: "Moving Down",
+                  3: "Moving Left",
+                  4: "Moving Right"
+                }[id];
+                document.getElementById("status").innerText = "Currently: " + name;
+              });
+          }
+
+          function press(id) {
+            clearInterval(intervalId);
+            sendCommand(id);
+            if (id !== '0') {
+              intervalId = setInterval(() => sendCommand(id), 300);
+            }
+          }
+
+          document.addEventListener("mouseup", () => clearInterval(intervalId));
+          document.addEventListener("mouseleave", () => clearInterval(intervalId));
+        </script>
       </body>
     </html>
     """
