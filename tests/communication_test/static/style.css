@@ -15,6 +15,7 @@ body {
     border-radius: 16px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.1);
     animation: fadeIn 0.5s ease-in-out;
+    position: relative;
 }
 
 .logo {
@@ -70,11 +71,14 @@ h1 {
 .arrow.right { grid-area: right; }
 .arrow.stop  { grid-area: stop; background-color: #ff4d4d; color: white; }
 
-.status {
-    margin-top: 20px;
-    font-size: 16px;
-    color: #555;
-    animation: fadeIn 0.3s ease-in-out;
+.info-bar {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 14px;
+    color: #666;
+    text-align: right;
+    line-height: 1.4;
 }
 
 .fade-in {
