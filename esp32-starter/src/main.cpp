@@ -243,4 +243,9 @@ void loop()
     Serial.print(gyro_rate);
     Serial.print(' ');
   }
+
+  //For Serial Plotter
+  // if(millis() % 20 == 0){
+  //   Serial.println(tiltx);
+  // }
 }
