@@ -1,6 +1,3 @@
-//This file uses double loop technique to control the tilt angle.
-//Tile angle controls desired angular rate, and error in angular rate controls desired angular acceleration of the motor.
-
 #include <Arduino.h>
 #include <SPI.h>
 #include <TimerInterrupt_Generic.h>
@@ -32,37 +29,23 @@ const int LOOP_INTERVAL     = 5;
 const int STEPPER_INTERVAL_US = 20;
 
 const float VREF = 4.096;
+
+const float dt = LOOP_INTERVAL / 1000;
 const float C = 0.98;
 float theta_prev = 0;
 
-float tilt_target = 0;
+float tilt_target = -0.022;
 float tilt_error = 0;
 float tilt_last_error = 0;
 float tilt_derivative = 0;
 float tilt_integral = 0; 
-
-
-float gyro_rate=0;
-float gyro_target = 0;
-float gyro_error = 0;
-float gyro_last_error = 0;
-float gyro_derivative = 0;
-float gyro_integral = 0; 
-
 float corrected_a = 0;
+float gyro_rate=0;
 int direction;
 
-float kp_o = 0;
-float ki_o = 0;
-float kd_o = 0;
-
 float kp = -1000;
-float ki = 0;
 float kd = -20;
-
-float kv = 10;
-float target_speed = 0;
-float dt = LOOP_INTERVAL/1000.0;
+float ki = 0;
 
 //Global objects
 ESP32Timer ITimer(3);
@@ -149,18 +132,6 @@ float complementaryFilter(float theta_a, float gyro_rate, float theta_prev, floa
     return theta_n;
 }
 
-float clamp(float input, float max, float min){
-  int output;
-  if(input > max){
-    int output = max;
-  }else if(input < min){
-    int output  = min;
-  }else{
-    output = input;
-  }
-  return output;
-}
-
 
 void loop()
 {
@@ -179,39 +150,27 @@ void loop()
 
     //Calculate Tilt using accelerometer and sin x = x approximation for a small tilt angle
     float theta_a = atan2(a.acceleration.z,  a.acceleration.x);
-    gyro_rate = g.gyro.x;
+    gyro_rate = g.gyro.x-0.15;
     float theta_n = complementaryFilter(theta_a, gyro_rate, theta_prev, dt, C);
     theta_prev = theta_n;
     tiltx = theta_n;
 
-    //tilt error calculation
     tilt_error = tilt_target - tiltx;
-    tilt_derivative = (tilt_error - tilt_last_error) / dt;
-    tilt_integral = tilt_integral + tilt_error * dt;
+    tilt_derivative = (tilt_error - tilt_last_error) / LOOP_INTERVAL;
+    tilt_integral = tilt_integral + tilt_error * LOOP_INTERVAL;
     tilt_last_error = tilt_error;
 
-    //controller for target angular velocity of the bot
-    gyro_target = kp_o*tilt_error + ki_o*tilt_integral + kd_o*tilt_derivative;
+    corrected_a = -(tilt_error * kp + tilt_derivative * kd + tilt_error * ki);
+    if(corrected_a > 0){
+      direction = 1;
+    }else{
+      direction = -1;
+    }
 
-    //gyro error calculation
-    gyro_error = gyro_target - gyro_rate;
-    gyro_derivative = (gyro_error - gyro_last_error)/ dt;
-    gyro_integral = gyro_integral + gyro_integral * dt;
-    gyro_last_error = gyro_error;
-
-    //controller for target acceleration of the wheels
-    corrected_a = kp*gyro_error + ki*gyro_integral + kd*gyro_derivative;
-
-    //calculation for target wheel angular velocity
-    target_speed =kv*gyro_rate;
-
-    //set wheel target speed
-    step1.setTargetSpeedRad(target_speed);
-    step2.setTargetSpeedRad(-target_speed);
-
-    //set wheel acceleration
     step1.setAccelerationRad(corrected_a);
     step2.setAccelerationRad(corrected_a);
+    step1.setTargetSpeedRad(direction*10);
+    step2.setTargetSpeedRad(-direction*10);
 
   }
 
