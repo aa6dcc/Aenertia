@@ -1,5 +1,7 @@
 //This file uses double loop technique to control the tilt angle.
 //Tile angle controls desired angular rate, and error in angular rate controls desired angular acceleration of the motor.
+//The K values are not adjusted, when adjusting, you should adjust kv first, then inner loop, then adjust the outer loop. 
+//Integral terms may not be used, only tune kp and kd.
 
 #include <Arduino.h>
 #include <SPI.h>
