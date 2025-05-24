@@ -109,3 +109,14 @@ The server is implemented using FastAPI, and the link to access the website I am
 
 The next step will be to control the robot not only by clicking buttons on the website but also by using the arrows on my keyboard, which would lead to a slight animation of the arrows on the website.
 I will also try and make the website look better by enhancing some of the effects and adding some color.
+
+Made some changes to the website:
+
+![image](https://github.com/user-attachments/assets/237f3a62-89c0-432c-9bf3-cf2ca41f08ed)
+
+I tried to make the control pad neater, and now the robot can be controlled not only using the arrow keys on the website but also using the keyboard arrows.
+In the top right corner I also added a battery feature (the battery of my computer - this is a draft, in the future this will be the battery of the robot) as well as the time.
+
+I would like for this website to have 3 separate tabs (PID control, flash LED and control robot pad) in the future to make the website more neat and organized.
+
+For the camera access via the Raspberry Pi, we must unpower the Raspberry Pi, connect the camera and then power it up again, otherwise the camera will not be detected. 

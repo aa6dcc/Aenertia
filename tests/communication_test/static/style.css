@@ -15,6 +15,7 @@ body {
     border-radius: 16px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.1);
     animation: fadeIn 0.5s ease-in-out;
+    position: relative;
 }
 
 .logo {
@@ -70,15 +71,31 @@ h1 {
 .arrow.right { grid-area: right; }
 .arrow.stop  { grid-area: stop; background-color: #ff4d4d; color: white; }
 
-.status {
-    margin-top: 20px;
-    font-size: 16px;
-    color: #555;
-    animation: fadeIn 0.3s ease-in-out;
+.info-bar {
+    position: fixed;
+    top: 12px;
+    right: 20px;
+    font-size: 14px;
+    color: #444;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 6px 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    z-index: 1000;
 }
 
 .fade-in {
     animation: fadeIn 0.5s ease-in-out;
+}
+
+.arrow.active {
+    background-color: #a4c4e0 !important;
+    transform: scale(1.1);
+}
+
+.active {
+    background-color: #a4c4e0 !important;
+    transform: scale(1.1);
 }
 
 @keyframes fadeIn {
