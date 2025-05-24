@@ -1,232 +1,106 @@
-#include <Arduino.h>
-#include <SPI.h>
-#include <TimerInterrupt_Generic.h>
+#include <Wire.h>
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
 #include <step.h>
-#include <PID_v1.h>
 
-#define TXD2 23
-#define RXD2 19
+// MPU6050 object
+Adafruit_MPU6050 mpu;
 
-// The Stepper pins
-const int STEPPER1_DIR_PIN  = 23;
-const int STEPPER1_STEP_PIN = 25;
-const int STEPPER2_DIR_PIN  = 4;
-const int STEPPER2_STEP_PIN = 14;
-const int STEPPER_EN_PIN    = 15; 
+// Define motor control pins
+#define LEFT_STEP  14
+#define LEFT_DIR   4
+#define RIGHT_STEP 17
+#define RIGHT_DIR  16
 
-//ADC pins
-const int ADC_CS_PIN        = 5;
-const int ADC_SCK_PIN       = 18;
-const int ADC_MISO_PIN      = 19;
-const int ADC_MOSI_PIN      = 23;
+// Stepper motor control objects
+step leftMotor(1000, LEFT_STEP, LEFT_DIR);   // interval = 1000us
+step rightMotor(1000, RIGHT_STEP, RIGHT_DIR);
 
-// Diagnostic pin for oscilloscope
-const int TOGGLE_PIN        = 32;
+float pid_p_gain = 15;
+float pid_i_gain = 1.5;
+float pid_d_gain = 30;
 
-const int PRINT_INTERVAL    = 500;
-const int LOOP_INTERVAL     = 10;
-const int STEPPER_INTERVAL_US = 20;
+float pid_error = 0, pid_i_mem = 0, pid_last_d_error = 0, pid_output = 0;
+float angle_offset = 0.0;  // Angle offset for calibration
 
-//Global objects
-ESP32Timer ITimer(3);
-Adafruit_MPU6050 mpu;         //Default pins for I2C are SCL: IO22, SDA: IO21
-
-double setpoint = 0;
-double input, output;
-
-double Kp = 525.0;
-double Ki = 17.0;
-double Kd = 19.0;
-
-float angle = 0; // 卡尔曼输出角度
-float bias = 0;
-float rate;
-
-float P[2][2] = { {0, 0}, {0, 0} };
-
-float Q_angle = 0.001;  // 加速度计噪声
-float Q_bias = 0.003;   // 陀螺仪噪声
-float R_measure = 0.03;
-
-PID myPID(&input, &output, &setpoint, Kp, Ki, Kd, DIRECT);
-
-unsigned long lastPIDUpdate = 0;
-const unsigned long PIDInterval = 15;
-
-float motorSpeed = 0;
-unsigned long lastStepTime1 = 0;
-unsigned long lastStepTime2 = 0;
-
-TaskHandle_t pidTaskHandle;
-
-void pidLoop(void *parameter);
-void motorControl();
+unsigned long lastLoopTime = 0;
+const int LOOP_INTERVAL_US = 4000;
 
 
-step step1(STEPPER_INTERVAL_US,STEPPER1_STEP_PIN,STEPPER1_DIR_PIN );
-step step2(STEPPER_INTERVAL_US,STEPPER2_STEP_PIN,STEPPER2_DIR_PIN );
-
-
-//Interrupt Service Routine for motor update
-//Note: ESP32 doesn't support floating point calculations in an ISR
-bool TimerHandler(void * timerNo)
-{
-  static bool toggle = false;
-
-  //Update the stepper motors
-  step1.runStepper();
-  step2.runStepper();
-
-  //Indicate that the ISR is running
-  digitalWrite(TOGGLE_PIN,toggle);  
-  toggle = !toggle;
-	return true;
+float getPitch() {
+  sensors_event_t a, g, temp;
+  mpu.getEvent(&a, &g, &temp);
+  float angle = atan2(a.acceleration.x, a.acceleration.z) * 180.0 / PI;
+  return angle;
 }
 
-float kalmanFilter(float newAngle, float newRate, float dt) {
-    // 预测
-    rate = newRate - bias;
-    angle += dt * rate;
+// Simple PID controller
+void pidController(float current_angle) {
+  float error = current_angle;
+  pid_i_mem += pid_i_gain * error;
+  pid_i_mem = constrain(pid_i_mem, -400, 400);
 
-    P[0][0] += dt * (dt*P[1][1] - P[0][1] - P[1][0] + Q_angle);
-    P[0][1] -= dt * P[1][1];
-    P[1][0] -= dt * P[1][1];
-    P[1][1] += Q_bias * dt;
+  float d_error = error - pid_last_d_error;
+  pid_output = pid_p_gain * error + pid_i_mem + pid_d_gain * d_error;
+  pid_output = constrain(pid_output, -1000, 1000); // Limit for motor speed
 
-    // 更新
-    float S = P[0][0] + R_measure;
-    float K[2];
-    K[0] = P[0][0] / S;
-    K[1] = P[1][0] / S;
-
-    float y = newAngle - angle;
-    angle += K[0] * y;
-    bias += K[1] * y;
-
-    float P00_temp = P[0][0];
-    float P01_temp = P[0][1];
-
-    P[0][0] -= K[0] * P00_temp;
-    P[0][1] -= K[0] * P01_temp;
-    P[1][0] -= K[1] * P00_temp;
-    P[1][1] -= K[1] * P01_temp;
-
-    return angle;
+  pid_last_d_error = error;
 }
 
-
-uint16_t readADC(uint8_t channel) {
-  uint8_t tx0 = 0x06 | (channel >> 2);  // Command Byte 0 = Start bit + single-ended mode + MSB of channel
-  uint8_t tx1 = (channel & 0x03) << 6;  // Command Byte 1 = Remaining 2 bits of channel
-
-  digitalWrite(ADC_CS_PIN, LOW); 
-
-  SPI.transfer(tx0);                    // Send Command Byte 0
-  uint8_t rx0 = SPI.transfer(tx1);      // Send Command Byte 1 and receive high byte of result
-  uint8_t rx1 = SPI.transfer(0x00);     // Send dummy byte and receive low byte of result
-
-  digitalWrite(ADC_CS_PIN, HIGH); 
-
-  uint16_t result = ((rx0 & 0x0F) << 8) | rx1; // Combine high and low byte into 12-bit result
-  return result;
-}
-
-void setup()
-{
+void setup() {
   Serial.begin(115200);
-  Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);
-  Serial.println("Message Serial started on GPIO25(TX), GPIO23(RX)");
-
   Wire.begin();
-  pinMode(TOGGLE_PIN,OUTPUT);
-  Serial.println("ESP32 ready to receive messages...");
 
-  // Try to initialize Accelerometer/Gyroscope
+  // Initialize MPU6050
   if (!mpu.begin()) {
     Serial.println("Failed to find MPU6050 chip");
-    while (1) {
-      delay(10);
-    }
+    while (1) delay(10);
   }
-  Serial.println("MPU6050 Found!");
 
-  mpu.setAccelerometerRange(MPU6050_RANGE_2_G);
+  mpu.setAccelerometerRange(MPU6050_RANGE_4_G);
   mpu.setGyroRange(MPU6050_RANGE_250_DEG);
   mpu.setFilterBandwidth(MPU6050_BAND_44_HZ);
 
-  //Attach motor update ISR to timer to run every STEPPER_INTERVAL_US μs
-  if (!ITimer.attachInterruptInterval(STEPPER_INTERVAL_US, TimerHandler)) {
-    Serial.println("Failed to start stepper interrupt");
-    while (1) delay(10);
-    }
-  Serial.println("Initialised Interrupt for Stepper");
+  // Stabilize MPU
+  delay(1000);
 
-  //Set motor acceleration values
-  step1.setAccelerationRad(100.0);
-  step2.setAccelerationRad(100.0);
+  // Simple calibration for pitch offset
+  float angle_sum = 0;
+  for (int i = 0; i < 100; i++) {
+    angle_sum += getPitch();
+    delay(10);
+  }
+  angle_offset = angle_sum / 100.0;
 
-  //Enable the stepper motor drivers
-  pinMode(STEPPER_EN_PIN,OUTPUT);
-  digitalWrite(STEPPER_EN_PIN, false);
- 
-  //Set up ADC and SPI
-  pinMode(ADC_CS_PIN, OUTPUT);
-  digitalWrite(ADC_CS_PIN, HIGH);
-  SPI.begin(ADC_SCK_PIN, ADC_MISO_PIN, ADC_MOSI_PIN, ADC_CS_PIN);
-
-  myPID.SetMode(AUTOMATIC);
-  myPID.SetOutputLimits(-10000,10000);
-  xTaskCreatePinnedToCore(pidLoop, "PID Task", 10000, NULL, 2, &pidTaskHandle, 0);
-  delay(4000);
-
+  // Set motor acceleration (microsteps/s^2)
+  leftMotor.setAcceleration(500);
+  rightMotor.setAcceleration(500);
 }
-
 
 void loop() {
-  motorControl();
-  if (Serial2.available()) {
-    String incoming = Serial2.readStringUntil('\n');
-    Serial.print("Received Parameters: ");
-    Serial.println(incoming);
-    sscanf(incoming.c_str(), "%lf %lf %lf %lf", &Kp, &Ki, &Kd, &setpoint);
-    Serial.println("Values Set to: ");
-    Serial.printf("Kp = %.2f, Ki = %.2f, Kd = %.2f, Setpoint = %.2f\n", Kp, Ki, Kd, setpoint);
-    myPID.SetTunings(Kp, Ki, Kd);
+  unsigned long now = micros();
+  if (now - lastLoopTime >= LOOP_INTERVAL_US) {
+    lastLoopTime = now;
+
+    float angle = getPitch() - angle_offset;
+    pidController(angle);
+
+    // Set motor speeds based on PID output
+    leftMotor.setTargetSpeedRad((int)pid_output);
+    rightMotor.setTargetSpeedRad((int)pid_output);
+    leftMotor.runStepper();
+    rightMotor.runStepper();
+  }
+  if(micros() % 50000 == 0){
+      Serial.print((int)pid_output);
+      Serial.print(" ");
+      Serial.print(getPitch() - angle_offset);
+      Serial.print(" ");
+
+      // Update motor
+
+      Serial.println(leftMotor.getSpeedRad());
   }
 }
 
-void pidLoop(void *parameter){
-  while(true){
-      unsigned long currentMillis = millis();
-      if(currentMillis - lastPIDUpdate >= PIDInterval){
-        
-        lastPIDUpdate = currentMillis;
-
-        sensors_event_t a, g, temp;
-        mpu.getEvent(&a, &g, &temp);
-        float accAngle = atan2(a.acceleration.y, a.acceleration.z) * 180 / PI;
-        float gyroRate = g.gyro.x * 180 / PI;
-        float filteredAngle = kalmanFilter(accAngle, gyroRate, 0.001);
-
-        input = filteredAngle;
-        myPID.Compute();
-
-        motorSpeed = output;
-
-        Serial.print("Angle: ");
-        Serial.print(input);
-        Serial.print("  Motor Speed: ");
-        Serial.print(motorSpeed);
-        Serial.print(step1.getSpeedRad());
-        Serial.println(' ');
-    }
-    delay(1);
-  }
-}
-
-void motorControl() {
-  step1.setTargetSpeedRad(10);
-  step2.setTargetSpeedRad(-10);
-}
+// Returns pitch angle from MPU6050
