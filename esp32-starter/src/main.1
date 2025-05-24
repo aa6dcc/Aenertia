@@ -34,7 +34,7 @@ const float dt = LOOP_INTERVAL / 1000;
 const float C = 0.98;
 float theta_prev = 0;
 
-float tilt_target = -0.022;
+float tilt_target = 0.16;
 float tilt_error = 0;
 float tilt_last_error = 0;
 float tilt_derivative = 0;
@@ -43,8 +43,8 @@ float corrected_a = 0;
 float gyro_rate=0;
 int direction;
 
-float kp = -1000;
-float kd = -20;
+float kp = -800;
+float kd = -75;
 float ki = 0;
 
 //Global objects
@@ -150,7 +150,7 @@ void loop()
 
     //Calculate Tilt using accelerometer and sin x = x approximation for a small tilt angle
     float theta_a = atan2(a.acceleration.z,  a.acceleration.x);
-    gyro_rate = g.gyro.x-0.15;
+    gyro_rate = g.gyro.y;
     float theta_n = complementaryFilter(theta_a, gyro_rate, theta_prev, dt, C);
     theta_prev = theta_n;
     tiltx = theta_n;
@@ -160,7 +160,8 @@ void loop()
     tilt_integral = tilt_integral + tilt_error * LOOP_INTERVAL;
     tilt_last_error = tilt_error;
 
-    corrected_a = -(tilt_error * kp + tilt_derivative * kd + tilt_error * ki);
+    corrected_a = tilt_error * kp + tilt_derivative * kd + tilt_error * ki;
+
     if(corrected_a > 0){
       direction = 1;
     }else{
@@ -169,8 +170,8 @@ void loop()
 
     step1.setAccelerationRad(corrected_a);
     step2.setAccelerationRad(corrected_a);
-    step1.setTargetSpeedRad(direction*10);
-    step2.setTargetSpeedRad(-direction*10);
+    step1.setTargetSpeedRad(direction*15);
+    step2.setTargetSpeedRad(-direction*15);
 
   }
 
@@ -195,8 +196,8 @@ void loop()
     Serial.print(step1.getSpeedRad());
     Serial.print(' ');
     Serial.print((readADC(0) * VREF)/4095.0);
-    Serial.println();
-    Serial.print(gyro_rate);
     Serial.print(' ');
+    Serial.print(gyro_rate);
+    Serial.println(' ');
   }
 }

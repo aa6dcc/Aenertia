@@ -30,7 +30,7 @@ const int ADC_MOSI_PIN      = 23;
 // Diagnostic pin for oscilloscope
 const int TOGGLE_PIN        = 32;
 
-const int PRINT_INTERVAL    = 500;
+const int PRINT_INTERVAL    = 300;
 const int LOOP_INTERVAL     = 5;
 const int STEPPER_INTERVAL_US = 20;
 
@@ -38,7 +38,7 @@ const float VREF = 4.096;
 const float C = 0.98;
 float theta_prev = 0;
 
-float tilt_target = 0;
+float tilt_target = 0.166;
 float tilt_error = 0;
 float tilt_last_error = 0;
 float tilt_derivative = 0;
@@ -54,20 +54,23 @@ float gyro_integral = 0;
 
 float corrected_a = 0;
 int direction;
-float max_acc = 100;
+float max_acc = 175;
 float max_speed = 15;
 
-float kp_o = 0;
+float kp_o = 8;
 float ki_o = 0;
-float kd_o = 0;
+float kd_o = 0.9;
 
-float kp = -1000;
+float kp = 85;
 float ki = 0;
-float kd = -20;
+float kd = 0;
 
-float kv = 10;
+float kv = 200;
 float target_speed = 0;
-float dt = LOOP_INTERVAL/1000.0;
+float last_speed = 0;
+float dt = 0;
+float last_time = 0;
+float moving_list[3] = {0, 0, 0};
 
 //Global objects
 ESP32Timer ITimer(3);
@@ -77,7 +80,6 @@ step step1(STEPPER_INTERVAL_US,STEPPER1_STEP_PIN,STEPPER1_DIR_PIN );
 step step2(STEPPER_INTERVAL_US,STEPPER2_STEP_PIN,STEPPER2_DIR_PIN );
 
 KalmanFilter gyroKalman(0.01, 0.1);
-
 
 //Interrupt Service Routine for motor update
 //Note: ESP32 doesn't support floating point calculations in an ISR
@@ -110,6 +112,8 @@ uint16_t readADC(uint8_t channel) {
   uint16_t result = ((RX0 & 0x0F) << 8) | rx1; // Combine high and low byte into 12-bit result
   return result;
 }
+
+
 
 void setup()
 {
@@ -178,12 +182,21 @@ void loop()
     mpu.getEvent(&a, &g, &temp);
 
     //Calculate Tilt using accelerometer and sin x = x approximation for a small tilt angle
-    float theta_a = atan2(a.acceleration.z,  a.acceleration.x);
-    gyro_rate = g.gyro.x;
-    gyro_rate = gyroKalman.update(g.gyro.x);
+    float theta_a = atan2(a.acceleration.x, a.acceleration.z);
+
+
+    gyro_rate = gyroKalman.update(g.gyro.y)-0.04;
+    dt = (millis()-last_time)/1000;
     float theta_n = complementaryFilter(theta_a, gyro_rate, theta_prev, dt, C);
+
+    moving_list[2] = moving_list[1];
+    moving_list[1] = moving_list[0];
+    moving_list[0] = theta_n;
+    theta_n = 0.6*moving_list[0] + 0.3*moving_list[1] + 0.1*moving_list[2];
+
     theta_prev = theta_n;
     tiltx = theta_n;
+    last_time = millis();
 
     //tilt error calculation
     tilt_error = tilt_target - tiltx;
@@ -207,9 +220,11 @@ void loop()
     corrected_a = clamp(corrected_a, max_acc, -max_acc);
 
     //calculation for target wheel angular velocity
-    target_speed =kv*gyro_rate;
+    target_speed = 0.7 * kv*gyro_rate + 0.3*last_speed;
     target_speed = clamp(target_speed, max_speed, -max_speed);
 
+    last_speed = target_speed;
+    
     //set wheel target speed
     step1.setTargetSpeedRad(target_speed);
     step2.setTargetSpeedRad(-target_speed);
@@ -241,9 +256,9 @@ void loop()
     Serial.print(step1.getSpeedRad());
     Serial.print(' ');
     Serial.print((readADC(0) * VREF)/4095.0);
-    Serial.println();
-    Serial.print(gyro_rate);
     Serial.print(' ');
+    Serial.print(gyro_rate);
+    Serial.println(' ');
   }
 
   //For Serial Plotter
