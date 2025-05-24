@@ -31,7 +31,7 @@ const int ADC_MOSI_PIN      = 23;
 const int TOGGLE_PIN        = 32;
 
 const int PRINT_INTERVAL    = 300;
-const int LOOP_INTERVAL     = 5;
+const int LOOP_INTERVAL     = 10;
 const int STEPPER_INTERVAL_US = 20;
 
 const float VREF = 4.096;
@@ -121,7 +121,7 @@ void setup()
   Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);
   pinMode(TOGGLE_PIN,OUTPUT);
 
-  // Try to initialize Accelerometer/Gyroscope
+  // // Try to initialize Accelerometer/Gyroscope
   if (!mpu.begin()) {
     Serial.println("Failed to find MPU6050 chip");
     while (1) {
@@ -186,7 +186,8 @@ void loop()
 
 
     gyro_rate = gyroKalman.update(g.gyro.y)-0.04;
-    dt = (millis()-last_time)/1000;
+
+    dt = (millis()-last_time)/1000.0;
     float theta_n = complementaryFilter(theta_a, gyro_rate, theta_prev, dt, C);
 
     moving_list[2] = moving_list[1];
