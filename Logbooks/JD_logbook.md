@@ -74,6 +74,8 @@ However, during the process, we should strictly limit the theta angle to make it
 
 A problem of power raised during the process. Raspberry pi would automatically restart due to low voltage when motors are running. This is caused by motors drawing to much current from the circuit board and voltage regulaion is not done well enough to conpenstate for the power drawn. This should be fixed by further power monitoring. 
 
+# Server should also be used in making a remote controller.
+
 
 
 
