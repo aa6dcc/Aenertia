@@ -9,6 +9,7 @@
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
 #include <step.h>
+#include <Kalman.h>
 
 #define RXD2 25
 #define TXD2 26
@@ -53,6 +54,8 @@ float gyro_integral = 0;
 
 float corrected_a = 0;
 int direction;
+float max_acc = 100;
+float max_speed = 15;
 
 float kp_o = 0;
 float ki_o = 0;
@@ -72,6 +75,8 @@ Adafruit_MPU6050 mpu;         //Default pins for I2C are SCL: IO22, SDA: IO21
 
 step step1(STEPPER_INTERVAL_US,STEPPER1_STEP_PIN,STEPPER1_DIR_PIN );
 step step2(STEPPER_INTERVAL_US,STEPPER2_STEP_PIN,STEPPER2_DIR_PIN );
+
+KalmanFilter gyroKalman(0.01, 0.1);
 
 
 //Interrupt Service Routine for motor update
@@ -152,17 +157,10 @@ float complementaryFilter(float theta_a, float gyro_rate, float theta_prev, floa
 }
 
 float clamp(float input, float max, float min){
-  int output;
-  if(input > max){
-    int output = max;
-  }else if(input < min){
-    int output  = min;
-  }else{
-    output = input;
-  }
-  return output;
+  if (input > max) return max;
+  else if (input < min) return min;
+  else return input;
 }
-
 
 void loop()
 {
@@ -182,6 +180,7 @@ void loop()
     //Calculate Tilt using accelerometer and sin x = x approximation for a small tilt angle
     float theta_a = atan2(a.acceleration.z,  a.acceleration.x);
     gyro_rate = g.gyro.x;
+    gyro_rate = gyroKalman.update(g.gyro.x);
     float theta_n = complementaryFilter(theta_a, gyro_rate, theta_prev, dt, C);
     theta_prev = theta_n;
     tiltx = theta_n;
@@ -191,6 +190,7 @@ void loop()
     tilt_derivative = (tilt_error - tilt_last_error) / dt;
     tilt_integral = tilt_integral + tilt_error * dt;
     tilt_last_error = tilt_error;
+    tilt_integral = clamp(tilt_integral, 100, -100);
 
     //controller for target angular velocity of the bot
     gyro_target = kp_o*tilt_error + ki_o*tilt_integral + kd_o*tilt_derivative;
@@ -198,14 +198,17 @@ void loop()
     //gyro error calculation
     gyro_error = gyro_target - gyro_rate;
     gyro_derivative = (gyro_error - gyro_last_error)/ dt;
-    gyro_integral = gyro_integral + gyro_integral * dt;
+    gyro_integral = gyro_integral + gyro_error * dt;
     gyro_last_error = gyro_error;
+    gyro_integral = clamp(gyro_integral, 100, -100);
 
     //controller for target acceleration of the wheels
     corrected_a = kp*gyro_error + ki*gyro_integral + kd*gyro_derivative;
+    corrected_a = clamp(corrected_a, max_acc, -max_acc);
 
     //calculation for target wheel angular velocity
     target_speed =kv*gyro_rate;
+    target_speed = clamp(target_speed, max_speed, -max_speed);
 
     //set wheel target speed
     step1.setTargetSpeedRad(target_speed);
@@ -242,4 +245,9 @@ void loop()
     Serial.print(gyro_rate);
     Serial.print(' ');
   }
+
+  //For Serial Plotter
+  // if(millis() % 20 == 0){
+  //   Serial.println(tiltx);
+  // }
 }
