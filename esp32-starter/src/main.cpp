@@ -25,7 +25,7 @@ const int ADC_MOSI_PIN      = 23;
 const int TOGGLE_PIN        = 32;
 
 const int PRINT_INTERVAL    = 500;
-const int LOOP_INTERVAL     = 5;
+const int LOOP_INTERVAL     = 10;
 const int STEPPER_INTERVAL_US = 20;
 
 const float VREF = 4.096;
@@ -56,12 +56,12 @@ bool TimerHandler(void * timerNo)
 
 uint16_t readADC(uint8_t channel) {
   uint8_t TX0 = 0x06 | (channel >> 2);  // Command Byte 0 = Start bit + single-ended mode + MSB of channel
-  uint8_t tx1 = (channel & 0x03) << 6;  // Command Byte 1 = Remaining 2 bits of channel
+  uint8_t TXA = (channel & 0x03) << 6;  // Command Byte 1 = Remaining 2 bits of channel
 
   digitalWrite(ADC_CS_PIN, LOW); 
 
   SPI.transfer(TX0);                    // Send Command Byte 0
-  uint8_t RX0 = SPI.transfer(TX1);      // Send Command Byte 1 and receive high byte of result
+  uint8_t RX0 = SPI.transfer(TXA);      // Send Command Byte 1 and receive high byte of result
   uint8_t rx1 = SPI.transfer(0x00);     // Send dummy byte and receive low byte of result
 
   digitalWrite(ADC_CS_PIN, HIGH); 
@@ -114,21 +114,21 @@ float complementaryFilter(float theta_a, float gyro_rate, float theta_prev, floa
     float theta_n = (1 - C) * theta_a + C * (gyro_rate * dt + theta_prev);
     return theta_n;
 }
-const float dt = LOOP_INTERVAL / 1000;
-const float C = 0.98;
+const float dt = LOOP_INTERVAL / 1000.0f;
+const float C = 0.85;
 float theta_prev = 0;
 
-float tilt_target = -0.037;
+float tilt_target = 0.012;
 float tilt_error = 0;
 float tilt_last_error = 0;
 float tilt_derivative = 0;
 float tilt_integral = 0; 
-float acc_est = 20;
+float acc_est = 0;
 float speed_target_rad = 0;
-const float speed_max_rad = 55;
-const float max_acc = 200;
+const float speed_value_rad = 5;
+const float max_acc = 100;
 
-float kp = -10000;
+float kp = -9000;
 float kd = 0;
 float ki = 0;
 //const float kx = 200;
@@ -156,30 +156,29 @@ void loop()
     tiltx = theta_n;
 
     tilt_error = tilt_target - tiltx;
-    tilt_derivative = (tilt_error - tilt_last_error) / LOOP_INTERVAL;
-    tilt_integral = tilt_integral + tilt_error * LOOP_INTERVAL;
+    tilt_derivative = (tilt_error - tilt_last_error) / dt;
+    tilt_integral = tilt_integral + tilt_error * dt;
     tilt_last_error = tilt_error;
 
-    if(tilt_error <= 0.01 && tilt_error >= -0.01){
-      speed_target_rad = 0;
+    acc_est = tilt_error * kp + tilt_derivative * kd + tilt_integral * ki;
+    step1.setAccelerationRad(acc_est);
+    step2.setAccelerationRad(acc_est);
+
+    if (acc_est > max_acc) acc_est = max_acc;
+    if (acc_est < -max_acc) acc_est = -max_acc;
+    
+    if(acc_est > 0){
+      speed_target_rad = speed_value_rad;
     }
     else{
-      speed_target_rad = tilt_error * kp + tilt_derivative * kd + tilt_integral * ki;
+      speed_target_rad = -speed_value_rad;
     }
-    if (speed_target_rad > speed_max_rad) speed_target_rad = speed_max_rad;
-    if (speed_target_rad < -speed_max_rad) speed_target_rad = -speed_max_rad;
 
     step1.setTargetSpeedRad(speed_target_rad);
     step2.setTargetSpeedRad(-speed_target_rad);
 
     //acc_est = (speed_target_rad - step1.getSpeedRad()) / LOOP_INTERVAL * kx;  // rad/s^2
     // acc_est = kx * tilt_error;
-    // if (acc_est > max_acc) acc_est = max_acc;
-    // if (acc_est < -max_acc) acc_est = -max_acc;
-
-    step1.setAccelerationRad(acc_est);
-    step2.setAccelerationRad(acc_est);
-
   }
 
   if (Serial2.available()) {
@@ -202,6 +201,8 @@ void loop()
     Serial.print(acc_est);
     Serial.print(' ');
     Serial.print(step1.getSpeedRad());
+    Serial.print(' ');
+    Serial.print(speed_target_rad);
     Serial.print(' ');
     Serial.print((readADC(0) * VREF)/4095.0);
     Serial.println();
