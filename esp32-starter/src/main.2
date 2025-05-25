@@ -10,7 +10,6 @@
 #include <Adafruit_Sensor.h>
 #include <step.h>
 #include <Kalman.h>
-#include "BluetoothSerial.h"
 
 #define RXD2 25
 #define TXD2 26
@@ -31,7 +30,7 @@ const int ADC_MOSI_PIN      = 23;
 // Diagnostic pin for oscilloscope
 const int TOGGLE_PIN        = 32;
 
-const int PRINT_INTERVAL    = 1000;
+const int PRINT_INTERVAL    = 300;
 const int LOOP_INTERVAL     = 10;
 const int STEPPER_INTERVAL_US = 20;
 
@@ -39,20 +38,12 @@ const float VREF = 4.096;
 const float C = 0.98;
 float theta_prev = 0;
 
-float velocity = 0;
-float velocity_target = 0;
-float velocity_error = 0;
-float velocity_last_error = 0;
-float velocity_derivative = 0;
-float velocity_integral = 0; 
-
-float tilt_target_bias = 0.166;
-float tilt_target_control = 0;
-float tilt_target = 0;
+float tilt_target = 0.166;
 float tilt_error = 0;
 float tilt_last_error = 0;
 float tilt_derivative = 0;
 float tilt_integral = 0; 
+
 
 float gyro_rate=0;
 float gyro_target = 0;
@@ -65,10 +56,6 @@ float corrected_a = 0;
 int direction;
 float max_acc = 175;
 float max_speed = 15;
-
-float kp_v = 0;
-float ki_v = 0;
-float kd_v = 0;
 
 float kp_o = 8;
 float ki_o = 0;
@@ -83,8 +70,6 @@ float target_speed = 0;
 float last_speed = 0;
 float dt = 0;
 float last_time = 0;
-float command_time = 0;
-bool EXECUTING = false;
 float moving_list[3] = {0, 0, 0};
 
 //Global objects
@@ -95,8 +80,6 @@ step step1(STEPPER_INTERVAL_US,STEPPER1_STEP_PIN,STEPPER1_DIR_PIN );
 step step2(STEPPER_INTERVAL_US,STEPPER2_STEP_PIN,STEPPER2_DIR_PIN );
 
 KalmanFilter gyroKalman(0.01, 0.1);
-
-BluetoothSerial SerialBT;
 
 //Interrupt Service Routine for motor update
 //Note: ESP32 doesn't support floating point calculations in an ISR
@@ -130,38 +113,26 @@ uint16_t readADC(uint8_t channel) {
   return result;
 }
 
-void go_forward(float speed){
-  velocity_target = speed;
-}
-void go_backward(float speed){
-  velocity_target = speed;
-}
-void stop(){
-  velocity_target = 0;
-}
-
 
 
 void setup()
 {
   Serial.begin(115200);
   Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);
-  SerialBT.begin("ESP32_BT");    // Bluetooth device name
-  Serial.println("Bluetooth Started! Pair with ESP32_BT");
   pinMode(TOGGLE_PIN,OUTPUT);
 
   // // Try to initialize Accelerometer/Gyroscope
-  // if (!mpu.begin()) {
-  //   Serial.println("Failed to find MPU6050 chip");
-  //   while (1) {
-  //     delay(10);
-  //   }
-  // }
-  // Serial.println("MPU6050 Found!");
+  if (!mpu.begin()) {
+    Serial.println("Failed to find MPU6050 chip");
+    while (1) {
+      delay(10);
+    }
+  }
+  Serial.println("MPU6050 Found!");
 
-  // mpu.setAccelerometerRange(MPU6050_RANGE_2_G);
-  // mpu.setGyroRange(MPU6050_RANGE_250_DEG);
-  // mpu.setFilterBandwidth(MPU6050_BAND_44_HZ);
+  mpu.setAccelerometerRange(MPU6050_RANGE_2_G);
+  mpu.setGyroRange(MPU6050_RANGE_250_DEG);
+  mpu.setFilterBandwidth(MPU6050_BAND_44_HZ);
 
   //Attach motor update ISR to timer to run every STEPPER_INTERVAL_US μs
   if (!ITimer.attachInterruptInterval(STEPPER_INTERVAL_US, TimerHandler)) {
@@ -169,6 +140,9 @@ void setup()
     while (1) delay(10);
     }
   Serial.println("Initialised Interrupt for Stepper");
+
+  //Set motor acceleration values
+
 
   //Enable the stepper motor drivers
   pinMode(STEPPER_EN_PIN,OUTPUT);
@@ -204,18 +178,14 @@ void loop()
     loopTimer += LOOP_INTERVAL;
     
     // Fetch data from MPU6050
-    // sensors_event_t a, g, temp;
-    // mpu.getEvent(&a, &g, &temp);
+    sensors_event_t a, g, temp;
+    mpu.getEvent(&a, &g, &temp);
 
-    // //Calculate Tilt using accelerometer and sin x = x approximation for a small tilt angle
-    // float theta_a = atan2(a.acceleration.x, a.acceleration.z);
+    //Calculate Tilt using accelerometer and sin x = x approximation for a small tilt angle
+    float theta_a = atan2(a.acceleration.x, a.acceleration.z);
 
-    // gyro_rate = gyroKalman.update(g.gyro.y)-0.04;
 
-    float theta_a = 0;
-    float gyro_rate = 0;
-
-    velocity = (step1.getSpeedRad()-step2.getSpeedRad())/2;    
+    gyro_rate = gyroKalman.update(g.gyro.y)-0.04;
 
     dt = (millis()-last_time)/1000.0;
     float theta_n = complementaryFilter(theta_a, gyro_rate, theta_prev, dt, C);
@@ -228,15 +198,6 @@ void loop()
     theta_prev = theta_n;
     tiltx = theta_n;
     last_time = millis();
-
-    velocity_error = velocity_target-velocity;
-    velocity_derivative = (velocity_error - velocity_last_error)/dt;
-    velocity_integral = velocity_integral + velocity_error * dt;
-    velocity_last_error = velocity_error;
-    velocity_integral = clamp(velocity_integral, 10, -10);
-
-    tilt_target_control = kp_v * velocity_error + kd_v * velocity_derivative;
-    tilt_target = tilt_target_control + tilt_target_bias;
 
     //tilt error calculation
     tilt_error = tilt_target - tiltx;
@@ -272,52 +233,17 @@ void loop()
     //set wheel acceleration
     step1.setAccelerationRad(corrected_a);
     step2.setAccelerationRad(corrected_a);
+
   }
 
   if (Serial2.available()) {
     String incoming = Serial2.readStringUntil('\n');
     Serial.print("Received Parameters: ");
     Serial.println(incoming);
-    sscanf(incoming.c_str(), "%f %f %f %f", &kp, &ki, &kd, &tilt_target_bias);
+    sscanf(incoming.c_str(), "%f %f %f %f", &kp, &ki, &kd, &tilt_target);
     Serial.println("Values Set to: ");
     Serial.printf("Kp = %.2f, Ki = %.2f, Kd = %.2f, Setpoint = %.2f\n", kp, ki, kd, tilt_target);
   }
-
-  if (SerialBT.available()) {
-    
-    String command = SerialBT.readStringUntil('\n');
-    Serial.print("Received Command: ");
-    Serial.println(command);
-    if(command == "forward"){
-      go_forward(3);
-      EXECUTING = true;
-      command_time = millis();
-    }else if(command == "backward"){
-      go_backward(3);
-      EXECUTING = true;
-      command_time = millis();
-    }else if(command == "Stop"){
-      stop();
-      EXECUTING = false;
-    }else{
-      Serial.print("Received Parameters: ");
-      Serial.println(command);
-      sscanf(command.c_str(), "%f %f %f %f %f %f %f %f", &kp, &kd, &kp_o, &kd_o, &kp_v, &kd_v, &kv, &tilt_target_bias);
-      Serial.printf("Updated:\nInner: kp=%.2f kd=%.2f\n", kp, kd);
-      Serial.printf("Mid: kp_o=%.2f kd_o=%.2f\n", kp_o, kd_o);
-      Serial.printf("Outer: kp_v=%.2f kd_v=%.2f\n", kp_v, kd_v);
-      Serial.printf("kv=%.2f, Bias=%.2f\n", kv, tilt_target_bias);
-    }
-  }
-
-  if(millis() > command_time + 1000 && EXECUTING){
-      stop();
-      EXECUTING = false;
-  }
-
-  // if (Serial.available()) {
-  //   SerialBT.write(Serial.read()); // Send data from Serial Monitor to BT
-  // }
 
   
   //Print updates every PRINT_INTERVAL ms
@@ -333,9 +259,7 @@ void loop()
     Serial.print((readADC(0) * VREF)/4095.0);
     Serial.print(' ');
     Serial.print(gyro_rate);
-    Serial.print(' ');
-    Serial.print("Kp = ");
-    Serial.println(kp);
+    Serial.println(' ');
   }
 
   //For Serial Plotter
