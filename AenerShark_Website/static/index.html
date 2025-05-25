@@ -129,10 +129,11 @@
 
     // Flash LED via HTTP endpoint
     function flashLED() {
-      fetch('/flash-led')
-        .then(resp => resp.json())
-        .then(obj => alert(obj.message || JSON.stringify(obj)))
-        .catch(err => alert("Failed to flash LED: " + err));
+      if (!client.connected) {
+      alert("MQTT not connected yet.");
+      return;
+    }
+    client.publish('robot/led', 'flash');
     }
 
     // Directional controls
