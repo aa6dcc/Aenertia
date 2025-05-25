@@ -1,8 +1,7 @@
 import paho.mqtt.client as mqtt
 import serial
 import threading # Threading is a library that allows us to run other tasks that the current one in the background
-from time import wait
-
+from time import sleep
 #Serial configf
 SERIAL_PORT = "/dev/ttyUSB0"
 baud_rate = 115200
@@ -20,10 +19,11 @@ def send_2_esp(command):
 def fake_cv_loop(): # This loop will go until cv_disabled is called. Hozever because we are stuck in the loop we cannot check if the mqtt published disabled
     while cv_enabled:
         print("LED is on")
-        send_2_esp("Led_ON")
-        wait(2)
+        send_2_esp("LED_ON")
+        sleep(2)
         print("LED is off")
         send_2_esp("LED_OFF")
+        sleep(2)
 
 
 def on_connect(client, userdata, flags, rc):
@@ -34,12 +34,13 @@ def on_connect(client, userdata, flags, rc):
 def on_message(client, userdata, msg):
     global cv_enabled
 
-    payload = msg.payload
+    payload = msg.payload.decode()
     print(f"Topic:{msg.topic} ; Command: {payload}")
 
     if payload == "enable cv":
         if not cv_enabled:
             cv_enabled = True
+            print("Cv enabled")
             threading.Thread(target=fake_cv_loop, daemon=True).start() #To fix this we use threading. Threading isolates the code we target and procceeds zith the rest of the code.
     elif payload == "disable cv":
         cv_enabled = False
