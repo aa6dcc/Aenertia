@@ -1,0 +1,23 @@
+#include <Wire.h>
+#include <Arduino.h>
+
+void setup() {
+  Wire.begin(); // Defaults to GPIO 21 (SDA) and 22 (SCL)
+  Serial.begin(115200);
+  while (!Serial); // Wait for Serial Monitor (for boards like Leonardo)
+
+  Serial.println("I2C Scanner running...");
+
+  for (uint8_t address = 1; address < 127; address++) {
+    Wire.beginTransmission(address);
+    if (Wire.endTransmission() == 0) {
+      Serial.print("Found I2C device at 0x");
+      Serial.println(address, HEX);
+    }
+    delay(10);
+  }
+
+  Serial.println("Scan complete.");
+}
+
+void loop() {}

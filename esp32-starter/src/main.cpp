@@ -260,42 +260,6 @@ void loop()
     step2.setAccelerationRad(corrected_a);
   }
 
-  // if (Serial.available()) {
-    
-  //   String command = Serial.readStringUntil('\n');
-  //   Serial.print("Received Command: ");
-  //   Serial.println(command);
-  //   if(command == "forward"){
-  //     go_forward(3);
-  //     EXECUTING = true;
-  //     command_time = millis();
-  //   }else if(command == "backward"){
-  //     go_backward(3);
-  //     EXECUTING = true;
-  //     command_time = millis();
-  //   }else if(command == "Stop"){
-  //     stop();
-  //     EXECUTING = false;
-  //   }else{
-  //     Serial.print("Received Parameters: ");
-  //     Serial.println(command);
-  //     sscanf(command.c_str(), "%f %f %f %f %f %f %f %f", &kp, &kd, &kp_o, &kd_o, &kp_v, &kd_v, &kv, &tilt_target_bias);
-  //     Serial.printf("Updated:\nInner: kp=%.2f kd=%.2f\n", kp, kd);
-  //     Serial.printf("Mid: kp_o=%.2f kd_o=%.2f\n", kp_o, kd_o);
-  //     Serial.printf("Outer: kp_v=%.2f kd_v=%.2f\n", kp_v, kd_v);
-  //     Serial.printf("kv=%.2f, Bias=%.2f\n", kv, tilt_target_bias);
-  //   }
-  // }
-
-  // if(millis() > command_time + 1000 && EXECUTING){
-  //     stop();
-  //     EXECUTING = false;
-  // }
-
-  // if (Serial.available()) {
-  //   SerialBT.write(Serial.read()); // Send data from Serial Monitor to BT
-  // }
-
   
   //Print updates every PRINT_INTERVAL ms
   //Line format: X-axis tilt, Motor speed, A0 Voltage
@@ -314,9 +278,4 @@ void loop()
     Serial.print("Tilt_target: ");
     Serial.println(tilt_target);
   }
-
-  //For Serial Plotter
-  // if(millis() % 20 == 0){
-  //   Serial.println(tiltx);
-  // }
 }
