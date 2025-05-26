@@ -89,7 +89,7 @@ The ADC choice would be MCP3208 since it is a most common 8 channel ADC that is 
 
 ## Measurement and Amplification
 
-In between the battery and the motors, there is a $ 100m\Omega $ resistor. The current to the motors is measured to be around 1A-1.5A when the motor is running at full speed, and the celing for current should be 2A since the fuse would burn if it goes above. 
+In between the battery and the motors, there is a $100m\Omega$ resistor. The current to the motors is measured to be around 1A-1.5A when the motor is running at full speed, and the celing for current should be 2A since the fuse would burn if it goes above. 
 Thus, the range of voltage across the shunt resistance should be 0 to 0.2V. 
 The full range of ADC conversion is 0 to 3.3V, so an amplification of 15.5 times is required. 
 
@@ -104,7 +104,7 @@ Amplifier2 should connected to 0V (GND), 3.3V (Vs), IM+ (V+), IMOT (V-).
 ADC should be connected to 0V (GND), 3.3V (Vcc), Amplifier1 Output (Channel1), Amplifier2 Output (Channel3).
 
 # Circuit Diagram
-![My Photo](JD_Files/Circuit%20Diagram%20PCB.png)
+![Circuit](JD_Files/Circuit%20Diagram%20PCB.png)
 
 
 
