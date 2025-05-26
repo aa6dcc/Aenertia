@@ -42,7 +42,7 @@ float velocity_last_error = 0;
 float velocity_derivative = 0;
 float velocity_integral = 0; 
 
-float tilt_target_bias = 0.015;
+float tilt_target_bias = 0.180;
 float tilt_target_control = 0;
 float tilt_target = 0;
 float tilt_error = 0;
@@ -62,11 +62,11 @@ int direction;
 float max_acc = 100;
 float max_speed = 15;
 
-float kp_v = 0;
+float kp_v = 0.005;
 float ki_v = 0;
-float kd_v = 0;
+float kd_v = 0.001;
 
-float kp_o = 10;
+float kp_o = 8;
 float ki_o = 0;
 float kd_o = 1;
 
@@ -200,7 +200,7 @@ void loop()
     //Calculate Tilt using accelerometer and sin x = x approximation for a small tilt angle
     float theta_a = atan2(a.acceleration.z, a.acceleration.x);
 
-    gyro_rate = gyroKalman.update(g.gyro.y)-0.01;
+    gyro_rate = gyroKalman.update(g.gyro.y)-0.03;
 
     // float theta_a = 0;
     // float gyro_rate = 0;
@@ -222,7 +222,7 @@ void loop()
 
     tilt_target_control = kp_v * velocity_error + kd_v * velocity_derivative;
     tilt_target = tilt_target_control + tilt_target_bias;
-    //tilt_target = clamp(velocity_integral, 0.0087, -0.0087);
+    tilt_target = clamp(tilt_target, 0.02, -0.02);
 
     //tilt error calculation
     tilt_error = tilt_target - tiltx;
@@ -311,8 +311,8 @@ void loop()
     Serial.print(' ');
     Serial.print(gyro_rate);
     Serial.print(' ');
-    Serial.print("Tilt_target: ");
-    Serial.println(tilt_target);
+    Serial.print("Gyro_rate: ");
+    Serial.println(gyro_rate);
   }
 
   //For Serial Plotter
