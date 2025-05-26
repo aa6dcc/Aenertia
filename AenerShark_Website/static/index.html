@@ -5,48 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Aenertia Robot Control Panel</title>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-    }
-    h1, h2, h3 {
-      margin-bottom: 10px;
-    }
-    form {
-      margin-bottom: 20px;
-    }
-    input, button {
-      margin: 5px;
-    }
-    /* Live video styling */
-    #videoStream {
-      width: 100%;
-      max-width: 640px;
-      border: 1px solid #ccc;
-      margin-bottom: 20px;
-    }
-    /* D-pad grid */
-    #dpad {
-      display: grid;
-      grid-template-columns: 80px 80px 80px;
-      grid-template-rows:    80px 80px 80px;
-      gap: 10px;
-      justify-content: center;
-      align-items: center;
-      margin-top: 20px;
-    }
-    #up    { grid-column: 2; grid-row: 1; }
-    #left  { grid-column: 1; grid-row: 2; }
-    #right { grid-column: 3; grid-row: 2; }
-    #down  { grid-column: 2; grid-row: 3; }
-    #dpad img {
-      width: 100%;
-      height: 100%;
-      cursor: pointer;
-      user-select: none;
-    }
-  </style>
+  <!-- Link out to external stylesheet -->
+  <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
   <h1>Aenertia Robot Control Panel</h1>
@@ -99,12 +59,10 @@
 
     client.on('connect', () => {
       console.log('🔌 MQTT connected');
-      // enable all buttons once connected
       document.querySelectorAll('button').forEach(btn => btn.disabled = false);
     });
     client.on('error', err => console.error('MQTT error:', err));
 
-    // Publish utility
     function publishCommand(topic, message) {
       if (client.connected) {
         client.publish(topic, message);
@@ -113,12 +71,8 @@
       }
     }
 
-    // PID submission
     function submitPID(loopType) {
-      if (!client.connected) {
-        alert("MQTT not connected yet.");
-        return;
-      }
+      if (!client.connected) { alert("MQTT not connected yet."); return; }
       const P   = document.getElementById(loopType + 'P').value || '0';
       const D   = document.getElementById(loopType + 'D').value || '0';
       const I   = document.getElementById(loopType + 'I').value || '0';
@@ -127,16 +81,11 @@
       client.publish('robot/pid', msg);
     }
 
-    // Flash LED via HTTP endpoint
     function flashLED() {
-      if (!client.connected) {
-      alert("MQTT not connected yet.");
-      return;
-    }
-    client.publish('robot/led', 'flash');
+      if (!client.connected) { alert("MQTT not connected yet."); return; }
+      client.publish('robot/led', 'flash');
     }
 
-    // Directional controls
     function startMove(direction) {
       publishCommand('robot/serial', direction);
     }

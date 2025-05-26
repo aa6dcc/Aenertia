@@ -1,0 +1,50 @@
+/* style.css */
+
+body {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+}
+
+h1, h2, h3 {
+  margin-bottom: 10px;
+}
+
+form {
+  margin-bottom: 20px;
+}
+
+input, button {
+  margin: 5px;
+}
+
+/* Live video styling */
+#videoStream {
+  width: 100%;
+  max-width: 640px;
+  border: 1px solid #ccc;
+  margin-bottom: 20px;
+}
+
+/* D-pad grid */
+#dpad {
+  display: grid;
+  grid-template-columns: 80px 80px 80px;
+  grid-template-rows:    80px 80px 80px;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+/* Positioning each button in the grid */
+#up    { grid-column: 2; grid-row: 1; }
+#left  { grid-column: 1; grid-row: 2; }
+#right { grid-column: 3; grid-row: 2; }
+#down  { grid-column: 2; grid-row: 3; }
+
+#dpad img {
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  user-select: none;
+}
