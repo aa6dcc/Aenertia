@@ -44,18 +44,20 @@
   <h2>LED Control</h2>
   <button id="flashLedBtn" disabled>Flash LED</button>
 
-  <!-- Directional Control -->
+  <!-- Directional Control (with Stop) -->
   <h2>Directional Control (Hold to Move)</h2>
   <div id="dpad">
-    <img id="up"    src="/assets/images/up.png"    alt="Up"
-         onpointerdown="startMove('FORWARD')" onpointerup="stopMove()" onpointerleave="stopMove()" />
-    <img id="left"  src="/assets/images/left.png"  alt="Left"
-         onpointerdown="startMove('LEFT')"    onpointerup="stopMove()" onpointerleave="stopMove()" />
     <div></div>
-    <img id="right" src="/assets/images/right.png" alt="Right"
-         onpointerdown="startMove('RIGHT')"  onpointerup="stopMove()" onpointerleave="stopMove()" />
-    <img id="down"  src="/assets/images/down.png"  alt="Down"
-         onpointerdown="startMove('BACKWARD')" onpointerup="stopMove()" onpointerleave="stopMove()" />
+    <img id="up"    class="arrow" src="/assets/images/up.png"    alt="Up" />
+    <div></div>
+
+    <img id="left"  class="arrow" src="/assets/images/left.png"  alt="Left" />
+    <img id="stop"  class="arrow stop" src="/assets/images/stop.png"  alt="Stop" />
+    <img id="right" class="arrow" src="/assets/images/right.png" alt="Right" />
+
+    <div></div>
+    <img id="down"  class="arrow" src="/assets/images/down.png"  alt="Down" />
+    <div></div>
   </div>
 </body>
 </html>
