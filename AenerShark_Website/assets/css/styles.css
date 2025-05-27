@@ -1,16 +1,82 @@
+/* ===== General Styling ===== */
 body {
   background-color: #f9f9f9;
   font-family: Arial, sans-serif;
   text-align: center;
   padding: 40px;
+  margin: 0;
 }
 
-h1 {
+h1, h2, h3 {
   color: #222;
+  margin-bottom: 10px;
 }
 
-button {
-  padding: 12px 24px;
-  font-size: 16px;
+input {
+  padding: 12px;
+  margin: 5px;
+  font-size: 20px;
+  width: 160px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+/* ===== Image D-Pad Layout ===== */
+.image-dpad {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  margin-top: 60px;
+}
+
+.dpad-middle-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 100px;
+}
+
+.dpad-spacer {
+  width: 200px;
+}
+
+/* ===== Button Images ===== */
+.dpad-btn {
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
   cursor: pointer;
+  transition: transform 0.1s ease, filter 0.2s ease;
+}
+
+.dpad-btn:hover {
+  transform: scale(1.05);
+  filter: brightness(1.1);
+}
+
+.dpad-btn:active {
+  transform: scale(0.95);
+  filter: brightness(0.9);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .dpad-btn {
+    width: 120px;
+    height: 120px;
+  }
+
+  .dpad-middle-row {
+    gap: 60px;
+  }
+
+  .dpad-spacer {
+    width: 120px;
+  }
+
+  input {
+    width: 100px;
+    font-size: 16px;
+  }
 }

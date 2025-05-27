@@ -2,17 +2,17 @@ from matplotlib import pyplot as plt
 from math import sin, cos, asin, radians
 #Definition of samping frequency and simulation time
 f_s = 500
-time = 3
+time = 30
 timescale = 1/f_s
 t = [i*timescale for i in range(0,time*f_s)]
 
 #Definition of variables in the simulation
-k_p = 200
+k_p = 50
 k_i = 0.01
-k_d = 6
+k_d = 4
 
-k_p_vel = 0.01  # 建议初始值
-k_d_vel = 0.0001
+k_p_vel = 0.015  # 建议初始值
+k_d_vel = 0.0005
 
 e_v = 0
 
@@ -23,7 +23,7 @@ velocity_desired = 1
 e_theta = 0
 sensor_bias = radians(0)
 delay_sensor_ms = 0
-delay_torque_ms = 0
+delay_torque_ms = 10
 delay_s = delay_sensor_ms/(1000*timescale)
 delay_t = delay_torque_ms/(1000*timescale)
 
@@ -47,16 +47,22 @@ theta_desired = [0]
 
 #Simulation Loop
 for i in range(1,time*f_s):
+
+    # if((int(i/(time*f_s/3)))%2==0):
+    #     velocity_desired = 1
+    # else:
+    #     velocity_desired = -1
+
     # Outer Loop
     e_d_v = e_v
     e_v = velocity_desired - velocity[i-1]
     e_d_v = (e_v-e_d_v)/timescale
     theta_d_raw = k_p_vel*e_v + k_d_vel*e_d_v
 
-    if theta_d<0:
-        theta_d = max(theta_d, radians(-10))
+    if theta_d_raw<0:
+        theta_d_raw = max(theta_d_raw, radians(-10))
     else:
-        theta_d = min(theta_d, radians(10)) # Clamp
+        theta_d_raw = min(theta_d_raw, radians(10)) # Clamp
 
     alpha_theta_d = 0.05  # smaller = more filtering (lower bandwidth)
     theta_d = (1 - alpha_theta_d) * theta_d + alpha_theta_d * theta_d_raw
@@ -70,7 +76,15 @@ for i in range(1,time*f_s):
     e_i += e_theta
     e_d = (e_theta-e_d)/timescale
     # w_new = k_p*e_theta + k_i*e_i + k_d*e_d
+    
     motor_torque_new = -(k_p*e_theta + k_i*e_i + k_d*e_d)
+    acc_new = motor_torque_new/(mass*r**2+1/2*0.05*r**2)
+    w_new = w[i-1]+acc_new*timescale
+
+    if(i-delay_t < 0):
+        torque_control = 0
+    else:
+        torque_control = (w[i-1]-w[i-2])/timescale*(mass*r**2+1/2*0.05*r**2)
 
     # w.append(w_new)
     if(i-delay_t < 0):
@@ -84,6 +98,7 @@ for i in range(1,time*f_s):
 
     # Angular acceleration
     alpha = torque_new / (mass * height ** 2)
+    
 
     # Integrate
     omega_new = omega[i - 1] + alpha * timescale
