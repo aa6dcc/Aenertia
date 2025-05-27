@@ -1,63 +1,138 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Aenertia Robot Control Panel</title>
-
-  <!-- External CSS -->
-  <link rel="stylesheet" href="/style.css">
-
-  <!-- MQTT client library -->
+  <link rel="stylesheet" href="/static/style.css">
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-  <!-- Your client-side logic -->
-  <script src="/control.js" defer></script>
+  <script src="/static/control.js" defer></script>
 </head>
 <body>
-  <h1>Aenertia Robot Control Panel</h1>
-
-  <!-- Live Camera Feed -->
-  <h2>Live Camera</h2>
-  <img id="videoStream" src="/video_feed" alt="Live Camera Feed" />
-
-  <!-- PID Tuning -->
-  <h2>PID Tuning</h2>
-  <form id="innerForm">
-    <h3>Inner Loop</h3>
-    P: <input type="number" id="innerP" /> 
-    D: <input type="number" id="innerD" /> 
-    I: <input type="number" id="innerI" /> 
-    Setpoint: <input type="number" id="innerSet" />
-    <button type="submit" id="submitInner" disabled>Submit Inner PID</button>
-  </form>
-
-  <form id="outerForm">
-    <h3>Outer Loop</h3>
-    P: <input type="number" id="outerP" /> 
-    D: <input type="number" id="outerD" /> 
-    I: <input type="number" id="outerI" /> 
-    Setpoint: <input type="number" id="outerSet" />
-    <button type="submit" id="submitOuter" disabled>Submit Outer PID</button>
-  </form>
-
-  <!-- Flash LED -->
-  <h2>LED Control</h2>
-  <button id="flashLedBtn" disabled>Flash LED</button>
-
-  <!-- Directional Control (with Stop) -->
-  <h2>Directional Control (Hold to Move)</h2>
-  <div id="dpad">
-    <div></div>
-    <img id="up"    class="arrow" src="/assets/images/up.png"    alt="Up" />
-    <div></div>
-
-    <img id="left"  class="arrow" src="/assets/images/left.png"  alt="Left" />
-    <img id="stop"  class="arrow stop" src="/assets/images/stop.png"  alt="Stop" />
-    <img id="right" class="arrow" src="/assets/images/right.png" alt="Right" />
-
-    <div></div>
-    <img id="down"  class="arrow" src="/assets/images/down.png"  alt="Down" />
-    <div></div>
+  <div class="info-bar">
+    <div id="time">--:--</div>
+    <div id="battery">Battery: --%</div>
   </div>
+
+  <div class="mode-bar-top-left">
+    <form action="/set_mode/manual"><button class="button">Manual</button></form>
+    <form action="/set_mode/autonomous"><button class="button">Autonomous</button></form>
+    <form action="/set_mode/test"><button class="button">Test</button></form>
+  </div>
+
+  <div class="tabs">
+    <button onclick="showTab('pad')">Manual Control</button>
+    <button onclick="showTab('flash')">Test</button>
+    <button onclick="showTab('pid')">PID Values</button>
+    <button onclick="showTab('auto')">Autonomous</button>
+  </div>
+
+  <div id="pad" class="tab active">
+    <div class="card">
+      <img src="/static/images/logo.png" class="logo" alt="Logo">
+      <h1>Arrow Pad Control</h1>
+      <div class="controller">
+        <div class="arrow up"    id="up">↑</div>
+        <div class="arrow down"  id="down">↓</div>
+        <div class="arrow left"  id="left">←</div>
+        <div class="arrow right" id="right">→</div>
+        <div class="arrow stop"  id="stop">■</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="flash" class="tab">
+    <div class="card">
+      <h1>Flash & CV Test</h1>
+      <form action="/led/flash"><button class="button">Flash LED</button></form>
+      <form action="/cv/enable"><button class="button">Enable CV</button></form>
+      <form action="/cv/disable"><button class="button">Disable CV</button></form>
+    </div>
+  </div>
+
+  <div id="pid" class="tab">
+    <div class="card">
+      <h1>PID Values</h1>
+      <h2>Inner Loop</h2>
+      <form action="/submit_inner" method="post">
+        P: <input name="pg"><br>
+        D: <input name="dg"><br>
+        I: <input name="ig"><br>
+        SP: <input name="sp"><br>
+        <button type="submit" class="button">Submit</button>
+      </form>
+      <div id="inner-table"></div>
+
+      <h2>Outer Loop</h2>
+      <form action="/submit_outer" method="post">
+        P: <input name="pg"><br>
+        D: <input name="dg"><br>
+        I: <input name="ig"><br>
+        SP: <input name="sp"><br>
+        ROT:<input name="rot"><br>
+        <button type="submit" class="button">Submit</button>
+      </form>
+      <div id="outer-table"></div>
+    </div>
+  </div>
+
+  <div id="auto" class="tab">
+    <div class="card">
+      <h1>Autonomous</h1>
+      <div class="auto-grid">
+        <div class="auto-column">
+          <form action="/autonomous/follow"><button class="button">Follow Me</button></form>
+        </div>
+        <div class="auto-column">
+          <form action="/autonomous/key_location" method="post">
+            Assign Key: <input name="loc">
+            <button class="button">Assign</button>
+          </form>
+          <form action="/autonomous/return"><button class="button">Return</button></form>
+          <form action="/dashboard/show_keys"><button class="button">Show Keys</button></form>
+          <div id="key-block"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showTab(id) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    function updateTime() {
+      const now = new Date();
+      document.getElementById('time').innerText =
+        now.getHours().toString().padStart(2,'0') + ':' +
+        now.getMinutes().toString().padStart(2,'0');
+    }
+    function updateBattery() {
+      navigator.getBattery()?.then(b=>{
+        document.getElementById('battery').innerText =
+          'Battery: ' + Math.round(b.level * 100) + '%';
+      });
+    }
+
+    // Initial render of PID tables
+    fetch('/pid-values').then(r=>r.json()).then(data=>{
+      const ih = data.inner, oh = data.outer;
+      const renderTable = (rows, headers) => {
+        let html = '<table><tr>' + headers.map(h=>`<th>${h}</th>`).join('') + '</tr>';
+        rows.forEach(r=> html += '<tr>' + r.map(c=>`<td>${c}</td>`).join('') + '</tr>');
+        return html + '</table>';
+      };
+      document.getElementById('inner-table').innerHTML =
+        '<h3>Received Inner</h3>' + renderTable(ih, ['P','D','I','SP']);
+      document.getElementById('outer-table').innerHTML =
+        '<h3>Received Outer</h3>' + renderTable(oh, ['P','D','I','SP','ROT']);
+    });
+
+    // Refresh time/battery
+    updateTime(); updateBattery();
+    setInterval(updateTime, 10000);
+    setInterval(updateBattery, 60000);
+  </script>
 </body>
 </html>
