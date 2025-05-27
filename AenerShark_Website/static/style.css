@@ -1,140 +1,148 @@
-/* ---------- Base ---------- */
-* { box-sizing: border-box; margin: 0; padding: 0; }
+/* --- Reset & Base --- */
+* { box-sizing:border-box; margin:0; padding:0; }
 body {
-  font-family: Arial, sans-serif;
-  background: #f5f5f5;
-  color: #333;
-  line-height: 1.4;
+  font-family:Arial,sans-serif;
+  background:#eef2f7;
+  color:#333;
+  min-height:100vh;
 }
-a { text-decoration: none; color: inherit; }
+a { text-decoration:none; color:inherit; }
 
-/* ---------- Header ---------- */
+/* --- Header --- */
 .site-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #fff;
-  padding: 0.5rem 1rem;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-  position: sticky;
-  top: 0; z-index: 10;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:#fff;
+  padding:0.5rem 1rem;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+  position:sticky; top:0; z-index:100;
 }
-.logo-title {
-  display: flex; align-items: center; gap: 0.5rem;
-}
-.logo { height: 40px; width: auto; }
-.title { font-size: 1.5rem; }
+.logo-title { display:flex; align-items:center; gap:0.5rem; }
+.logo { height:40px; }
+.title { font-size:1.4rem; font-weight:600; }
 
-/* Nav tabs */
-.nav-tabs {
-  display: flex; gap: 0.5rem;
-}
+.nav-tabs { display:flex; gap:0.5rem; }
 .tab-btn {
-  padding: 0.5rem 1rem;
-  background: #fff;
-  border: 1px solid #ccc;
-  border-bottom: none;
-  border-radius: 4px 4px 0 0;
-  cursor: pointer;
-  transition: background .2s;
+  padding:0.5rem 1rem;
+  border:1px solid #ccc;
+  border-bottom:none;
+  background:#f9f9f9;
+  border-radius:4px 4px 0 0;
+  cursor:pointer;
+  transition:background .2s;
 }
-.tab-btn.active {
-  background: #fafafa;
-  border-color: #888;
-  font-weight: bold;
+.tab-btn.active,
+.tab-btn:hover {
+  background:#fff;
+  border-color:#888;
 }
-.tab-btn:hover { background: #f0f0f0; }
+.info-bar { font-size:0.9rem; color:#555; }
 
-/* Info bar */
-.info-bar {
-  font-size: 0.9rem;
-  color: #555;
+/* --- Layout Container --- */
+.container {
+  display:grid;
+  grid-template-columns:200px 1fr;
+  gap:1rem;
+  padding:1rem;
 }
 
-/* ---------- Content & Cards ---------- */
-.content {
-  padding: 1rem;
+/* --- Left Sidebar --- */
+.mode-sidebar {
+  display:flex; flex-direction:column; gap:1rem;
 }
-.tab-content { display: none; }
-.tab-content.active { display: block; }
+.mode-sidebar .button {
+  width:100%;
+}
 
-/* Reusable card */
+/* --- Main Content --- */
+.content { overflow-x:hidden; }
+
+/* --- Tabs Content --- */
+.tab-content { display:none; }
+.tab-content.active { display:block; }
+
+/* --- Cards --- */
 .card {
-  background: #fff;
-  border-radius: 8px;
-  padding: 1rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  margin-bottom: 1.5rem;
+  background:#fff;
+  border-radius:8px;
+  padding:1.5rem;
+  box-shadow:0 4px 12px rgba(0,0,0,0.05);
+  margin-bottom:1.5rem;
 }
 
-/* Button group */
-.button-group {
-  display: flex; gap: 1rem;
+/* --- Buttons --- */
+.button, .tab-btn {
+  font-size:1rem;
 }
-
-/* Standard button */
 .button {
-  padding: 0.6rem 1rem;
-  background: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background .2s;
+  background:#007bff;
+  color:#fff;
+  border:none;
+  border-radius:4px;
+  padding:0.6rem 1.2rem;
+  cursor:pointer;
+  transition:background .2s;
 }
-.button:hover { background: #0056b3; }
+.button:hover { background:#0056b3; }
 
-/* ---------- Arrow Pad ---------- */
+/* --- Arrow Pad --- */
 .controller {
-  display: grid;
+  display:grid;
   grid-template:
     ". up    ." 80px
     "left stop right" 80px
     ". down  ." 80px /
     80px 80px 80px;
-  gap: 0.5rem;
-  justify-content: center;
-  align-items: center;
-  margin-top: 1rem;
+  gap:10px;
+  justify-content:center;
+  align-items:center;
+  margin-top:1rem;
 }
 .arrow {
-  width: 100%; height: 100%;
-  background: #f0f0f0;
-  border: 2px solid #ccc;
-  border-radius: 8px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  transition: transform .1s, background .1s;
+  width:100%; height:100%;
+  background:#f8f8f8;
+  border:2px solid #ccc;
+  border-radius:8px;
+  display:flex; justify-content:center; align-items:center;
+  cursor:pointer;
+  transition:transform .1s, background .1s;
 }
-.arrow:hover { background: #e0e8f0; transform: scale(1.05); }
-.arrow.active { background: #a4c4e0; transform: scale(1.05); }
-.arrow.stop { background: #ff4d4d; color: white; }
+.arrow:hover { background:#e0e8f0; transform:scale(1.05); }
+.arrow.active { background:#a4c4e0; transform:scale(1.05); }
+.arrow.stop { background:#ff4d4d; color:#fff; }
 
-/* ---------- PID Layout ---------- */
+/* --- PID Grid --- */
 .pid-grid {
-  display: flex; gap: 2rem;
-  flex-wrap: wrap;
+  display:flex;
+  gap:2rem;
+  flex-wrap:wrap;
 }
 .pid-grid form label {
-  display: block;
-  margin: 0.5rem 0;
+  display:block;
+  margin:0.5rem 0;
 }
-.table-container { margin-top: 1rem; overflow-x: auto; }
+.table-container {
+  margin-top:1rem;
+  overflow-x:auto;
+}
 table {
-  width: 100%; border-collapse: collapse;
+  width:100%; border-collapse:collapse;
 }
 th, td {
-  border: 1px solid #ccc;
-  padding: 0.5rem;
-  text-align: center;
+  border:1px solid #ccc;
+  padding:0.5rem;
+  text-align:center;
 }
 
-/* ---------- Autonomous ---------- */
+/* --- Autonomous --- */
 .auto-grid {
-  display: flex; gap: 1rem; flex-wrap: wrap;
+  display:flex;
+  gap:1rem;
+  flex-wrap:wrap;
 }
 .key-form {
-  display: flex; gap: 0.5rem; margin: 1rem 0;
+  display:flex;
+  gap:0.5rem;
+  margin:1rem 0;
 }

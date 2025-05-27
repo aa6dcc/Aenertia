@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AenerShark Control Panel</title>
   <link rel="stylesheet" href="/static/style.css">
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
@@ -10,7 +9,7 @@
 </head>
 <body>
 
-  <!-- HEADER -->
+  <!-- TOP HEADER -->
   <header class="site-header">
     <div class="logo-title">
       <img src="/static/images/logo.png" alt="Logo" class="logo">
@@ -23,95 +22,109 @@
       <button class="tab-btn"      data-tab="auto">Autonomous</button>
     </nav>
     <div class="info-bar">
-      <span id="time">--:--</span>  |  <span id="battery">Battery: --%</span>
+      <span id="time">--:--</span> | <span id="battery">Battery: --%</span>
     </div>
   </header>
 
-  <!-- MAIN CONTENT -->
-  <main class="content">
+  <!-- MAIN LAYOUT: left sidebar + main area -->
+  <div class="container">
 
-    <!-- Manual Control -->
-    <section id="pad" class="tab-content active">
-      <div class="card">
-        <h2>Arrow Pad Control</h2>
-        <div class="controller">
-          <img id="up"    class="arrow" src="/static/images/up.png"    alt="Up">
-          <img id="left"  class="arrow" src="/static/images/left.png"  alt="Left">
-          <img id="stop"  class="arrow stop" src="/static/images/stop.png"  alt="Stop">
-          <img id="right" class="arrow" src="/static/images/right.png" alt="Right">
-          <img id="down"  class="arrow" src="/static/images/down.png"  alt="Down">
-        </div>
-      </div>
-    </section>
+    <!-- LEFT SIDEBAR -->
+    <aside class="mode-sidebar">
+      <form action="/set_mode/manual"     method="get"><button class="button">Set Manual</button></form>
+      <form action="/set_mode/autonomous" method="get"><button class="button">Set Autonomous</button></form>
+      <form action="/set_mode/test"       method="get"><button class="button">Set Test Mode</button></form>
+    </aside>
 
-    <!-- Flash & CV Test -->
-    <section id="flash" class="tab-content">
-      <div class="card">
-        <h2>Flash &amp; CV Test</h2>
-        <div class="button-group">
-          <form action="/led/flash"   method="get"><button class="button">Flash LED</button></form>
-          <form action="/cv/enable"   method="get"><button class="button">Enable CV</button></form>
-          <form action="/cv/disable"  method="get"><button class="button">Disable CV</button></form>
-        </div>
-      </div>
-    </section>
+    <!-- CENTRAL CONTENT -->
+    <main class="content">
 
-    <!-- PID Values -->
-    <section id="pid" class="tab-content">
-      <div class="card">
-        <h2>PID Tuning</h2>
-        <div class="pid-grid">
-          <div>
-            <h3>Inner Loop</h3>
-            <form action="/submit_inner" method="post">
-              <label>P:<input name="pg" required></label>
-              <label>D:<input name="dg" required></label>
-              <label>I:<input name="ig" required></label>
-              <label>SP:<input name="sp" required></label>
-              <button class="button" type="submit">Submit</button>
-            </form>
-            <div id="inner-table" class="table-container"></div>
-          </div>
-          <div>
-            <h3>Outer Loop</h3>
-            <form action="/submit_outer" method="post">
-              <label>P:<input name="pg" required></label>
-              <label>D:<input name="dg" required></label>
-              <label>I:<input name="ig" required></label>
-              <label>SP:<input name="sp" required></label>
-              <label>ROT:<input name="rot" required></label>
-              <button class="button" type="submit">Submit</button>
-            </form>
-            <div id="outer-table" class="table-container"></div>
+      <!-- MANUAL CONTROL TAB -->
+      <section id="pad" class="tab-content active">
+        <div class="card">
+          <h2>Arrow Pad Control</h2>
+          <div class="controller">
+            <img id="up"    class="arrow" src="/static/images/up.png"    alt="Up">
+            <img id="left"  class="arrow" src="/static/images/left.png"  alt="Left">
+            <img id="stop"  class="arrow stop" src="/static/images/stop.png"  alt="Stop">
+            <img id="right" class="arrow" src="/static/images/right.png" alt="Right">
+            <img id="down"  class="arrow" src="/static/images/down.png"  alt="Down">
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- Autonomous -->
-    <section id="auto" class="tab-content">
-      <div class="card">
-        <h2>Autonomous Control</h2>
-        <div class="auto-grid">
-          <form action="/autonomous/follow" method="get"><button class="button">Follow Me</button></form>
-          <form action="/autonomous/return" method="get"><button class="button">Return Home</button></form>
+      <!-- TEST TAB -->
+      <section id="flash" class="tab-content">
+        <div class="card">
+          <h2>Flash & CV Test</h2>
+          <div class="button-group">
+            <form action="/led/flash"   method="get"><button class="button">Flash LED</button></form>
+            <form action="/cv/enable"   method="get"><button class="button">Enable CV</button></form>
+            <form action="/cv/disable"  method="get"><button class="button">Disable CV</button></form>
+          </div>
         </div>
-        <hr>
-        <h3>Key Locations</h3>
-        <form action="/autonomous/key_location" method="post" class="key-form">
-          <label>Assign Key: <input name="loc" required></label>
-          <button class="button" type="submit">Assign</button>
-        </form>
-        <div id="key-block" class="table-container"></div>
-        <form action="/dashboard/show_keys" method="get"><button class="button">Show Keys</button></form>
-      </div>
-    </section>
+      </section>
 
-  </main>
+      <!-- PID TAB -->
+      <section id="pid" class="tab-content">
+        <div class="card">
+          <h2>PID Tuning</h2>
+          <div class="pid-grid">
+            <!-- inner -->
+            <div>
+              <h3>Inner Loop</h3>
+              <form action="/submit_inner" method="post">
+                <label>P:<input name="pg" required></label>
+                <label>D:<input name="dg" required></label>
+                <label>I:<input name="ig" required></label>
+                <label>SP:<input name="sp" required></label>
+                <button class="button" type="submit">Submit</button>
+              </form>
+              <div id="inner-table" class="table-container"></div>
+            </div>
+            <!-- outer -->
+            <div>
+              <h3>Outer Loop</h3>
+              <form action="/submit_outer" method="post">
+                <label>P:<input name="pg" required></label>
+                <label>D:<input name="dg" required></label>
+                <label>I:<input name="ig" required></label>
+                <label>SP:<input name="sp" required></label>
+                <label>ROT:<input name="rot" required></label>
+                <button class="button" type="submit">Submit</button>
+              </form>
+              <div id="outer-table" class="table-container"></div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-  <!-- TAB + DATA SCRIPTS -->
+      <!-- AUTONOMOUS TAB -->
+      <section id="auto" class="tab-content">
+        <div class="card">
+          <h2>Autonomous Control</h2>
+          <div class="auto-grid">
+            <form action="/autonomous/follow" method="get"><button class="button">Follow Me</button></form>
+            <form action="/autonomous/return" method="get"><button class="button">Return Home</button></form>
+          </div>
+          <hr>
+          <h3>Key Locations</h3>
+          <form action="/autonomous/key_location" method="post" class="key-form">
+            <label>Assign Key:<input name="loc" required></label>
+            <button class="button" type="submit">Assign</button>
+          </form>
+          <div id="key-block" class="table-container"></div>
+          <form action="/dashboard/show_keys" method="get">
+            <button class="button">Show Key Locations</button>
+          </form>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- TAB & DATA SCRIPT -->
   <script>
-    // Tab switching
     document.querySelectorAll('.tab-btn').forEach(btn=>{
       btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
@@ -122,42 +135,37 @@
       });
     });
 
-    // Time & Battery
     function updateTime(){
-      const now = new Date();
+      const now=new Date();
       document.getElementById('time').textContent =
-        now.getHours().toString().padStart(2,'0') + ':' +
-        now.getMinutes().toString().padStart(2,'0');
+        now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
     }
     function updateBattery(){
-      if(navigator.getBattery) navigator.getBattery().then(b=>{
+      navigator.getBattery()?.then(b=>{
         document.getElementById('battery').textContent =
-          'Battery: ' + Math.round(b.level * 100) + '%';
+          'Battery: '+Math.round(b.level*100)+'%';
       });
     }
     updateTime(); updateBattery();
-    setInterval(updateTime, 10000);
-    setInterval(updateBattery, 60000);
+    setInterval(updateTime,10000);
+    setInterval(updateBattery,60000);
 
-    // Fetch PID & keys data
+    // populate PID tables
     fetch('/pid-values').then(r=>r.json()).then(data=>{
-      const render = (rows,hdrs)=>{
-        let html = '<table><tr>'+ hdrs.map(h=>`<th>${h}</th>`).join('') +'</tr>';
-        rows.forEach(r=>{ html += '<tr>'+ r.map(c=>`<td>${c}</td>`).join('') +'</tr>'; });
-        return html + '</table>';
+      const render=(rows,headers)=>{
+        let html='<table><tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr>';
+        rows.forEach(r=>html+='<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>');
+        return html+'</table>';
       };
-      document.getElementById('inner-table').innerHTML =
-        render(data.inner, ['P','D','I','SP']);
-      document.getElementById('outer-table').innerHTML =
-        render(data.outer, ['P','D','I','SP','ROT']);
+      document.getElementById('inner-table').innerHTML = render(data.inner,['P','D','I','SP']);
+      document.getElementById('outer-table').innerHTML = render(data.outer,['P','D','I','SP','ROT']);
     });
-
+    // populate key table
     fetch('/dashboard/show_keys').then(r=>r.text()).then(html=>{
-      const tmp = document.createElement('div'); tmp.innerHTML = html;
-      const tbl = tmp.querySelector('h3 + table');
+      const tmp=document.createElement('div'); tmp.innerHTML=html;
+      const tbl=tmp.querySelector('h3+table');
       if(tbl) document.getElementById('key-block').appendChild(tbl);
     });
   </script>
-
 </body>
 </html>
