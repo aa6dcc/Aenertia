@@ -137,3 +137,8 @@ Control values tab:
 ![image](https://github.com/user-attachments/assets/12b6dd3e-7cbd-42fe-a55a-45c1d6e55f03)
 
 I had to change the position of the server.py code displaying time and battery so that it could appear on all 3 tabs
+
+I then added 3 different mode types: manual, autonomous and test:
+
+![image](https://github.com/user-attachments/assets/986e52c5-8fb0-4faa-9284-1fbda5848de9)
+
