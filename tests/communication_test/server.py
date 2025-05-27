@@ -42,6 +42,11 @@ def assign_location(loc: str = Form(...)):
     publish.single("autonomous", f"KEY:{loc}", hostname="localhost")
     return render_dashboard()
 
+@app.get("/set_mode/{mode}")
+def set_mode(mode: str):
+    publish.single("mode/set", mode.upper(), hostname="localhost")
+    return {"status": f"Mode set to {mode}"}
+
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard():
     return render_dashboard()
@@ -80,6 +85,18 @@ def render_dashboard():
         <div class="info-bar">
             <div id="time">--:--</div>
             <div id="battery">Battery: --%</div>
+        </div>
+
+        <div class="mode-bar">
+            <form action="/set_mode/manual" method="get" style="display:inline-block">
+                <button type="submit">Set Manual</button>
+            </form>
+            <form action="/set_mode/autonomous" method="get" style="display:inline-block">
+                <button type="submit">Set Autonomous</button>
+            </form>
+            <form action="/set_mode/test" method="get" style="display:inline-block">
+                <button type="submit">Set Test Mode</button>
+            </form>
         </div>
 
         <div class="tabs">
