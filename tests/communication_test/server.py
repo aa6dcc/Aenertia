@@ -87,16 +87,10 @@ def render_dashboard():
             <div id="battery">Battery: --%</div>
         </div>
 
-        <div class="mode-bar">
-            <form action="/set_mode/manual" method="get" style="display:inline-block">
-                <button type="submit">Set Manual</button>
-            </form>
-            <form action="/set_mode/autonomous" method="get" style="display:inline-block">
-                <button type="submit">Set Autonomous</button>
-            </form>
-            <form action="/set_mode/test" method="get" style="display:inline-block">
-                <button type="submit">Set Test Mode</button>
-            </form>
+        <div class="mode-bar-top-left">
+            <form action="/set_mode/manual" method="get"><button class="button">Set Manual</button></form>
+            <form action="/set_mode/autonomous" method="get"><button class="button">Set Autonomous</button></form>
+            <form action="/set_mode/test" method="get"><button class="button">Set Test Mode</button></form>
         </div>
 
         <div class="tabs">
@@ -138,7 +132,7 @@ def render_dashboard():
                     Derivative Gain <input name="dg"><br>
                     Integral Gain <input name="ig"><br>
                     Setpoint <input name="sp"><br>
-                    <input type="submit" value="Submit">
+                    <input type="submit" value="Submit" class="button">
                 </form>
                 <h3>Received PID Tuning Values</h3>
                 {inner_table}
@@ -149,7 +143,7 @@ def render_dashboard():
                     Integral Gain <input name="ig"><br>
                     Setpoint <input name="sp"><br>
                     Rotation Setpoint <input name="rot"><br>
-                    <input type="submit" value="Submit">
+                    <input type="submit" value="Submit" class="button">
                 </form>
                 <h3>Received PID Tuning Values</h3>
                 {outer_table}
