@@ -7,7 +7,7 @@ import numpy as np
 import cv2
 
 #Serial configf
-SERIAL_PORT = "/dev/ttyUSB0"
+SERIAL_PORT = "/dev/ttyUSB1"
 baud_rate = 115200
 
 cv_enabled = False
@@ -30,22 +30,7 @@ def fake_cv_loop(): # This loop will go until cv_disabled is called. Hozever bec
         sleep(2)
 
 def cv_loop():
-    cap = cv2.VideoCaputre(0)
-    lower_body_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_lowerbody.xml")
-
-    while cv_enabled and cap.IsOpened():
-        
-        ret, frame = cv2.read()
-
-        grey = cv2.cvtcolor(frame, cv2.COLOR_BGR2GRAY)
-        lower_bodies = lower_body_cascade.detectMultiScale(grey, 1.1, 4)
-        for(x, y, h, w) in lower_bodies:
-            cv2.rectangle(frame, (x, y), (x+w, y+h))
-
-
-        cv2.imshow("frame", frame)
-        if not ret or cv2.waitkey == ord("q"):
-            break
+    pass
 
 
 
