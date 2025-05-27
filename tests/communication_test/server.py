@@ -80,6 +80,20 @@ def render_dashboard():
         <link rel='stylesheet' href='/static/style.css'>
         <script src="/static/control.js" defer></script>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            .mode-bar-top-left {{
+                position: absolute;
+                top: 20px;
+                left: 20px;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                z-index: 1000;
+            }}
+            .mode-bar-top-left form {{
+                margin: 0;
+            }}
+        </style>
     </head>
     <body>
         <div class="info-bar">
