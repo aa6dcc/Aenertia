@@ -3,13 +3,83 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 import paho.mqtt.publish as publish
 
+app = FastAPI()
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 inner_history = []
 outer_history = []
 key_locations = []
 
+@app.get("/led/{id}")
+def control_led(id: int):
+    topic = "led/control"
+    msg = {
+        1: "UP", 2: "DOWN", 3: "LEFT", 4: "RIGHT"
+    }.get(id, "OFF")
+    publish.single(topic, msg, hostname="localhost")
+    return {"status": f"Command sent: {msg}"}
+
+@app.get("/led/flash")
+def flash_led():
+    publish.single("led/control", "FLASH", hostname="localhost")
+    return {"status": "Flashing LED"}
+
+@app.get("/cv/enable")
+def enable_cv():
+    publish.single("cv/control", "ENABLE", hostname="localhost")
+    return {"status": "CV Enabled"}
+
+@app.get("/cv/disable")
+def disable_cv():
+    publish.single("cv/control", "DISABLE", hostname="localhost")
+    return {"status": "CV Disabled"}
+
+@app.get("/autonomous/follow")
+def autonomous_follow():
+    publish.single("autonomous", "FOLLOW", hostname="localhost")
+    return {"status": "Follow Me activated"}
+
+@app.get("/autonomous/return")
+def autonomous_return():
+    publish.single("autonomous", "RETURN_HOME", hostname="localhost")
+    return {"status": "Returning Home"}
+
+@app.post("/autonomous/key_location", response_class=HTMLResponse)
+def assign_location(loc: str = Form(...)):
+    key_locations.append(loc)
+    publish.single("autonomous", f"KEY:{loc}", hostname="localhost")
+    return render_dashboard(show_keys=False)
+
+@app.get("/autonomous/set_key/{loc}")
+def set_existing_location(loc: str):
+    publish.single("autonomous", f"KEY:{loc}", hostname="localhost")
+    return render_dashboard(show_keys=False)
+
+@app.get("/dashboard", response_class=HTMLResponse)
+def dashboard():
+    return render_dashboard(show_keys=False)
+
+@app.get("/dashboard/show_keys", response_class=HTMLResponse)
+def dashboard_show_keys():
+    return render_dashboard(show_keys=True)
+
+@app.get("/set_mode/{mode}")
+def set_mode(mode: str):
+    publish.single("mode/set", mode.upper(), hostname="localhost")
+    return {"status": f"Mode set to {mode}"}
+
+@app.post("/submit_inner", response_class=HTMLResponse)
+def submit_inner(pg: str = Form(...), dg: str = Form(...), ig: str = Form(...), sp: str = Form(...)):
+    inner_history.append([pg, dg, ig, sp])
+    return render_dashboard(show_keys=False)
+
+@app.post("/submit_outer", response_class=HTMLResponse)
+def submit_outer(pg: str = Form(...), dg: str = Form(...), ig: str = Form(...), sp: str = Form(...), rot: str = Form(...)):
+    outer_history.append([pg, dg, ig, sp, rot])
+    return render_dashboard(show_keys=False)
+
 def render_dashboard(show_keys=False):
-    
     def table(rows, headers):
         html = "<table><tr>" + "".join(f"<th>{h}</th>" for h in headers) + "</tr>"
         for row in rows:
