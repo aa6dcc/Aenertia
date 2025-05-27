@@ -6,9 +6,8 @@ void setup() {
     Serial.begin(115200);
     pinMode(LED_PIN, OUTPUT);
     digitalWrite(LED_PIN, LOW);
-    //Serial.println("Code started:");
+    Serial.println("Code started:");
 }
-
 
 void loop() {
     // Read Command
