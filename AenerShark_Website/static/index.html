@@ -27,16 +27,19 @@
     </div>
   </header>
 
-  <!-- MAIN LAYOUT -->
+  <!-- LAYOUT -->
   <div class="container">
+    <!-- SIDEBAR -->
     <aside class="mode-sidebar">
       <button class="button" data-mqtt="mode/set" data-payload="MANUAL">Set Manual</button>
       <button class="button" data-mqtt="mode/set" data-payload="AUTONOMOUS">Set Autonomous</button>
       <button class="button" data-mqtt="mode/set" data-payload="TEST">Set Test</button>
     </aside>
+
+    <!-- TABBED CONTENT -->
     <main class="content">
 
-      <!-- MANUAL TAB -->
+      <!-- MANUAL -->
       <section id="pad" class="tab-content active">
         <div class="card">
           <h2>Arrow Pad</h2>
@@ -50,7 +53,7 @@
         </div>
       </section>
 
-      <!-- TEST TAB -->
+      <!-- TEST -->
       <section id="flash" class="tab-content">
         <div class="card">
           <h2>Flash & CV</h2>
@@ -62,7 +65,7 @@
         </div>
       </section>
 
-      <!-- PID TAB -->
+      <!-- PID -->
       <section id="pid" class="tab-content">
         <div class="card">
           <h2>PID Tuning</h2>
@@ -92,7 +95,7 @@
         </div>
       </section>
 
-      <!-- AUTONOMOUS TAB -->
+      <!-- AUTO -->
       <section id="auto" class="tab-content">
         <div class="card">
           <h2>Autonomous</h2>
@@ -114,17 +117,20 @@
     </main>
   </div>
 
-  <!-- TABS & STATUS SCRIPT -->
+  <!-- TABS & INFO SCRIPT -->
   <script>
-    document.querySelectorAll('.tab-btn').forEach(btn=>{
-      btn.onclick = () => {
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
         btn.classList.add('active');
+        const sel = btn.dataset.tab;
         document.querySelectorAll('.tab-content').forEach(s=>s.classList.remove('active'));
-        document.getElementById(btn.dataset.tab).classList.add('active');
-      };
+        document.getElementById(sel).classList.add('active');
+      });
     });
 
+    // Time & battery
     function updateTime(){
       const n=new Date();
       document.getElementById('time').textContent =
