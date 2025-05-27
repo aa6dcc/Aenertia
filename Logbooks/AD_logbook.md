@@ -152,3 +152,6 @@ To access the website:
   - run uvicorn server:app --host 0.0.0.0 --port 8000
   - head to http://localhost:8000/dashboard
 
+As of now, our current system can be summarised to:
+![image](https://github.com/user-attachments/assets/71acb12b-d4dc-472c-bd77-626d730abc62)
+
