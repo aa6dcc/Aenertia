@@ -1,18 +1,16 @@
-from fastapi import FastAPI, Form
+from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 import paho.mqtt.publish as publish
 
 app = FastAPI()
 
-# Mount static files (CSS, JS, images)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Store submitted values
 inner_history = []
 outer_history = []
+key_locations = []
 
-# MQTT LED control (arrow pad + flash)
 @app.get("/led/{id}")
 def control_led(id: int):
     topic = "led/control"
@@ -49,29 +47,39 @@ def autonomous_return():
 
 @app.post("/autonomous/key_location", response_class=HTMLResponse)
 def assign_location(loc: str = Form(...)):
+    key_locations.append(loc)
     publish.single("autonomous", f"KEY:{loc}", hostname="localhost")
-    return render_dashboard()
+    return render_dashboard(show_keys=False)
+
+@app.get("/autonomous/set_key/{loc}")
+def set_existing_location(loc: str):
+    publish.single("autonomous", f"KEY:{loc}", hostname="localhost")
+    return render_dashboard(show_keys=False)
+
+@app.get("/dashboard", response_class=HTMLResponse)
+def dashboard():
+    return render_dashboard(show_keys=False)
+
+@app.get("/dashboard/show_keys", response_class=HTMLResponse)
+def dashboard_show_keys():
+    return render_dashboard(show_keys=True)
 
 @app.get("/set_mode/{mode}")
 def set_mode(mode: str):
     publish.single("mode/set", mode.upper(), hostname="localhost")
     return {"status": f"Mode set to {mode}"}
 
-@app.get("/dashboard", response_class=HTMLResponse)
-def dashboard():
-    return render_dashboard()
-
 @app.post("/submit_inner", response_class=HTMLResponse)
 def submit_inner(pg: str = Form(...), dg: str = Form(...), ig: str = Form(...), sp: str = Form(...)):
     inner_history.append([pg, dg, ig, sp])
-    return render_dashboard()
+    return render_dashboard(show_keys=False)
 
 @app.post("/submit_outer", response_class=HTMLResponse)
 def submit_outer(pg: str = Form(...), dg: str = Form(...), ig: str = Form(...), sp: str = Form(...), rot: str = Form(...)):
     outer_history.append([pg, dg, ig, sp, rot])
-    return render_dashboard()
+    return render_dashboard(show_keys=False)
 
-def render_dashboard():
+def render_dashboard(show_keys=False):
     def table(rows, headers):
         html = "<table><tr>" + "".join(f"<th>{h}</th>" for h in headers) + "</tr>"
         for row in rows:
@@ -81,6 +89,12 @@ def render_dashboard():
 
     inner_table = table(inner_history, ["Proportional Gain", "Derivative Gain", "Integral Gain", "Setpoint"])
     outer_table = table(outer_history, ["Proportional Gain", "Derivative Gain", "Integral Gain", "Setpoint", "Rotation Setpoint"])
+    key_table = "<table><tr><th>Saved Key Locations</th></tr>"
+    for loc in key_locations:
+        key_table += f"<tr><td><a href='/autonomous/set_key/{loc}'><button class='button'>{loc}</button></a></td></tr>"
+    key_table += "</table>"
+
+    key_block = f"<h3>Key Locations</h3>{key_table}" if show_keys else ""
 
     return f"""
     <!DOCTYPE html>
@@ -100,9 +114,9 @@ def render_dashboard():
                 gap: 10px;
                 z-index: 1000;
             }}
-            .mode-bar-top-left form {{
-                margin: 0;
-            }}
+            .mode-bar-top-left form {{ margin: 0; }}
+            .auto-grid {{ display: flex; justify-content: space-between; gap: 20px; }}
+            .auto-column {{ flex: 1; }}
         </style>
     </head>
     <body>
@@ -183,16 +197,26 @@ def render_dashboard():
         <div id="auto" class="tab">
             <div class="card">
                 <h1>Autonomous Control</h1>
-                <form action="/autonomous/follow" method="get">
-                    <button class="button" type="submit">Follow Me</button>
-                </form>
-                <form action="/autonomous/return" method="get">
-                    <button class="button" type="submit">Return Home</button>
-                </form>
-                <form action="/autonomous/key_location" method="post">
-                    Assign Key Location: <input name="loc"><br>
-                    <button class="button" type="submit">Assign</button>
-                </form>
+                <div class="auto-grid">
+                    <div class="auto-column">
+                        <form action="/autonomous/follow" method="get">
+                            <button class="button" type="submit">Follow Me</button>
+                        </form>
+                    </div>
+                    <div class="auto-column">
+                        <form action="/autonomous/key_location" method="post">
+                            Assign Key Location: <input name="loc">
+                            <button class="button" type="submit">Assign</button>
+                        </form>
+                        <form action="/autonomous/return" method="get">
+                            <button class="button" type="submit">Return to Key Location</button>
+                        </form>
+                        <form action="/dashboard/show_keys" method="get">
+                            <button class="button" type="submit">Show Key Locations</button>
+                        </form>
+                        {key_block}
+                    </div>
+                </div>
             </div>
         </div>
 
