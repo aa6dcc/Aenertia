@@ -150,5 +150,5 @@ To access the website:
   - git pull
   - head to AenerShark\tests\communication_test
   - run uvicorn server:app --host 0.0.0.0 --port 8000
-  - head to http://localhost:8000/dashboard/show_keys?
+  - head to http://localhost:8000/dashboard
 
