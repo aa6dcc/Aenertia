@@ -27,6 +27,16 @@ def flash_led():
     publish.single("led/control", "FLASH", hostname="localhost")
     return {"status": "Flashing LED"}
 
+@app.get("/cv/enable")
+def enable_cv():
+    publish.single("cv/control", "ENABLE", hostname="localhost")
+    return {"status": "CV Enabled"}
+
+@app.get("/cv/disable")
+def disable_cv():
+    publish.single("cv/control", "DISABLE", hostname="localhost")
+    return {"status": "CV Disabled"}
+
 @app.get("/autonomous/follow")
 def autonomous_follow():
     publish.single("autonomous", "FOLLOW", hostname="localhost")
@@ -133,6 +143,12 @@ def render_dashboard():
                 <h1>Flash LED</h1>
                 <form action="/led/flash" method="get">
                     <button type="submit" class="button">Flash LED</button>
+                </form>
+                <form action="/cv/enable" method="get">
+                    <button type="submit" class="button">Enable CV</button>
+                </form>
+                <form action="/cv/disable" method="get">
+                    <button type="submit" class="button">Disable CV</button>
                 </form>
             </div>
         </div>
