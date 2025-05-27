@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>CV Control Panel</title>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin-top: 50px; }
+    button { font-size: 20px; padding: 10px 20px; margin: 20px; }
+    #status { margin-top: 20px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Computer Vision Control</h1>
+  <button onclick="sendCommand('enable cv')">Enable CV</button>
+  <button onclick="sendCommand('disable cv')">Disable CV</button>
+  <div id="status">Connecting to MQTT...</div>
+
+  <script>
+    const brokerUrl = "ws://172.20.10.9:9001"; // Replace with Pi IP
+    const topic = "cv/command";
+    const client = mqtt.connect(brokerUrl);
+
+    client.on("connect", function () {
+      document.getElementById("status").innerText = "✅ Connected to MQTT broker";
+    });
+
+    client.on("error", function (err) {
+      document.getElementById("status").innerText = "❌ MQTT error: " + err;
+    });
+
+    function sendCommand(cmd) {
+      client.publish(topic, cmd);
+      document.getElementById("status").innerText = `📡 Sent: ${cmd}`;
+    }
+  </script>
+</body>
+</html>
