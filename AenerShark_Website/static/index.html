@@ -1,121 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AenerShark Control Panel</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="style.css">
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-  <script src="/static/control.js" defer></script>
+  <script src="control.js" defer></script>
 </head>
 <body>
 
-  <!-- TOP HEADER -->
+  <!-- HEADER -->
   <header class="site-header">
     <div class="logo-title">
-      <img src="/static/images/logo.png" alt="Logo" class="logo">
-      <h1 class="title">AenerShark Control Panel</h1>
+      <img src="images/logo.png" class="logo" alt="Logo">
+      <h1>AenerShark Control Panel</h1>
     </div>
     <nav class="nav-tabs">
       <button class="tab-btn active" data-tab="pad">Manual</button>
       <button class="tab-btn"      data-tab="flash">Test</button>
-      <button class="tab-btn"      data-tab="pid">PID Values</button>
-      <button class="tab-btn"      data-tab="auto">Autonomous</button>
+      <button class="tab-btn"      data-tab="pid">PID</button>
+      <button class="tab-btn"      data-tab="auto">Auto</button>
     </nav>
     <div class="info-bar">
       <span id="time">--:--</span> | <span id="battery">Battery: --%</span>
     </div>
   </header>
 
-  <!-- MAIN LAYOUT: left sidebar + main area -->
+  <!-- LAYOUT -->
   <div class="container">
-
-    <!-- LEFT SIDEBAR -->
+    <!-- Left sidebar -->
     <aside class="mode-sidebar">
-      <form action="/set_mode/manual"     method="get"><button class="button">Set Manual</button></form>
-      <form action="/set_mode/autonomous" method="get"><button class="button">Set Autonomous</button></form>
-      <form action="/set_mode/test"       method="get"><button class="button">Set Test Mode</button></form>
+      <button class="button" data-mqtt="mode/set" data-payload="MANUAL">Set Manual</button>
+      <button class="button" data-mqtt="mode/set" data-payload="AUTONOMOUS">Set Autonomous</button>
+      <button class="button" data-mqtt="mode/set" data-payload="TEST">Set Test</button>
     </aside>
 
-    <!-- CENTRAL CONTENT -->
+    <!-- Main content -->
     <main class="content">
 
-      <!-- MANUAL CONTROL TAB -->
+      <!-- Manual Control -->
       <section id="pad" class="tab-content active">
         <div class="card">
-          <h2>Arrow Pad Control</h2>
+          <h2>Arrow Pad</h2>
           <div class="controller">
-            <img id="up"    class="arrow" src="/static/images/up.png"    alt="Up">
-            <img id="left"  class="arrow" src="/static/images/left.png"  alt="Left">
-            <img id="stop"  class="arrow stop" src="/static/images/stop.png"  alt="Stop">
-            <img id="right" class="arrow" src="/static/images/right.png" alt="Right">
-            <img id="down"  class="arrow" src="/static/images/down.png"  alt="Down">
+            <img id="up"    class="arrow" src="images/up.png"    alt="Up">
+            <img id="left"  class="arrow" src="images/left.png"  alt="Left">
+            <img id="stop"  class="arrow stop" src="images/stop.png"  alt="Stop">
+            <img id="right" class="arrow" src="images/right.png" alt="Right">
+            <img id="down"  class="arrow" src="images/down.png"  alt="Down">
           </div>
         </div>
       </section>
 
-      <!-- TEST TAB -->
+      <!-- Flash & CV Test -->
       <section id="flash" class="tab-content">
         <div class="card">
-          <h2>Flash & CV Test</h2>
+          <h2>Flash & CV</h2>
           <div class="button-group">
-            <form action="/led/flash"   method="get"><button class="button">Flash LED</button></form>
-            <form action="/cv/enable"   method="get"><button class="button">Enable CV</button></form>
-            <form action="/cv/disable"  method="get"><button class="button">Disable CV</button></form>
+            <button class="button" data-mqtt="led/control" data-payload="FLASH">Flash LED</button>
+            <button class="button" data-mqtt="cv/control"  data-payload="ENABLE">Enable CV</button>
+            <button class="button" data-mqtt="cv/control"  data-payload="DISABLE">Disable CV</button>
           </div>
         </div>
       </section>
 
-      <!-- PID TAB -->
+      <!-- PID Tuning -->
       <section id="pid" class="tab-content">
         <div class="card">
           <h2>PID Tuning</h2>
           <div class="pid-grid">
-            <!-- inner -->
             <div>
-              <h3>Inner Loop</h3>
-              <form action="/submit_inner" method="post">
-                <label>P:<input name="pg" required></label>
-                <label>D:<input name="dg" required></label>
-                <label>I:<input name="ig" required></label>
+              <h3>Inner</h3>
+              <form id="innerForm">
+                <label>P:<input name="p" required></label>
+                <label>D:<input name="d" required></label>
+                <label>I:<input name="i" required></label>
                 <label>SP:<input name="sp" required></label>
-                <button class="button" type="submit">Submit</button>
+                <button class="button" type="submit">Send</button>
               </form>
-              <div id="inner-table" class="table-container"></div>
             </div>
-            <!-- outer -->
             <div>
-              <h3>Outer Loop</h3>
-              <form action="/submit_outer" method="post">
-                <label>P:<input name="pg" required></label>
-                <label>D:<input name="dg" required></label>
-                <label>I:<input name="ig" required></label>
+              <h3>Outer</h3>
+              <form id="outerForm">
+                <label>P:<input name="p" required></label>
+                <label>D:<input name="d" required></label>
+                <label>I:<input name="i" required></label>
                 <label>SP:<input name="sp" required></label>
                 <label>ROT:<input name="rot" required></label>
-                <button class="button" type="submit">Submit</button>
+                <button class="button" type="submit">Send</button>
               </form>
-              <div id="outer-table" class="table-container"></div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- AUTONOMOUS TAB -->
+      <!-- Autonomous -->
       <section id="auto" class="tab-content">
         <div class="card">
-          <h2>Autonomous Control</h2>
+          <h2>Autonomous</h2>
           <div class="auto-grid">
-            <form action="/autonomous/follow" method="get"><button class="button">Follow Me</button></form>
-            <form action="/autonomous/return" method="get"><button class="button">Return Home</button></form>
+            <button class="button" data-mqtt="autonomous" data-payload="FOLLOW">Follow Me</button>
+            <button class="button" data-mqtt="autonomous" data-payload="RETURN_HOME">Return Home</button>
           </div>
           <hr>
           <h3>Key Locations</h3>
-          <form action="/autonomous/key_location" method="post" class="key-form">
-            <label>Assign Key:<input name="loc" required></label>
-            <button class="button" type="submit">Assign</button>
-          </form>
-          <div id="key-block" class="table-container"></div>
-          <form action="/dashboard/show_keys" method="get">
-            <button class="button">Show Key Locations</button>
+          <form id="keyForm">
+            <label>Key:<input name="loc" required></label>
+            <button class="button">Assign</button>
           </form>
         </div>
       </section>
@@ -123,49 +115,31 @@
     </main>
   </div>
 
-  <!-- TAB & DATA SCRIPT -->
   <script>
+    // Tabs
     document.querySelectorAll('.tab-btn').forEach(btn=>{
-      btn.addEventListener('click', () => {
+      btn.onclick = () => {
         document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
         btn.classList.add('active');
-        const sel = btn.dataset.tab;
         document.querySelectorAll('.tab-content').forEach(s=>s.classList.remove('active'));
-        document.getElementById(sel).classList.add('active');
-      });
-    });
-
-    function updateTime(){
-      const now=new Date();
-      document.getElementById('time').textContent =
-        now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
-    }
-    function updateBattery(){
-      navigator.getBattery()?.then(b=>{
-        document.getElementById('battery').textContent =
-          'Battery: '+Math.round(b.level*100)+'%';
-      });
-    }
-    updateTime(); updateBattery();
-    setInterval(updateTime,10000);
-    setInterval(updateBattery,60000);
-
-    // populate PID tables
-    fetch('/pid-values').then(r=>r.json()).then(data=>{
-      const render=(rows,headers)=>{
-        let html='<table><tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr>';
-        rows.forEach(r=>html+='<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>');
-        return html+'</table>';
+        document.getElementById(btn.dataset.tab).classList.add('active');
       };
-      document.getElementById('inner-table').innerHTML = render(data.inner,['P','D','I','SP']);
-      document.getElementById('outer-table').innerHTML = render(data.outer,['P','D','I','SP','ROT']);
     });
-    // populate key table
-    fetch('/dashboard/show_keys').then(r=>r.text()).then(html=>{
-      const tmp=document.createElement('div'); tmp.innerHTML=html;
-      const tbl=tmp.querySelector('h3+table');
-      if(tbl) document.getElementById('key-block').appendChild(tbl);
-    });
+
+    // Time & battery
+    function updateTime(){
+      const n=new Date();
+      document.getElementById('time').textContent =
+        n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0');
+    }
+    function updateBatt(){
+      navigator.getBattery?.().then(b=>{
+        document.getElementById('battery').textContent = `Battery: ${Math.round(b.level*100)}%`;
+      });
+    }
+    updateTime(); updateBatt();
+    setInterval(updateTime,60000);
+    setInterval(updateBatt,60000);
   </script>
 </body>
 </html>

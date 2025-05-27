@@ -1,82 +1,56 @@
 // static/control.js
 
-const client = mqtt.connect('ws://' + location.hostname + ':9001');
+const client = mqtt.connect(`ws://${location.hostname}:9001`);
 
-client.on('connect', () => {
-  document.querySelectorAll('button, .arrow').forEach(el => el.disabled = false);
+client.on('connect', ()=>{
+  document.querySelectorAll('button, .arrow').forEach(el=>el.disabled=false);
 });
-client.on('error', err => console.error('MQTT error:', err));
+client.on('error', err=>console.error(err));
 
-function publishCommand(topic, msg) {
-  if (!client.connected) return alert("MQTT not connected");
-  client.publish(topic, msg);
+function publish(topic, payload){
+  if(!client.connected) return alert("MQTT not connected");
+  client.publish(topic, payload);
 }
 
+// Arrow pad
 const cmdMap = {
   up:    ['robot/serial','FORWARD'],
   down:  ['robot/serial','BACKWARD'],
   left:  ['robot/serial','LEFT'],
   right: ['robot/serial','RIGHT'],
-  stop:  ['robot/serial','STOP'],
+  stop:  ['robot/serial','STOP']
+};
+Object.keys(cmdMap).forEach(key=>{
+  const el = document.getElementById(key);
+  let iid;
+  el.onpointerdown = ()=>{ publish(...cmdMap[key]); iid=setInterval(()=>publish(...cmdMap[key]),300); };
+  el.onpointerup = el.onpointerleave = ()=>{ clearInterval(iid); };
+});
+
+// Button publish (Test + Mode + Auto)
+document.querySelectorAll('button[data-mqtt]').forEach(btn=>{
+  btn.onclick = ()=>{
+    publish(btn.dataset.mqtt, btn.dataset.payload);
+  };
+});
+
+// PID forms
+document.getElementById('innerForm').onsubmit = e=>{
+  e.preventDefault();
+  const f = e.target;
+  const msg = `inner:${f.p.value},${f.d.value},${f.i.value},${f.sp.value}`;
+  publish('robot/pid', msg);
+};
+document.getElementById('outerForm').onsubmit = e=>{
+  e.preventDefault();
+  const f = e.target;
+  const msg = `outer:${f.p.value},${f.d.value},${f.i.value},${f.sp.value},${f.rot.value}`;
+  publish('robot/pid', msg);
 };
 
-function sendMove(key) {
-  let [topic,msg] = cmdMap[key];
-  publishCommand(topic, msg);
-}
-
-function holdMove(key) {
-  sendMove(key);
-  return setInterval(()=> sendMove(key), 300);
-}
-
-function setActive(el) {
-  if (!el.classList.contains('active')) {
-    document.querySelectorAll('.arrow.active').forEach(x=>x.classList.remove('active'));
-    el.classList.add('active');
-  }
-}
-function clearActive() {
-  document.querySelectorAll('.arrow.active').forEach(x=>x.classList.remove('active'));
-}
-
-window.addEventListener('DOMContentLoaded', () => {
-  // Arrow pad pointer events
-  Object.keys(cmdMap).forEach(key => {
-    const btn = document.getElementById(key);
-    let iid;
-    btn.onpointerdown = () => {
-      setActive(btn);
-      iid = holdMove(key);
-    };
-    btn.onpointerup = btn.onpointerleave = () => {
-      clearActive();
-      clearInterval(iid);
-    };
-  });
-
-  // Keyboard support
-  let lastKey, keyIid;
-  const keyMap = {
-    ArrowUp: 'up',
-    ArrowDown: 'down',
-    ArrowLeft: 'left',
-    ArrowRight:'right',
-    ' ': 'stop'
-  };
-  document.addEventListener('keydown', e => {
-    const action = keyMap[e.key];
-    if (action && e.key !== lastKey) {
-      lastKey = e.key;
-      const btn = document.getElementById(action);
-      setActive(btn);
-      sendMove(action);
-      if (action !== 'stop') keyIid = setInterval(()=> sendMove(action), 300);
-    }
-  });
-  document.addEventListener('keyup', () => {
-    clearActive();
-    clearInterval(keyIid);
-    lastKey = null;
-  });
-});
+// Key assign
+document.getElementById('keyForm').onsubmit = e=>{
+  e.preventDefault();
+  const loc = e.target.loc.value;
+  publish('autonomous', `KEY:${loc}`);
+};
