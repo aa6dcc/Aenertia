@@ -42,6 +42,15 @@
       <!-- MANUAL -->
       <section id="pad" class="tab-content active">
         <div class="card">
+          <h2>Live Camera</h2>
+          <!-- Live MJPEG stream from your Flask server on port 8001 -->
+          <img
+            id="videoStream"
+            src="http://172.20.10.6:8001/video_feed"
+            alt="Live Camera Feed"
+            class="live-video"
+          />
+
           <h2>Arrow Pad</h2>
           <div class="controller">
             <img id="up"    class="arrow" src="images/up.png"    alt="Up">
