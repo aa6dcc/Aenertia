@@ -1,4 +1,4 @@
-// static/control.js
+// control.js
 
 // 1. Connect to MQTT over WebSockets
 const client = mqtt.connect(`ws://${location.hostname}:9001`);
@@ -92,7 +92,6 @@ document.addEventListener('keydown', e => {
   el.classList.add('active');
   publish(...cmdMap[action]);
 
-  // if not STOP, start repeating
   if (action !== 'stop') {
     keyIid = setInterval(() => publish(...cmdMap[action]), 300);
   }
