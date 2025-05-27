@@ -27,6 +27,21 @@ def flash_led():
     publish.single("led/control", "FLASH", hostname="localhost")
     return {"status": "Flashing LED"}
 
+@app.get("/autonomous/follow")
+def autonomous_follow():
+    publish.single("autonomous", "FOLLOW", hostname="localhost")
+    return {"status": "Follow Me activated"}
+
+@app.get("/autonomous/return")
+def autonomous_return():
+    publish.single("autonomous", "RETURN_HOME", hostname="localhost")
+    return {"status": "Returning Home"}
+
+@app.post("/autonomous/key_location", response_class=HTMLResponse)
+def assign_location(loc: str = Form(...)):
+    publish.single("autonomous", f"KEY:{loc}", hostname="localhost")
+    return render_dashboard()
+
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard():
     return render_dashboard()
@@ -68,9 +83,10 @@ def render_dashboard():
         </div>
 
         <div class="tabs">
-            <button onclick="showTab('pad')">Arrow Pad</button>
-            <button onclick="showTab('flash')">Flash LED</button>
-            <button onclick="showTab('pid')">Control Values</button>
+            <button onclick="showTab('pad')">Manual Control</button>
+            <button onclick="showTab('flash')">Test</button>
+            <button onclick="showTab('pid')">PID Values</button>
+            <button onclick="showTab('auto')">Autonomous</button>
         </div>
 
         <div id="pad" class="tab active">
@@ -98,7 +114,7 @@ def render_dashboard():
 
         <div id="pid" class="tab">
             <div class="card">
-                <h1>Control Values</h1>
+                <h1>PID Values</h1>
                 <h2>Inner Loop</h2>
                 <form action="/submit_inner" method="post">
                     Proportional Gain <input name="pg"><br>
@@ -120,6 +136,22 @@ def render_dashboard():
                 </form>
                 <h3>Received PID Tuning Values</h3>
                 {outer_table}
+            </div>
+        </div>
+
+        <div id="auto" class="tab">
+            <div class="card">
+                <h1>Autonomous Control</h1>
+                <form action="/autonomous/follow" method="get">
+                    <button class="button" type="submit">Follow Me</button>
+                </form>
+                <form action="/autonomous/return" method="get">
+                    <button class="button" type="submit">Return Home</button>
+                </form>
+                <form action="/autonomous/key_location" method="post">
+                    Assign Key Location: <input name="loc"><br>
+                    <button class="button" type="submit">Assign</button>
+                </form>
             </div>
         </div>
 
