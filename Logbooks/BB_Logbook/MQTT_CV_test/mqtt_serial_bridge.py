@@ -7,11 +7,12 @@ import numpy as np
 import cv2
 
 #Serial configf
-SERIAL_PORT = "/dev/ttyUSB1"
+SERIAL_PORT = "/dev/ttyUSB0"
 baud_rate = 115200
 
 cv_enabled = False
 ser = None
+mode = "manual" #Global var mode initialized to Manual
 
 
 def send_2_esp(command):
@@ -36,24 +37,54 @@ def cv_loop():
 
 def on_connect(client, userdata, flags, rc):
     print("MQTT connected with result code", rc)
-    client.subscribe("cv/command")
+    client.subscribe("robot/mode")
+    client.subscribe("robot/cv")
+    client.subscribe("robot/manual/command")
+
 
 
 def on_message(client, userdata, msg):
     global cv_enabled
-
+    global mode
     payload = msg.payload.decode()
+    topic = msg.topic.decode()
     print(f"Topic:{msg.topic} ; Command: {payload}")
 
-    if payload == "enable cv":
-        if not cv_enabled:
-            cv_enabled = True
-            print("Cv enabled")
-            threading.Thread(target=fake_cv_loop, daemon=True).start() #To fix this we use threading. Threading isolates the code we target and procceeds zith the rest of the code.
-    elif payload == "disable cv":
-        cv_enabled = False
-        send_2_esp("LED_OFF")
+    # We start by checking if the mode was changed
+    if topic == "robot/mode":
+        mode = payload
 
+    # Manual mode code
+    if mode == "manual":
+        if payload == "up":
+            send_2_esp("forward")
+        elif payload == "down":
+            send_2_esp("backward")
+        elif payload == "right":
+            send_2_esp("right")
+        elif payload == "left":
+            send_2_esp("left")
+        elif payload == "up-right":
+            send_2_esp("forwardANDright")
+        elif payload == "up-left":
+            send_2_esp("forwardANDleft")
+        elif payload == "up-right":
+            send_2_esp("backwardANDright")
+        elif payload == "up-left":
+            send_2_esp("backwardANDleft")
+
+    # Autnomous mode code
+    elif mode == "autonomous":    
+        if topic == "robot/cv":
+            if payload == "enable cv":
+                if not cv_enabled:
+                    cv_enabled = True
+                    print("Cv enabled")
+                    threading.Thread(target=fake_cv_loop, daemon=True).start() #To fix this we use threading. Threading isolates the code we target and procceeds zith the rest of the code.
+            elif payload == "disable cv":
+                cv_enabled = False
+                send_2_esp("LED_OFF")
+        
 
 def main():
     global ser
