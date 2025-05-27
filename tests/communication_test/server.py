@@ -62,6 +62,11 @@ def render_dashboard():
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
     <body>
+        <div class="info-bar">
+            <div id="time">--:--</div>
+            <div id="battery">Battery: --%</div>
+        </div>
+
         <div class="tabs">
             <button onclick="showTab('pad')">Arrow Pad</button>
             <button onclick="showTab('flash')">Flash LED</button>
@@ -69,10 +74,6 @@ def render_dashboard():
         </div>
 
         <div id="pad" class="tab active">
-            <div class="info-bar">
-                <div id="time">--:--</div>
-                <div id="battery">Battery: --%</div>
-            </div>
             <div class="card">
                 <img src="/static/images/logo.png" class="logo">
                 <h1>Arrow Pad Control</h1>
