@@ -120,3 +120,20 @@ In the top right corner I also added a battery feature (the battery of my comput
 I would like for this website to have 3 separate tabs (PID control, flash LED and control robot pad) in the future to make the website more neat and organized.
 
 For the camera access via the Raspberry Pi, we must unpower the Raspberry Pi, connect the camera and then power it up again, otherwise the camera will not be detected. 
+
+## 27/05/2025
+
+Implemented tabs in the web page with a hover effect when you roll your mouse pointer over the tabs
+The new URL I use is http://localhost:8000/dashboard
+
+Arrow pad tab:
+(same as previously, with battery and time - can use arrows on the keyboard too)
+![image](https://github.com/user-attachments/assets/e0af73ff-74c9-4795-8e86-04f74f4f9f0e)
+
+Flash LED tab:
+![image](https://github.com/user-attachments/assets/fb7fd93d-3177-4a64-ba3c-018e80da2b5e)
+
+Control values tab:
+![image](https://github.com/user-attachments/assets/12b6dd3e-7cbd-42fe-a55a-45c1d6e55f03)
+
+I had to change the position of the server.py code displaying time and battery so that it could appear on all 3 tabs
