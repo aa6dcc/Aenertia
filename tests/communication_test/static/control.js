@@ -66,7 +66,6 @@ window.onload = () => {
     });
 };
 
-// only set active if not already
 function setActive(btn) {
     if (!btn.classList.contains("active")) {
         clearActive();
