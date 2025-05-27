@@ -41,9 +41,9 @@ float kp_v = 0;
 float ki_v = 0;
 float kd_v = 0;
 
-float kp = 800;
+float kp = 9000;
 float ki = 0;
-float kd = 75;
+float kd = 88;
 
 float kv = 150;
 float target_speed = 0;
@@ -63,6 +63,7 @@ float velocity_integral = 0;
 float tilt_target_bias = 0.015;
 float tilt_target_control = 0;
 float tilt_target = 0;
+float last_tilt_target = 0;
 float tilt_error = 0;
 float tilt_last_error = 0;
 float tilt_derivative = 0;
@@ -82,7 +83,7 @@ Adafruit_MPU6050 mpu;         //Default pins for I2C are SCL: IO22, SDA: IO21
 step step1(STEPPER_INTERVAL_US,STEPPER1_STEP_PIN,STEPPER1_DIR_PIN );
 step step2(STEPPER_INTERVAL_US,STEPPER2_STEP_PIN,STEPPER2_DIR_PIN );
 
-KalmanFilter gyroKalman(0.01, 0.1);
+KalmanFilter gyroKalman(0.02, 0.1);
 
 //Interrupt Service Routine for motor update
 //Note: ESP32 doesn't support floating point calculations in an ISR
@@ -116,15 +117,15 @@ uint16_t readADC(uint8_t channel) {
   return result;
 }
 
-void go_forward(float speed){
-  velocity_target = speed;
-}
-void go_backward(float speed){
-  velocity_target = -speed;
-}
-void stop(){
-  velocity_target = 0;
-}
+// void go_forward(float speed){
+//   velocity_target = speed;
+// }
+// void go_backward(float speed){
+//   velocity_target = -speed;
+// }
+// void stop(){
+//   velocity_target = 0;
+// }
 
 
 
@@ -205,7 +206,10 @@ void loop()
     velocity_integral = clamp(velocity_integral, 10, -10);
 
     tilt_target_control = kp_v * velocity_error + kd_v * velocity_derivative;
+    tilt_target_control = clamp(tilt_target_control, 0.017, -0.017);
     tilt_target = tilt_target_control + tilt_target_bias;
+    tilt_target = 0.7*tilt_target + 0.3*last_tilt_target;
+    last_tilt_target = tilt_target;
 
     tilt_error = tilt_target - tiltx;
     tilt_derivative = (tilt_error - tilt_last_error) / dt;
@@ -216,9 +220,11 @@ void loop()
     corrected_a = kp * tilt_error + kd * tilt_derivative;
     corrected_a = clamp(corrected_a, max_acc, -max_acc);
 
-    target_speed = 0.7 * kv * tilt_error + 0.3 * last_speed;
-    target_speed = clamp(target_speed, max_speed, -max_speed);
-    last_speed = target_speed;
+    // target_speed = 0.7 * kv * tilt_error + 0.3 * last_speed;
+    // target_speed = clamp(target_speed, max_speed, -max_speed);
+    // last_speed = target_speed;
+
+    target_speed = tilt_error/abs(tilt_error)*15;
 
     step1.setTargetSpeedRad(target_speed);
     step2.setTargetSpeedRad(-target_speed);
