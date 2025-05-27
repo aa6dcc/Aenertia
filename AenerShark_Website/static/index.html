@@ -27,19 +27,16 @@
     </div>
   </header>
 
-  <!-- LAYOUT -->
+  <!-- MAIN LAYOUT -->
   <div class="container">
-    <!-- Left sidebar -->
     <aside class="mode-sidebar">
       <button class="button" data-mqtt="mode/set" data-payload="MANUAL">Set Manual</button>
       <button class="button" data-mqtt="mode/set" data-payload="AUTONOMOUS">Set Autonomous</button>
       <button class="button" data-mqtt="mode/set" data-payload="TEST">Set Test</button>
     </aside>
-
-    <!-- Main content -->
     <main class="content">
 
-      <!-- Manual Control -->
+      <!-- MANUAL TAB -->
       <section id="pad" class="tab-content active">
         <div class="card">
           <h2>Arrow Pad</h2>
@@ -53,11 +50,11 @@
         </div>
       </section>
 
-      <!-- Flash & CV Test -->
+      <!-- TEST TAB -->
       <section id="flash" class="tab-content">
         <div class="card">
           <h2>Flash & CV</h2>
-          <div class="button-group">
+          <div class="button-group flash-group">
             <button class="button" data-mqtt="led/control" data-payload="FLASH">Flash LED</button>
             <button class="button" data-mqtt="cv/control"  data-payload="ENABLE">Enable CV</button>
             <button class="button" data-mqtt="cv/control"  data-payload="DISABLE">Disable CV</button>
@@ -65,14 +62,14 @@
         </div>
       </section>
 
-      <!-- PID Tuning -->
+      <!-- PID TAB -->
       <section id="pid" class="tab-content">
         <div class="card">
           <h2>PID Tuning</h2>
           <div class="pid-grid">
-            <div>
+            <div class="pid-block">
               <h3>Inner</h3>
-              <form id="innerForm">
+              <form id="innerForm" class="pid-form">
                 <label>P:<input name="p" required></label>
                 <label>D:<input name="d" required></label>
                 <label>I:<input name="i" required></label>
@@ -80,9 +77,9 @@
                 <button class="button" type="submit">Send</button>
               </form>
             </div>
-            <div>
+            <div class="pid-block">
               <h3>Outer</h3>
-              <form id="outerForm">
+              <form id="outerForm" class="pid-form">
                 <label>P:<input name="p" required></label>
                 <label>D:<input name="d" required></label>
                 <label>I:<input name="i" required></label>
@@ -95,7 +92,7 @@
         </div>
       </section>
 
-      <!-- Autonomous -->
+      <!-- AUTONOMOUS TAB -->
       <section id="auto" class="tab-content">
         <div class="card">
           <h2>Autonomous</h2>
@@ -104,19 +101,21 @@
             <button class="button" data-mqtt="autonomous" data-payload="RETURN_HOME">Return Home</button>
           </div>
           <hr>
-          <h3>Key Locations</h3>
-          <form id="keyForm">
-            <label>Key:<input name="loc" required></label>
-            <button class="button">Assign</button>
-          </form>
+          <div class="key-section">
+            <h3>Key Locations</h3>
+            <form id="keyForm" class="key-form">
+              <label>Key:<input name="loc" required></label>
+              <button class="button" type="submit">Assign</button>
+            </form>
+          </div>
         </div>
       </section>
 
     </main>
   </div>
 
+  <!-- TABS & STATUS SCRIPT -->
   <script>
-    // Tabs
     document.querySelectorAll('.tab-btn').forEach(btn=>{
       btn.onclick = () => {
         document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
@@ -126,7 +125,6 @@
       };
     });
 
-    // Time & battery
     function updateTime(){
       const n=new Date();
       document.getElementById('time').textContent =
@@ -134,7 +132,8 @@
     }
     function updateBatt(){
       navigator.getBattery?.().then(b=>{
-        document.getElementById('battery').textContent = `Battery: ${Math.round(b.level*100)}%`;
+        document.getElementById('battery').textContent =
+          'Battery: '+Math.round(b.level*100)+'%';
       });
     }
     updateTime(); updateBatt();
