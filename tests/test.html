@@ -1,33 +1,4 @@
-from fastapi import FastAPI, Form, Request
-from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
-import paho.mqtt.publish as publish
-
-
-inner_history = []
-outer_history = []
-key_locations = []
-
-def render_dashboard(show_keys=False):
-    
-    def table(rows, headers):
-        html = "<table><tr>" + "".join(f"<th>{h}</th>" for h in headers) + "</tr>"
-        for row in rows:
-            html += "<tr>" + "".join(f"<td>{cell}</td>" for cell in row) + "</tr>"
-        html += "</table>"
-        return html
-
-    inner_table = table(inner_history, ["Proportional Gain", "Derivative Gain", "Integral Gain", "Setpoint"])
-    outer_table = table(outer_history, ["Proportional Gain", "Derivative Gain", "Integral Gain", "Setpoint", "Rotation Setpoint"])
-    key_table = "<table><tr><th>Saved Key Locations</th></tr>"
-    for loc in key_locations:
-        key_table += f"<tr><td><a href='/autonomous/set_key/{loc}'><button class='button'>{loc}</button></a></td></tr>"
-    key_table += "</table>"
-
-    key_block = f"<h3>Key Locations</h3>{key_table}" if show_keys else ""
-
-    return f"""
-    <!DOCTYPE html>
+ <!DOCTYPE html>
     <html>
     <head>
         <title>Robot Dashboard</title>
