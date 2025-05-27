@@ -142,3 +142,13 @@ I then added 3 different mode types: manual, autonomous and test:
 
 ![image](https://github.com/user-attachments/assets/986e52c5-8fb0-4faa-9284-1fbda5848de9)
 
+I updated the autonomous tab to have a saved key locations button, which displays all locations which have been inputted in the "assign" box: clicking on a given location listed on the website sets it as the key location for the robot.
+
+![image](https://github.com/user-attachments/assets/c2ea6f92-8c2c-486f-b738-8ff6c5b2ddc9)
+
+To access the website:
+  - git pull
+  - head to AenerShark\tests\communication_test
+  - run uvicorn server:app --host 0.0.0.0 --port 8000
+  - head to http://localhost:8000/dashboard/show_keys?
+
