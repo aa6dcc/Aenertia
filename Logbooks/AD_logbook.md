@@ -154,5 +154,6 @@ To access the website:
 
 As of now, our current system can be summarised to:
 
-![image](https://github.com/user-attachments/assets/71acb12b-d4dc-472c-bd77-626d730abc62)
+![image](https://github.com/user-attachments/assets/ccdfc337-3624-4e26-b427-b60b2ec572f9)
 
+This allows for a scalable project which can have its values loaded onto an AWS account (via DynamoDB & S3)
