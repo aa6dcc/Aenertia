@@ -1,4 +1,3 @@
-// mqtt-control.js
 const brokerUrl = 'ws://172.20.10.2:9001';  // your Pi (update if needed)
 const opts = { keepalive: 30, reconnectPeriod: 1000 };
 const client = mqtt.connect(brokerUrl, opts);
@@ -17,8 +16,11 @@ client.on('message', (topic, message) => {
     document.getElementById('battery').innerText = `Battery: ${msg}%`;
   } else if (topic === 'robot/keys') {
     const keys = JSON.parse(msg);
-    document.getElementById('key-list').innerHTML =
-      '<ul>' + keys.map(k => `<li>${k}</li>`).join('') + '</ul>';
+    const keyList = document.getElementById('key-list');
+    keyList.innerHTML =
+      '<ul>' + keys.map(k =>
+        `<li><button class="key-button" onclick="pub('robot/auto/key/set', '${k}')">${k}</button></li>`
+      ).join('') + '</ul>';
   }
 });
 
@@ -55,7 +57,6 @@ const arrowTopic = 'robot/manual/command';
 // ---- Mouse-based arrow controls ----
 ['up','down','left','right'].forEach(dir => {
   const btn = document.getElementById(dir);
-  let holdId;
   if (!btn) return;
   btn.onmousedown = () => {
     activeKeys.add(dir);
@@ -146,7 +147,7 @@ buttonActions.forEach(({id, topic, payload}) => {
   btn.onclick = () => pub(topic, payload);
 });
 
-// Assign key location
+// ---- Assign key location ----
 const assignBtn = document.getElementById('btn-assign-key');
 if (assignBtn) assignBtn.onclick = () => {
   const loc = document.getElementById('key-loc').value;
@@ -158,12 +159,23 @@ const formInner = document.getElementById('form-inner');
 if (formInner) formInner.onsubmit = e => {
   e.preventDefault();
   const d = new FormData(e.target);
-  pub('robot/pid/inner', JSON.stringify({ pg:+d.get('pg'), dg:+d.get('dg'), ig:+d.get('ig'), sp:+d.get('sp') }));
+  pub('robot/pid/inner', JSON.stringify({
+    pg: +d.get('pg'),
+    dg: +d.get('dg'),
+    ig: +d.get('ig'),
+    sp: +d.get('sp')
+  }));
 };
 
 const formOuter = document.getElementById('form-outer');
 if (formOuter) formOuter.onsubmit = e => {
   e.preventDefault();
   const d = new FormData(e.target);
-  pub('robot/pid/outer', JSON.stringify({ pg:+d.get('pg'), dg:+d.get('dg'), ig:+d.get('ig'), sp:+d.get('sp'), rot:+d.get('rot') }));
+  pub('robot/pid/outer', JSON.stringify({
+    pg: +d.get('pg'),
+    dg: +d.get('dg'),
+    ig: +d.get('ig'),
+    sp: +d.get('sp'),
+    rot: +d.get('rot')
+  }));
 };

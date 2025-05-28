@@ -31,8 +31,6 @@
   <!-- MANUAL PAD -->
   <div id="pad" class="tab active">
     <div class="card video-layout">
-
-      <!-- Live Camera Pane -->
       <div class="video-container">
         <h2>Live Camera</h2>
         <img
@@ -42,8 +40,6 @@
           alt="Live Camera Feed"
         />
       </div>
-
-      <!-- Arrow Pad Pane -->
       <div class="controls-container">
         <h2>Arrow Pad Control</h2>
         <div class="controller">
@@ -54,7 +50,6 @@
           <div class="arrow right" id="right">→</div>
         </div>
       </div>
-
     </div>
   </div>
 
@@ -120,11 +115,9 @@
     </div>
   </div>
 
-    <!-- AUTONOMOUS -->
+  <!-- AUTONOMOUS -->
   <div id="auto" class="tab">
     <div class="card video-layout">
-
-      <!-- Live Camera Pane -->
       <div class="video-container">
         <h2>Live Camera</h2>
         <img
@@ -134,29 +127,26 @@
           alt="Live Camera Feed"
         />
       </div>
-
-      <!-- Autonomous Controls Pane -->
       <div class="controls-container">
         <h2>Autonomous Control</h2>
         <div class="auto-grid">
           <div class="auto-column">
             <button class="button" id="btn-follow">Follow Me</button><br>
-            <button class="button" id="btn-return-key">Return to Key Location</button><br>
-            <button class="button" id="btn-show-keys">Show Key Locations</button>
-            <div id="key-list"></div>
+            <button class="button" id="btn-return-key">Return to Key Location</button>
           </div>
         </div>
       </div>
-
     </div>
   </div>
 
-  <!-- Assign Key Location -->
+  <!-- Assign Key Location (persistent on all tabs) -->
   <div class="assign-key-container">
     <div class="assign-box">
       <label for="key-loc">Assign Key Location:</label>
       <input id="key-loc" type="text">
       <button class="button" id="btn-assign-key">Assign</button>
+      <button class="button" id="btn-show-keys">Show Key Locations</button>
+      <div id="key-list"></div>
     </div>
   </div>
 

@@ -171,3 +171,16 @@ input[type="submit"], .button {
     color: white;
     border: n
 }
+
+.key-button {
+  background-color: #e3f2fd;
+  border: 1px solid #90caf9;
+  padding: 6px 12px;
+  border-radius: 8px;
+  margin: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.key-button:hover {
+  background-color: #bbdefb;
+}
