@@ -163,3 +163,10 @@ This allows for a scalable project which can have its values loaded onto an AWS 
 Changed the interface to show MQTT status and added the ability to assign to key locations on every tab
 
 ![image](https://github.com/user-attachments/assets/a24c22e2-754c-43a4-9f8c-0709c0c26ebb)
+
+I then reformatted the website so that the show key locations button is next to the assign key location button:
+
+![image](https://github.com/user-attachments/assets/e1329ded-95c1-4676-809c-ba6502f876b3)
+
+I will start working on implementing the database from here on out.
+
