@@ -1,5 +1,4 @@
 // mqtt-control.js
-// const brokerUrl = 'ws://172.20.10.9:9001';  // your Pi (update if needed)
 const brokerUrl = 'ws://172.20.10.2:9001';  // your Pi (update if needed)
 const opts = { keepalive: 30, reconnectPeriod: 1000 };
 const client = mqtt.connect(brokerUrl, opts);
@@ -7,7 +6,7 @@ const client = mqtt.connect(brokerUrl, opts);
 // ---- MQTT Event Handlers ----
 client.on('connect', () => {
   console.log('MQTT connected');
-  document.getElementById('battery').innerText = 'MQTT Ready';
+  document.getElementById('mqtt-status').innerText = 'MQTT: Connected';
   client.subscribe('robot/battery');
   client.subscribe('robot/keys');
 });
@@ -25,7 +24,14 @@ client.on('message', (topic, message) => {
 
 client.on('error', err => {
   console.error('MQTT error', err);
-  document.getElementById('battery').innerText = 'MQTT Error';
+  document.getElementById('mqtt-status').innerText = 'MQTT: Error';
+  document.getElementById('battery').innerText = 'Battery: --%';
+});
+
+client.on('close', () => {
+  console.warn('MQTT connection closed');
+  document.getElementById('mqtt-status').innerText = 'MQTT: Disconnected';
+  document.getElementById('battery').innerText = 'Battery: --%';
 });
 
 // ---- Helper to publish ----
@@ -40,7 +46,6 @@ setInterval(() => {
 }, 10000);
 
 // ---- Arrow Control Commands ----
-// numeric codes expected by robot subscriber:
 const commandMap = {
   up: 'up', down: 'down', left: 'left', right: 'right', stop: 'stop',
   'up-left': 'up-left', 'up-right': 'up-right', 'down-left': 'down-left', 'down-right': 'down-right'
@@ -86,30 +91,24 @@ document.addEventListener('keyup', e => {
 });
 
 function updateMovement() {
-  // clear existing interval
   if (movementInterval) clearInterval(movementInterval);
-
-  // if no keys pressed, send stop and clear highlights
   if (activeKeys.size === 0) {
     pub(arrowTopic, commandMap.stop);
     document.querySelectorAll('.arrow.active').forEach(el => el.classList.remove('active'));
     return;
   }
 
-  // highlight active arrows
   document.querySelectorAll('.arrow.active').forEach(el => el.classList.remove('active'));
   activeKeys.forEach(d => {
     const b = document.getElementById(d);
     if (b) b.classList.add('active');
   });
 
-  // send immediately, then at interval
   sendMovement();
   movementInterval = setInterval(sendMovement, 200);
 }
 
 function sendMovement() {
-  // determine command based on key combos
   const hasUp = activeKeys.has('up');
   const hasDown = activeKeys.has('down');
   const hasLeft = activeKeys.has('left');
@@ -147,20 +146,21 @@ buttonActions.forEach(({id, topic, payload}) => {
   btn.onclick = () => pub(topic, payload);
 });
 
-// assign key location
+// Assign key location
 const assignBtn = document.getElementById('btn-assign-key');
 if (assignBtn) assignBtn.onclick = () => {
   const loc = document.getElementById('key-loc').value;
   pub('robot/auto/key/assign', loc);
 };
 
-// PID forms
+// ---- PID Form Handling ----
 const formInner = document.getElementById('form-inner');
 if (formInner) formInner.onsubmit = e => {
   e.preventDefault();
   const d = new FormData(e.target);
   pub('robot/pid/inner', JSON.stringify({ pg:+d.get('pg'), dg:+d.get('dg'), ig:+d.get('ig'), sp:+d.get('sp') }));
 };
+
 const formOuter = document.getElementById('form-outer');
 if (formOuter) formOuter.onsubmit = e => {
   e.preventDefault();
