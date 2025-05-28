@@ -1,0 +1,199 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(to bottom right, #eef1f5, #dfe6ed);
+    margin: 0;
+    padding: 20px;
+    text-align: center;
+}
+
+/* ── Shared Card Styles ── */
+.card {
+    background: white;
+    padding: 30px;
+    margin: 20px auto;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    max-width: 1000px;
+}
+
+/* ── Video + Controls side by side ── */
+.video-layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4rem;
+  align-items: flex-start;
+}
+
+.video-container {
+  flex: 1 1 500px;
+  max-width: 650px;
+}
+
+.video-container h2 {
+  margin-bottom: 0.5rem;
+  font-size: 1.25rem;
+}
+
+.video-container .live-video {
+  width: 100%;
+  height: auto;
+  max-height: 600px;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+}
+
+.controls-container {
+  flex: 1 1 200px;
+}
+
+.controls-container h2 {
+  margin-bottom: 0.5rem;
+  font-size: 1.25rem;
+}
+
+/* ── Arrow Pad ── */
+.controller {
+    display: grid;
+    grid-template-columns: repeat(3, 80px);
+    grid-template-rows: repeat(3, 80px);
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
+    margin: 20px auto;
+    width: max-content;
+}
+
+.arrow.up    { grid-column: 2; grid-row: 1; }
+.arrow.left  { grid-column: 1; grid-row: 2; }
+.arrow.stop  { grid-column: 2; grid-row: 2; }
+.arrow.right { grid-column: 3; grid-row: 2; }
+.arrow.down  { grid-column: 2; grid-row: 3; }
+
+.arrow {
+    width: 60px;
+    height: 60px;
+    border-radius: 10px;
+    border: 2px solid #ccc;
+    font-size: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    user-select: none;
+}
+
+.arrow:hover, .arrow.active {
+    background-color: #a4c4e0;
+    transform: scale(1.05);
+}
+
+.arrow.stop {
+    background: #f44336;
+    color: white;
+    border: none;
+}
+
+/* ── Tabs & Buttons ── */
+.tabs {
+  margin: 20px 0;
+}
+
+.tabs button {
+    background: #f0f0f0;
+    border: none;
+    padding: 10px 20px;
+    margin: 5px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.tabs button:hover,
+.tabs button.active {
+    background-color: #d0e3f0;
+}
+
+.tab {
+    display: none;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.tab.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Info Bar ── */
+.info-bar {
+    position: fixed;
+    top: 15px;
+    right: 20px;
+    background: #fff;
+    padding: 10px 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    font-size: 14px;
+    z-index: 1000;
+}
+
+/* ── Forms ── */
+.form-row {
+  display: flex;
+  justify-content: start;
+  align-items: center;
+  margin: 8px 0;
+}
+
+.form-row label {
+  width: 150px;
+  text-align: right;
+  margin-right: 10px;
+  font-weight: 500;
+}
+
+.form-row input {
+  flex: 1;
+  padding: 6px;
+}
+
+input[type="submit"], .button {
+    padding: 10px 20px;
+    margin-top: 10px;
+    background-color: #1976d2;
+    color: white;
+    border: n
+}
+
+.key-button {
+  background-color: #e3f2fd;
+  border: 1px solid #90caf9;
+  padding: 6px 12px;
+  border-radius: 8px;
+  margin: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.key-button:hover {
+  background-color: #bbdefb;
+}
+
+.key-btn {
+  background: #f0f0f0;
+  border: 1px solid #ccc;
+  padding: 6px 12px;
+  margin: 4px 0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.key-btn:hover {
+  background-color: #cce4ff;
+}
