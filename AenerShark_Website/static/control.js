@@ -1,6 +1,8 @@
 // control.js
 
 // 0. Wait for DOM
+console.log('🔥 control.js loaded');
+
 window.addEventListener('DOMContentLoaded', () => {
 
   // 1. Connect to MQTT over WebSockets
