@@ -4,11 +4,8 @@
   <meta charset="UTF-8">
   <title>Robot Dashboard (MQTT)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- CSS -->
   <link rel="stylesheet" href="static/style.css">
-  <!-- MQTT.js client library -->
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js" defer></script>
-  <!-- Your control logic -->
   <script src="static/mqtt-control.js" defer></script>
 </head>
 <body>
@@ -104,7 +101,6 @@
         </div>
         <input type="submit" value="Submit" class="button">
       </form>
-
     </div>
   </div>
 
@@ -114,12 +110,7 @@
       <h1>Autonomous Control</h1>
       <div class="auto-grid">
         <div class="auto-column">
-          <button class="button" id="btn-follow">Follow Me</button>
-        </div>
-        <div class="auto-column">
-          Assign Key Location:
-          <input id="key-loc" type="text">
-          <button class="button" id="btn-assign-key">Assign</button><br>
+          <button class="button" id="btn-follow">Follow Me</button><br>
           <button class="button" id="btn-return-key">Return to Key Location</button><br>
           <button class="button" id="btn-show-keys">Show Key Locations</button>
           <div id="key-list"></div>
@@ -128,11 +119,20 @@
     </div>
   </div>
 
+  <!-- Assign Key Location (floating right, on all tabs) -->
+  <div class="assign-key-container">
+    <div class="assign-box">
+      <label for="key-loc">Assign Key Location:</label>
+      <input id="key-loc" type="text">
+      <button class="button" id="btn-assign-key">Assign</button>
+    </div>
+  </div>
+
   <script>
-  function showTab(id) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-  }
+    function showTab(id) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
   </script>
 </body>
 </html>

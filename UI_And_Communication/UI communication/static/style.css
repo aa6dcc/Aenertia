@@ -157,3 +157,31 @@ input[type="submit"], .button {
 .form-row input {
   flex: 1;
 }
+
+.assign-key-container {
+  position: fixed;
+  top: 100px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.assign-box {
+  background: white;
+  padding: 12px;
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  width: 220px;
+  text-align: center;
+}
+
+.assign-box label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.assign-box input {
+  width: 90%;
+  padding: 6px;
+  margin-bottom: 10px;
+}
