@@ -1,6 +1,8 @@
-#!/usr/bin/env python3
-
+import sys
 import os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+import global_var as gv
+
 import time
 
 import cv2
@@ -40,7 +42,7 @@ def pose_detection():
 
     # Debug: confirm the actual configuration
     cfg = cam.camera_config["main"]["size"]
-    print(f"Camera configured at: {cfg[0]}×{cfg[1]}")
+    # print(f"Camera configured at: {cfg[0]}×{cfg[1]}")
 
     mp_image_format = mp.ImageFormat.SRGB
 
@@ -69,8 +71,13 @@ def pose_detection():
             lower_idxs = [11, 12, 13, 14, 15, 16]
             pts = []
             h, w = frame_bgr.shape[:2]
+
+            gv.HumanDetected
+            gv.offset
+            gv.offset = 0
+
             if result.pose_landmarks:
-                HumanDetected = True
+                gv.HumanDetected = True
 
                 first_pose: list = result.pose_landmarks[0]
                 for idx in lower_idxs:
@@ -80,18 +87,21 @@ def pose_detection():
                         y_px = int(kp.y * h)
                         pts.append((x_px, y_px))
             else:
-                print("No results")
-                HumanDetected = False
+                # print("No results")
+                gv.HumanDetected = False
             # 6) Draw bounding box & compute offset
             if pts:
                 xs, ys = zip(*pts)
                 x1, x2 = min(xs), max(xs)
                 y1, y2 = min(ys), max(ys)
                 cv2.rectangle(frame_bgr, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                offset = ((x1 + x2) // 2) - (w // 2)
-                if offset == None:
+                gv.offset = ((x1 + x2) // 2) - (w // 2)
+                if gv.offset == None:
                     print("stop")
-                print(f"Offset from center: {offset}")
+                # print(f"Offset from center: {offset}")
+            # print(f"HumanDetected = {HumanDetected}, Offset = {offset}")
+
+            # print(HumanDetected)
 
             # 7) Display for debugging
             cv2.imshow("Lower-Body Follow", frame_bgr)

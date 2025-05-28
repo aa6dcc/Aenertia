@@ -5,8 +5,7 @@ from time import sleep
 #import app_video # runs the server to send back the video
 from Advanced_CV.pose_detection import pose_detection
 
-import numpy as np
-import cv2
+import global_var as gv
 
 #Serial config (i included many ports just n case we somehow connect to an unexpected port number. It is very unlikely it goes above 1) 
 SERIAL_PORT = [ "/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2","/dev/ttyUSB3", "/dev/ttyUSB5", 
@@ -17,12 +16,11 @@ SERIAL_PORT = [ "/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2","/dev/ttyUSB3", "
 baud_rate = 115200
 
 #global variables
-cv_enabled = False
+follow_mode = False
 ser = None
 mode = "manual" #Global var mode initialized to Manual
-HumanDetected = False
-offset = 0
-
+# gv.HumanDetected = False
+# gv.offset = 0
 
 def send_2_esp(command):
     print(f"Sending to esp: {command}")
@@ -30,42 +28,54 @@ def send_2_esp(command):
         ser.write((command + "\n").encode())
 
 
-def fake_cv_loop(): # This loop will go until cv_disabled is called. Hozever because we are stuck in the loop we cannot check if the mqtt published disabled
-    while cv_enabled:
-        print("LED is on")
-        send_2_esp("LED_ON")
-        sleep(2)
-        print("LED is off")
-        send_2_esp("LED_OFF")
-        sleep(2)
+def follow_me():
+    gv.HumanDetected
+    gv.offset
+    print(gv.HumanDetected)
+    while follow_mode:
+        print(gv.HumanDetected)
+
+        if gv.HumanDetected:
+            print("HUMAN DETECTED")
+            if abs(gv.offset) < 200: 
+                send_2_esp("forward")
+            elif 200 <= gv.offset < 700:
+                send_2_esp("forwardANDright")
+            elif -200 >= gv.offset > -700:
+                send_2_esp("forardANDleft")
+            elif gv.offset >= 700:
+                send_2_esp("right")
+            elif gv.offset <= -700:
+                send_2_esp("left")
+            else: 
+                send_2_esp("stop")
+        else:
+            send_2_esp("stop")
 
 
-def cv_loop():
-    global offset
-    pass
-    '''
-    return 
-    '''
-
-def GotoKeyLocation():
+def gotoKeyLocation():
     print("ROS2 works ; Python stays silent")
 
+
 def on_connect(client, userdata, flags, rc):
+    gv.HumanDetected
+    gv.offset
+    
     print("MQTT connected with result code", rc)
     client.subscribe("robot/mode")
-    client.subscribe("robot/cv")
+    client.subscribe("robot/auto")
     client.subscribe("robot/manual/command")
 
     # Run the CV pose detection in the background
     threading.Thread(target=pose_detection, daemon=True).start() #To fix this we use threading. Threading isolates the code we target and procceeds zith the rest of the code.
 
 
-
 def on_message(client, userdata, msg):
     #global cv_enabled
     global mode
-    global HumanDetected
-    global offset
+    global follow_mode
+    gv.HumanDetected
+    gv.offset
 
     #MQTT input
     payload = msg.payload.decode()
@@ -75,6 +85,11 @@ def on_message(client, userdata, msg):
     # We start by checking if the mode was changed
     if topic == "robot/mode":
         mode = payload
+
+    # Check if the robot should stop following
+    if mode != "autonomous" or payload == "return":  # This should be GoToKeyLocation Instead of return
+        follow_mode = False
+        print("follow mode OFF")
 
     # Manual mode code
     if mode == "manual":
@@ -99,40 +114,17 @@ def on_message(client, userdata, msg):
 
     # Autnomous mode code
     elif mode == "autonomous":  
-        ''' PREVIOUS TEST: CURRENTLY IRRELEVANT
-        if topic == "robot/cv":
-            if payload == "enable cv":
-                if not cv_enabled:
-                    cv_enabled = True
-                    print("Cv enabled")
-                    threading.Thread(target=fake_cv_loop, daemon=True).start() #To fix this we use threading. Threading isolates the code we target and procceeds zith the rest of the code.
-            elif payload == "disable cv":
-                cv_enabled = False
-                send_2_esp("LED_OFF")
-        '''
         if topic == "robot/auto":
-            # In follow mode the robot follors the person around
-            if payload == "follow":
-                if HumanDetected:
-                    if abs(offset) < 100: 
-                        send_2_esp("forward")
-                    elif 100 <= offset < 700:
-                        send_2_esp("forward and right")
-                    elif -100 >= offset > -700:
-                        send_2_esp("forzard and left")
-                    elif offset >= 700:
-                        send_2_esp("right")
-                    elif offset <= -700:
-                        send_2_esp("left")
-                    else: 
-                        send_2_esp("stop")
-                else :
-                    send_2_esp("stop")
-            
-            elif payload == "GotoKeyLocation":
-                GotoKeyLocation()
 
-            elif payload == "stop": #To be implemented later
+            # In follow mode the robot follows the person around
+            if payload == "follow":  
+                follow_mode = True
+                threading.Thread(target=follow_me, daemon=True).start() # Runs follow_me unless follow_mode is disabled
+
+            elif payload == "return": # This should be GoToKeyLocation Instead of return 
+                gotoKeyLocation()
+
+            elif payload == "stop": # To be implemented later
                 send_2_esp("stop")
 
 
