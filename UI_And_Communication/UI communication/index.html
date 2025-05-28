@@ -22,7 +22,7 @@
   </div>
 
   <div class="tabs">
-    <button onclick="showTab('pad')">Manual Control</button>
+    <button onclick="showTab('pad')" class="active">Manual Control</button>
     <button onclick="showTab('flash')">Test</button>
     <button onclick="showTab('pid')">PID Values</button>
     <button onclick="showTab('auto')">Autonomous</button>
@@ -30,16 +30,31 @@
 
   <!-- MANUAL PAD -->
   <div id="pad" class="tab active">
-    <div class="card">
-      <img src="static/images/logo.png" class="logo" alt="Logo">
-      <h1>Arrow Pad Control</h1>
-      <div class="controller">
-        <div class="arrow up" id="up">↑</div>
-        <div class="arrow stop" id="stop">■</div>
-        <div class="arrow down" id="down">↓</div>
-        <div class="arrow left" id="left">←</div>
-        <div class="arrow right" id="right">→</div>
+    <div class="card video-layout">
+
+      <!-- Live Camera Pane -->
+      <div class="video-container">
+        <h2>Live Camera</h2>
+        <img
+          id="videoStream"
+          class="live-video"
+          src="http://172.20.10.6:8001/video_feed"
+          alt="Live Camera Feed"
+        />
       </div>
+
+      <!-- Arrow Pad Pane -->
+      <div class="controls-container">
+        <h2>Arrow Pad Control</h2>
+        <div class="controller">
+          <div class="arrow up"    id="up">↑</div>
+          <div class="arrow stop"  id="stop">■</div>
+          <div class="arrow down"  id="down">↓</div>
+          <div class="arrow left"  id="left">←</div>
+          <div class="arrow right" id="right">→</div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -105,22 +120,38 @@
     </div>
   </div>
 
-  <!-- AUTONOMOUS -->
+    <!-- AUTONOMOUS -->
   <div id="auto" class="tab">
-    <div class="card">
-      <h1>Autonomous Control</h1>
-      <div class="auto-grid">
-        <div class="auto-column">
-          <button class="button" id="btn-follow">Follow Me</button><br>
-          <button class="button" id="btn-return-key">Return to Key Location</button><br>
-          <button class="button" id="btn-show-keys">Show Key Locations</button>
-          <div id="key-list"></div>
+    <div class="card video-layout">
+
+      <!-- Live Camera Pane -->
+      <div class="video-container">
+        <h2>Live Camera</h2>
+        <img
+          id="videoStreamAuto"
+          class="live-video"
+          src="http://172.20.10.6:8001/video_feed"
+          alt="Live Camera Feed"
+        />
+      </div>
+
+      <!-- Autonomous Controls Pane -->
+      <div class="controls-container">
+        <h2>Autonomous Control</h2>
+        <div class="auto-grid">
+          <div class="auto-column">
+            <button class="button" id="btn-follow">Follow Me</button><br>
+            <button class="button" id="btn-return-key">Return to Key Location</button><br>
+            <button class="button" id="btn-show-keys">Show Key Locations</button>
+            <div id="key-list"></div>
+          </div>
         </div>
       </div>
+
     </div>
   </div>
 
-  <!-- Assign Key Location (floating right, on all tabs) -->
+  <!-- Assign Key Location -->
   <div class="assign-key-container">
     <div class="assign-box">
       <label for="key-loc">Assign Key Location:</label>
@@ -132,6 +163,8 @@
   <script>
     function showTab(id) {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+      document.querySelector(`.tabs button[onclick="showTab('${id}')"]`)?.classList.add('active');
       document.getElementById(id).classList.add('active');
     }
   </script>
