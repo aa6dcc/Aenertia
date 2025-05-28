@@ -74,7 +74,42 @@ However, during the process, we should strictly limit the theta angle to make it
 
 A problem of power raised during the process. Raspberry pi would automatically restart due to low voltage when motors are running. This is caused by motors drawing to much current from the circuit board and voltage regulaion is not done well enough to conpenstate for the power drawn. This should be fixed by further power monitoring. 
 
-# Server should also be used in making a remote controller.
+### Server should also be used in making a remote controller.
+<br>
+
+# Power Monitoring
+## Basic Task:
+The task for power monitoring is to measure the current and voltage for two things: The 15V motors and the rest 5V components.
+Both nodes has a shunt resistor connected in series on the PCB used solely for current measurement. 
+When current goes through the shunt resistor, there would be a slight voltage drop that is proportional to its resistance. Thus, by measureing this value using an ADC, we are able to find the current and power supplied in this branch of the system. 
+
+## ADC Choice
+
+The ADC choice would be MCP3208 since it is a most common 8 channel ADC that is compatable with the code provided. It has 12bits precision which is much better than the performance of the built-in analog input ports of the ESP32.
+
+## Measurement and Amplification
+
+In between the battery and the motors, there is a $100m\Omega$ resistor. The current to the motors is measured to be around 1A-1.5A when the motor is running at full speed, and the celing for current should be 2A since the fuse would burn if it goes above. 
+Thus, the range of voltage across the shunt resistance should be 0 to 0.2V. 
+The full range of ADC conversion is 0 to 3.3V, so an amplification of 15.5 times is required. 
+
+In between the buck converter and all 5V devices (esp32 and raspberry pi), there is a $10m\Omega$ resistor. The current should also be lower than 2A so a maximum of 0.02V is calculated. 
+This value need to be amplified by 155 times to reach 3.3V.
+
+## Measuring Instructions
+Amplifier1 should be connected to 0V (GND), 3.3V (Vs), I5+ (V+), 5V (V-). 
+
+Amplifier2 should connected to 0V (GND), 3.3V (Vs), IM+ (V+), IMOT (V-). 
+
+ADC should be connected to 0V (GND), 3.3V (Vcc), Amplifier1 Output (Channel1), Amplifier2 Output (Channel3).
+
+# Circuit Diagram
+![Circuit](JD_Files/Circuit%20Diagram%20PCB.png)
+
+
+
+
+
 
 
 

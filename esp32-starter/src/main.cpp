@@ -1,15 +1,9 @@
-//This file uses double loop technique to control the tilt angle.
-//Tile angle controls desired angular rate, and error in angular rate controls desired angular acceleration of the motor.
-//The K values are not adjusted, when adjusting, you should adjust kv first, then inner loop, then adjust the outer loop. 
-//Integral terms may not be used, only tune kp and kd.
-
 #include <Arduino.h>
 #include <SPI.h>
 #include <TimerInterrupt_Generic.h>
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
 #include <step.h>
-#include <Kalman.h>
 
 // The Stepper pins
 const int STEPPER1_DIR_PIN  = 16;
@@ -19,7 +13,7 @@ const int STEPPER2_STEP_PIN = 14;
 const int STEPPER_EN_PIN    = 15; 
 
 //ADC pins
-const int ADC_CS_PIN        = 5;  
+const int ADC_CS_PIN        = 5;
 const int ADC_SCK_PIN       = 18;
 const int ADC_MISO_PIN      = 19;
 const int ADC_MOSI_PIN      = 23;
@@ -27,61 +21,47 @@ const int ADC_MOSI_PIN      = 23;
 // Diagnostic pin for oscilloscope
 const int TOGGLE_PIN        = 32;
 
-const int PRINT_INTERVAL    = 300;
+const int PRINT_INTERVAL    = 500;
 const int LOOP_INTERVAL     = 10;
 const int STEPPER_INTERVAL_US = 20;
 
+const float kx = 5.0;
 const float VREF = 4.096;
-const float C = 0.98;
-float theta_prev = 0;
+// PID 控制参数（你可以根据实际表现调节）
+float kp1 = 8848;
+float ki1 = 0;
+float kd1 = 80 ;//800
+float kp2 = -0.003;
+float ki2 = -0.00007;
+// float kp2 = 0;
+// float ki2 = 0;
+float kd2 = 0.0;
+float kp_turn = 0.0;  
+float ki_turn = 0.0;
+float kd_turn = 0.0;
+float turnIntegral = 0, lastTurnError = 0;
 
-float velocity = 0;
-float velocity_target = 0;
-float velocity_error = 0;
-float velocity_last_error = 0;
-float velocity_derivative = 0;
-float velocity_integral = 0; 
+float targetYaw = 0;  // 希望的角度，或者从遥控器获得的转动指令
 
-float tilt_target_bias = 0.180;
-float tilt_target_control = 0;
-float tilt_target = 0;
-float tilt_error = 0;
-float tilt_last_error = 0;
-float tilt_derivative = 0;
-float tilt_integral = 0; 
-
-float gyro_rate=0;
-float gyro_target = 0;
-float gyro_error = 0;
-float gyro_last_error = 0;
-float gyro_derivative = 0;
-float gyro_integral = 0; 
-
-float corrected_a = 0;
-int direction;
-float max_acc = 100;
-float max_speed = 15;
-
-float kp_v = 0.005;
-float ki_v = 0;
-float kd_v = 0.001;
-
-float kp_o = 8;
-float ki_o = 0;
-float kd_o = 1;
-
-float kp = 90;
-float ki = 0;
-float kd = 1;
-
-float kv = 150;
-float target_speed = 0;
-float last_speed = 0;
-float dt = 0;
-float last_time = 0;
-float command_time = 0;
-bool EXECUTING = false;
-
+// PID 状态变量
+static float angleIntegral = 0.0;
+static float lastAngleError = 0.0;
+static float lastAcce=0.0;
+static float speedIntegral = 0.0;
+static float lastSpeedError = 0.0;
+float acce=0.0;
+float targetSpeed=0;
+float motorCommand=0.0;
+float speed = 0.0;
+float targetAngle = 0.0;
+float output = 0.0;
+float  accAngle=0.0;
+float  gyroRate=0.0;
+float dt=0.0;
+float targetAnglebias = 0;
+float lastTargetAngle=0.0;
+float currentYaw=0.0;
+float turnOutput = 0;
 //Global objects
 ESP32Timer ITimer(3);
 Adafruit_MPU6050 mpu;         //Default pins for I2C are SCL: IO22, SDA: IO21
@@ -89,7 +69,6 @@ Adafruit_MPU6050 mpu;         //Default pins for I2C are SCL: IO22, SDA: IO21
 step step1(STEPPER_INTERVAL_US,STEPPER1_STEP_PIN,STEPPER1_DIR_PIN );
 step step2(STEPPER_INTERVAL_US,STEPPER2_STEP_PIN,STEPPER2_DIR_PIN );
 
-KalmanFilter gyroKalman(0.01, 0.1);
 
 //Interrupt Service Routine for motor update
 //Note: ESP32 doesn't support floating point calculations in an ISR
@@ -109,31 +88,17 @@ bool TimerHandler(void * timerNo)
 
 uint16_t readADC(uint8_t channel) {
   uint8_t TX0 = 0x06 | (channel >> 2);  // Command Byte 0 = Start bit + single-ended mode + MSB of channel
-  uint8_t tx1 = (channel & 0x03) << 6;  // Command Byte 1 = Remaining 2 bits of channel
+  uint8_t txByte1 = (channel & 0x03) << 6;  // Command Byte 1 = Remaining 2 bits of channel
 
   digitalWrite(ADC_CS_PIN, LOW); 
-
-  SPI.transfer(TX0);                    // Send Command Byte 0
+   SPI.transfer(TX0);                    // Send Command Byte 0
   uint8_t RX0 = SPI.transfer(TX1);      // Send Command Byte 1 and receive high byte of result
-  uint8_t rx1 = SPI.transfer(0x00);     // Send dummy byte and receive low byte of result
+  uint8_t rxByte1 = SPI.transfer(0x00);     // Send dummy byte and receive low byte of result
 
   digitalWrite(ADC_CS_PIN, HIGH); 
-
-  uint16_t result = ((RX0 & 0x0F) << 8) | rx1; // Combine high and low byte into 12-bit result
+  uint16_t result = ((RX0 & 0x0F) << 8) | rxByte1; // Combine high and low byte into 12-bit result
   return result;
 }
-
-void go_forward(float speed){
-  velocity_target = speed;
-}
-void go_backward(float speed){
-  velocity_target = -speed;
-}
-void stop(){
-  velocity_target = 0;
-}
-
-
 
 void setup()
 {
@@ -160,6 +125,8 @@ void setup()
     }
   Serial.println("Initialised Interrupt for Stepper");
 
+  //Set motor acceleration values
+ 
   //Enable the stepper motor drivers
   pinMode(STEPPER_EN_PIN,OUTPUT);
   digitalWrite(STEPPER_EN_PIN, false);
@@ -171,17 +138,6 @@ void setup()
 
 }
 
-float complementaryFilter(float theta_a, float gyro_rate, float theta_prev, float dt, float C) {
-    float theta_n = (1 - C) * theta_a + C * (gyro_rate * dt + theta_prev);
-    return theta_n;
-}
-
-float clamp(float input, float max, float min){
-  if (input > max) return max;
-  else if (input < min) return min;
-  else return input;
-}
-
 void loop()
 {
   //Static variables are initialised once and then the value is remembered betweeen subsequent calls to this function
@@ -190,133 +146,164 @@ void loop()
   static float tiltx = 0.0;             //current tilt angle
   
   //Run the control loop every LOOP_INTERVAL ms
+  
   if (millis() > loopTimer) {
     loopTimer += LOOP_INTERVAL;
-    
+    static unsigned long lastTime = 0;
+    unsigned long now = millis();
+    if(now<5000){
+      targetSpeed=0;
+      targetYaw=0;
+    }else if (now<9000){
+      targetSpeed=8;
+      //targetYaw=0.1;
+    }else if(now<13000){
+      targetSpeed=-8;
+      //targetYaw=-0.1;
+    }else{
+      targetSpeed=0;
+      //targetYaw=0;
+    }
+    dt = (now - lastTime) / 1000.0;
+    lastTime = now;
     // Fetch data from MPU6050
+    //targetAngle = 0.0;
     sensors_event_t a, g, temp;
     mpu.getEvent(&a, &g, &temp);
+    //tiltx = a.acceleration.z / 9.67;
+    //accAngle = atan2(a.acceleration.z, a.acceleration.x);
+    accAngle = atan2(a.acceleration.z, sqrt(a.acceleration.x * a.acceleration.x + a.acceleration.y * a.acceleration.y));
+    gyroRate = g.gyro.y-0.01;
+    float alpha = 0.98;
+    tiltx =( alpha * (tiltx + gyroRate * dt) + (1 - alpha) * accAngle);
+     // === 内环 PID（速度 -> 电机命令）===
+    float actualSpeed = -(step1.getSpeedRad());  // 可替换为更合适的速度估计
+    float speedError = targetSpeed - actualSpeed;
+    speedIntegral += speedError * dt;
+    speedIntegral = constrain(speedIntegral, -100, 100);
+    float speedDerivative = (speedError - lastSpeedError) / dt;
+    targetAngle= (kp2 * speedError + ki2 * speedIntegral + kd2 * speedDerivative)+targetAnglebias;
+    targetAngle=0.7*targetAngle+0.3*lastTargetAngle;
+    lastTargetAngle=targetAngle;
+    lastSpeedError = speedError;
+    // === 外环 PID（角度 -> 目标速度）===
+    float angleError = targetAngle - tiltx;
+    angleIntegral += angleError * dt;
+    angleIntegral = constrain(angleIntegral, -300, 300);  // 防止积分饱和
+    float angleDerivative = (angleError - lastAngleError) / dt;
+    acce = (kp1 * angleError + ki1 * angleIntegral + kd1 * angleDerivative);
+    acce= acce*0.7+lastAcce*0.3;
+    lastAcce=acce;
+    lastAngleError = angleError;
+
+   // ==== 转向 PID 参数 ====
+
+// ==== 获取当前 yaw （偏航角速度或角度） ====
+currentYaw = g.gyro.z+0.06;  // 或者集成角度值
+
+// ==== 计算 PID ====
+float yawError = targetYaw - currentYaw;
+turnIntegral += yawError * dt;
+float turnDerivative = (yawError - lastTurnError) / dt;
+turnOutput = kp_turn * yawError + ki_turn * turnIntegral + kd_turn * turnDerivative;
+lastTurnError = yawError;
+if(turnOutput < 0.005 && turnOutput > -0.005){
+    turnOutput = 0;
+}
+else{
+    turnOutput = turnOutput;
+}
+
+
+//float error = targetAngle - tiltx;
+
+// 积分项累加
+//integral += error * (LOOP_INTERVAL / 1000.0);  // 注意单位：秒
+
+// 微分项
+//float derivative = (error - lastError) / (LOOP_INTERVAL / 1000.0);
+
+// PID 控制器输出
+//output = (kp1 * error + ki1 * integral + kd1 * derivative)/1000;
+//speed = (kp2 * error + ki2 * integral + kd2 * derivative)/1000;
+//float maxOutput = 10.0;
+//output = constrain(output, -maxOutput, maxOutput);
+
+// 保存上一次误差
+//lastError = error;
 
     //Calculate Tilt using accelerometer and sin x = x approximation for a small tilt angle
-    float theta_a = atan2(a.acceleration.z, a.acceleration.x);
+    //888tiltx = a.acceleration.z/9.67;
 
-    gyro_rate = gyroKalman.update(g.gyro.y)-0.03;
-
-    // float theta_a = 0;
-    // float gyro_rate = 0;
-
-    velocity = (step1.getSpeedRad()-step2.getSpeedRad())/2;    
-
-    dt = (millis()-last_time)/1000.0;
-    float theta_n = complementaryFilter(theta_a, gyro_rate, theta_prev, dt, C);
-
-    theta_prev = theta_n;
-    tiltx = theta_n;
-    last_time = millis();
-
-    velocity_error = velocity_target-velocity;
-    velocity_derivative = (velocity_error - velocity_last_error)/dt;
-    velocity_integral = velocity_integral + velocity_error * dt;
-    velocity_last_error = velocity_error;
-    velocity_integral = clamp(velocity_integral, 10, -10);
-
-    tilt_target_control = kp_v * velocity_error + kd_v * velocity_derivative;
-    tilt_target = tilt_target_control + tilt_target_bias;
-    tilt_target = clamp(tilt_target, 0.02, -0.02);
-
-    //tilt error calculation
-    tilt_error = tilt_target - tiltx;
-    tilt_derivative = (tilt_error - tilt_last_error) / dt;
-    tilt_integral = tilt_integral + tilt_error * dt;
-    tilt_last_error = tilt_error;
-    tilt_integral = clamp(tilt_integral, 100, -100);
-
-    //controller for target angular velocity of the bot
-    gyro_target = kp_o*tilt_error + ki_o*tilt_integral + kd_o*tilt_derivative;
-
-    //gyro error calculation
-    gyro_error = gyro_target - gyro_rate;
-    gyro_derivative = (gyro_error - gyro_last_error)/ dt;
-    gyro_integral = gyro_integral + gyro_error * dt;
-    gyro_last_error = gyro_error;
-    gyro_integral = clamp(gyro_integral, 100, -100);
-
-    //controller for target acceleration of the wheels
-    corrected_a = kp*gyro_error + ki*gyro_integral + kd*gyro_derivative;
-    corrected_a = clamp(corrected_a, max_acc, -max_acc);
-
-    //calculation for target wheel angular velocity
-    target_speed = 0.7 * kv*gyro_rate + 0.3*last_speed;
-    target_speed = clamp(target_speed, max_speed, -max_speed);
-
-    last_speed = target_speed;
-    
-    //set wheel target speed
-    step1.setTargetSpeedRad(target_speed);
-    step2.setTargetSpeedRad(-target_speed);
-
-    //set wheel acceleration
-    step1.setAccelerationRad(corrected_a);
-    step2.setAccelerationRad(corrected_a);
+    //Set target motor speed proportional to tilt angle
+    //Note: this is for demonstrating accelerometer and motors - it won't work as a balance controller
+    acce = constrain(acce, -80, 80);
+//   step1.setAccelerationRad(abs(acce+turnOutput));
+//   step2.setAccelerationRad(abs(acce-turnOutput));
+  step1.setAccelerationRad(abs(acce));
+  step2.setAccelerationRad(abs(acce));
+  if(acce+turnOutput>0){
+     step1.setTargetSpeedRad(-(20));
+  }else {
+      step1.setTargetSpeedRad((20));
   }
-
-  // if (Serial.available()) {
-    
-  //   String command = Serial.readStringUntil('\n');
-  //   Serial.print("Received Command: ");
-  //   Serial.println(command);
-  //   if(command == "forward"){
-  //     go_forward(3);
-  //     EXECUTING = true;
-  //     command_time = millis();
-  //   }else if(command == "backward"){
-  //     go_backward(3);
-  //     EXECUTING = true;
-  //     command_time = millis();
-  //   }else if(command == "Stop"){
-  //     stop();
-  //     EXECUTING = false;
-  //   }else{
-  //     Serial.print("Received Parameters: ");
-  //     Serial.println(command);
-  //     sscanf(command.c_str(), "%f %f %f %f %f %f %f %f", &kp, &kd, &kp_o, &kd_o, &kp_v, &kd_v, &kv, &tilt_target_bias);
-  //     Serial.printf("Updated:\nInner: kp=%.2f kd=%.2f\n", kp, kd);
-  //     Serial.printf("Mid: kp_o=%.2f kd_o=%.2f\n", kp_o, kd_o);
-  //     Serial.printf("Outer: kp_v=%.2f kd_v=%.2f\n", kp_v, kd_v);
-  //     Serial.printf("kv=%.2f, Bias=%.2f\n", kv, tilt_target_bias);
-  //   }
-  // }
-
-  // if(millis() > command_time + 1000 && EXECUTING){
-  //     stop();
-  //     EXECUTING = false;
-  // }
-
-  // if (Serial.available()) {
-  //   SerialBT.write(Serial.read()); // Send data from Serial Monitor to BT
-  // }
-
+  if(acce-turnOutput>0){
+     step2.setTargetSpeedRad((20));
+  }else {
+      step2.setTargetSpeedRad(-(20));
+  }
+      
+      
+//step1.setAccelerationRad(500.0);
+//step2.setAccelerationRad(500.0);
+//step1.setTargetSpeedRad(-acce);
+//step2.setTargetSpeedRad(acce);
+//step1.setTargetSpeedRad(-motorCommand);
+//step2.setTargetSpeedRad(motorCommand);
+}
   
   //Print updates every PRINT_INTERVAL ms
   //Line format: X-axis tilt, Motor speed, A0 Voltage
   if (millis() > printTimer) {
-    printTimer += PRINT_INTERVAL;
-    Serial.print(tiltx*1000);
-    Serial.print(' ');
-    Serial.print(corrected_a);
-    Serial.print(' ');
-    Serial.print(step1.getSpeedRad());
-    Serial.print(' ');
-    Serial.print((readADC(0) * VREF)/4095.0);
-    Serial.print(' ');
-    Serial.print(gyro_rate);
-    Serial.print(' ');
-    Serial.print("Gyro_rate: ");
-    Serial.println(gyro_rate);
-  }
+    //if (millis() > printTimer) {
+  printTimer += PRINT_INTERVAL;
+  // Serial.print("ACC Angle: ");
+  // Serial.print(accAngle);
+  // Serial.print(" deg\t");
+  Serial.print("GYRO Rate: ");
+  Serial.print(gyroRate);
+  // Serial.print(" dt: ");
+  // Serial.print(dt, 4);
+  // Serial.println(" deA/s");
+  Serial.print(" | tiltx: ");
+  Serial.print(tiltx);  // 原本单位不清，现在你要的话可以换成角度显示
+  // Serial.print(" | targetAngle: ");
+  // Serial.print(targetAngle-targetAnglebias);
+  // Serial.print(" | error: ");
+  // Serial.print(targetAngle - tiltx);
+  // Serial.print(" | output: ");
+  // Serial.print(acce);
+  // Serial.print(" | turnOutput: ");
+  // Serial.print(turnOutput);
+//   Serial.print(" | motorSpeed1: ");
+//   Serial.print(step1.getSpeedRad());
+//    Serial.print(" | motorSpeed2: ");
+//   Serial.print(step2.getSpeedRad());
+  Serial.print(" | targetSpeed: ");
+  Serial.print(targetSpeed);
+  Serial.print(" |gyro.z: ");
+  Serial.print(currentYaw);
+  // Serial.print(" | position1: ");
+  // Serial.print(step1.getPosition());
+  // Serial.print(" | position2: ");
+  // Serial.print(step2.getPosition());
+  //Serial.print(" | millis: ");
+  //Serial.print(millis());
+  Serial.print(" | ADC(A0): ");
+  Serial.println(((readADC(0) * VREF) / 4095.0-0.21)/1.5);
+//   Serial.print(" | TargetYaw: ");
+//   Serial.println(targetYaw);
+}
 
-  //For Serial Plotter
-  // if(millis() % 20 == 0){
-  //   Serial.println(tiltx);
-  // }
+  //}
 }
