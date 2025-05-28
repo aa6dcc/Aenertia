@@ -8,6 +8,16 @@ body {
     text-align: center;
 }
 
+/* Live MJPEG stream styling */
+.live-video {
+  width: 100%;
+  max-width: 640px;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  margin: 1rem 0;
+  display: block;
+}
+
 .card {
     background: white;
     padding: 30px;
