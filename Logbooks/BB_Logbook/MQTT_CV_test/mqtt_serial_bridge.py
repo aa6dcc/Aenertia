@@ -37,24 +37,20 @@ def follow_me():
 
         if gv.HumanDetected:
             print("HUMAN DETECTED")
-            if abs(gv.offset) < 100: 
+            if abs(gv.offset) < 200: 
                 send_2_esp("forward")
-                print("send DATA")
-            elif 100 <= gv.offset < 700:
+            elif 200 <= gv.offset < 700:
                 send_2_esp("forwardANDright")
-                print("send DATA")
-            elif -100 >= gv.offset > -700:
+            elif -200 >= gv.offset > -700:
                 send_2_esp("forardANDleft")
-                print("send DATA")
             elif gv.offset >= 700:
                 send_2_esp("right")
-                print("send DATA")
             elif gv.offset <= -700:
                 send_2_esp("left")
-                print("send DATA")
             else: 
                 send_2_esp("stop")
-    print("Function ends")
+        else:
+            send_2_esp("stop")
 
 
 def gotoKeyLocation():
@@ -118,15 +114,12 @@ def on_message(client, userdata, msg):
 
     # Autnomous mode code
     elif mode == "autonomous":  
-        print("condition passed")
-
         if topic == "robot/auto":
+
             # In follow mode the robot follows the person around
             if payload == "follow":  
-                print("payload received")
                 follow_mode = True
                 threading.Thread(target=follow_me, daemon=True).start() # Runs follow_me unless follow_mode is disabled
-                print("Thread should start")
 
             elif payload == "return": # This should be GoToKeyLocation Instead of return 
                 gotoKeyLocation()
