@@ -120,3 +120,53 @@ In the top right corner I also added a battery feature (the battery of my comput
 I would like for this website to have 3 separate tabs (PID control, flash LED and control robot pad) in the future to make the website more neat and organized.
 
 For the camera access via the Raspberry Pi, we must unpower the Raspberry Pi, connect the camera and then power it up again, otherwise the camera will not be detected. 
+
+## 27/05/2025
+
+Implemented tabs in the web page with a hover effect when you roll your mouse pointer over the tabs
+The new URL I use is http://localhost:8000/dashboard
+
+Arrow pad tab:
+(same as previously, with battery and time - can use arrows on the keyboard too)
+![image](https://github.com/user-attachments/assets/e0af73ff-74c9-4795-8e86-04f74f4f9f0e)
+
+Flash LED tab:
+![image](https://github.com/user-attachments/assets/fb7fd93d-3177-4a64-ba3c-018e80da2b5e)
+
+Control values tab:
+![image](https://github.com/user-attachments/assets/12b6dd3e-7cbd-42fe-a55a-45c1d6e55f03)
+
+I had to change the position of the server.py code displaying time and battery so that it could appear on all 3 tabs
+
+I then added 3 different mode types: manual, autonomous and test:
+
+![image](https://github.com/user-attachments/assets/986e52c5-8fb0-4faa-9284-1fbda5848de9)
+
+I updated the autonomous tab to have a saved key locations button, which displays all locations which have been inputted in the "assign" box: clicking on a given location listed on the website sets it as the key location for the robot.
+
+![image](https://github.com/user-attachments/assets/c2ea6f92-8c2c-486f-b738-8ff6c5b2ddc9)
+
+To access the website:
+  - git pull
+  - head to AenerShark\tests\communication_test
+  - run uvicorn server:app --host 0.0.0.0 --port 8000
+  - head to http://localhost:8000/dashboard
+
+As of now, our current system can be summarised to:
+
+![image](https://github.com/user-attachments/assets/ccdfc337-3624-4e26-b427-b60b2ec572f9)
+
+This allows for a scalable project which can have its values loaded onto an AWS account (via DynamoDB & S3)
+
+## 28/05/2025
+
+Changed the interface to show MQTT status and added the ability to assign to key locations on every tab
+
+![image](https://github.com/user-attachments/assets/a24c22e2-754c-43a4-9f8c-0709c0c26ebb)
+
+I then reformatted the website so that the show key locations button is next to the assign key location button:
+
+![image](https://github.com/user-attachments/assets/e1329ded-95c1-4676-809c-ba6502f876b3)
+
+I will start working on implementing the database from here on out.
+

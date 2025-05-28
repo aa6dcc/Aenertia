@@ -55,4 +55,3 @@ TCP is used to communicate berween website and TCP server, UART is used to commu
 Full Architecture:
 
 ![image](https://github.com/user-attachments/assets/aeba1356-e19b-4993-99e6-69086c825837)
-

@@ -1,148 +1,159 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Aenertia Robot Control Panel</title>
+  <title>AenerShark Control Panel</title>
+  <link rel="stylesheet" href="style.css">
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-    }
-    h1, h2, h3 {
-      margin-bottom: 10px;
-    }
-    form {
-      margin-bottom: 20px;
-    }
-    input, button {
-      margin: 5px;
-    }
-    /* Live video styling */
-    #videoStream {
-      width: 100%;
-      max-width: 640px;
-      border: 1px solid #ccc;
-      margin-bottom: 20px;
-    }
-    /* D-pad grid */
-    #dpad {
-      display: grid;
-      grid-template-columns: 80px 80px 80px;
-      grid-template-rows:    80px 80px 80px;
-      gap: 10px;
-      justify-content: center;
-      align-items: center;
-      margin-top: 20px;
-    }
-    #up    { grid-column: 2; grid-row: 1; }
-    #left  { grid-column: 1; grid-row: 2; }
-    #right { grid-column: 3; grid-row: 2; }
-    #down  { grid-column: 2; grid-row: 3; }
-    #dpad img {
-      width: 100%;
-      height: 100%;
-      cursor: pointer;
-      user-select: none;
-    }
-  </style>
+  <script src="control.js" defer></script>
 </head>
 <body>
-  <h1>Aenertia Robot Control Panel</h1>
 
-  <!-- Live Camera Feed -->
-  <h2>Live Camera</h2>
-  <img id="videoStream" src="/video_feed" alt="Live Camera Feed" />
+  <!-- HEADER -->
+  <header class="site-header">
+    <div class="logo-title">
+      <img src="images/logo.png" class="logo" alt="Logo">
+      <h1>AenerShark Control Panel</h1>
+    </div>
+    <nav class="nav-tabs">
+      <button class="tab-btn active" data-tab="pad">Manual</button>
+      <button class="tab-btn"      data-tab="flash">Test</button>
+      <button class="tab-btn"      data-tab="pid">PID</button>
+      <button class="tab-btn"      data-tab="auto">Auto</button>
+    </nav>
+    <div class="info-bar">
+      <span id="time">--:--</span> | <span id="battery">Battery: --%</span>
+    </div>
+  </header>
 
-  <!-- PID Tuning -->
-  <h2>PID Tuning</h2>
-  <form onsubmit="submitPID('inner'); return false;">
-    <h3>Inner Loop</h3>
-    P: <input type="number" id="innerP" /> 
-    D: <input type="number" id="innerD" /> 
-    I: <input type="number" id="innerI" /> 
-    Setpoint: <input type="number" id="innerSet" />
-    <button type="submit" id="submitInner" disabled>Submit Inner PID</button>
-  </form>
+  <!-- LAYOUT -->
+  <div class="container">
+    <!-- SIDEBAR -->
+    <aside class="mode-sidebar">
+      <button class="button" data-mqtt="mode/set" data-payload="MANUAL">Set Manual</button>
+      <button class="button" data-mqtt="mode/set" data-payload="AUTONOMOUS">Set Autonomous</button>
+      <button class="button" data-mqtt="mode/set" data-payload="TEST">Set Test</button>
+    </aside>
 
-  <form onsubmit="submitPID('outer'); return false;">
-    <h3>Outer Loop</h3>
-    P: <input type="number" id="outerP" /> 
-    D: <input type="number" id="outerD" /> 
-    I: <input type="number" id="outerI" /> 
-    Setpoint: <input type="number" id="outerSet" />
-    <button type="submit" id="submitOuter" disabled>Submit Outer PID</button>
-  </form>
+    <!-- TABBED CONTENT -->
+    <main class="content">
 
-  <!-- Flash LED -->
-  <h2>LED Control</h2>
-  <button id="flashLedBtn" onclick="flashLED()" disabled>Flash LED</button>
+      <!-- MANUAL -->
+      <section id="pad" class="tab-content active">
+        <div class="card">
+          <h2>Live Camera</h2>
+          <!-- Live MJPEG stream from your Flask server on port 8001 -->
+          <img
+            id="videoStream"
+            src="http://172.20.10.6:8001/video_feed"
+            alt="Live Camera Feed"
+            class="live-video"
+          />
 
-  <!-- Directional Control -->
-  <h2>Directional Control (Hold to Move)</h2>
-  <div id="dpad">
-    <img id="up"    src="/assets/images/up.png"    alt="Up"
-         onpointerdown="startMove('FORWARD')" onpointerup="stopMove()" onpointerleave="stopMove()" />
-    <img id="left"  src="/assets/images/left.png"  alt="Left"
-         onpointerdown="startMove('LEFT')"    onpointerup="stopMove()" onpointerleave="stopMove()" />
-    <div></div>
-    <img id="right" src="/assets/images/right.png" alt="Right"
-         onpointerdown="startMove('RIGHT')"  onpointerup="stopMove()" onpointerleave="stopMove()" />
-    <img id="down"  src="/assets/images/down.png"  alt="Down"
-         onpointerdown="startMove('BACKWARD')" onpointerup="stopMove()" onpointerleave="stopMove()" />
+          <h2>Arrow Pad</h2>
+          <div class="controller">
+            <img id="up"    class="arrow" src="images/up.png"    alt="Up">
+            <img id="left"  class="arrow" src="images/left.png"  alt="Left">
+            <img id="stop"  class="arrow stop" src="images/stop.png"  alt="Stop">
+            <img id="right" class="arrow" src="images/right.png" alt="Right">
+            <img id="down"  class="arrow" src="images/down.png"  alt="Down">
+          </div>
+        </div>
+      </section>
+
+      <!-- TEST -->
+      <section id="flash" class="tab-content">
+        <div class="card">
+          <h2>Flash & CV</h2>
+          <div class="button-group flash-group">
+            <button class="button" data-mqtt="led/control" data-payload="FLASH">Flash LED</button>
+            <button class="button" data-mqtt="cv/control"  data-payload="ENABLE">Enable CV</button>
+            <button class="button" data-mqtt="cv/control"  data-payload="DISABLE">Disable CV</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- PID -->
+      <section id="pid" class="tab-content">
+        <div class="card">
+          <h2>PID Tuning</h2>
+          <div class="pid-grid">
+            <div class="pid-block">
+              <h3>Inner</h3>
+              <form id="innerForm" class="pid-form">
+                <label>P:<input name="p" required></label>
+                <label>D:<input name="d" required></label>
+                <label>I:<input name="i" required></label>
+                <label>SP:<input name="sp" required></label>
+                <button class="button" type="submit">Send</button>
+              </form>
+            </div>
+            <div class="pid-block">
+              <h3>Outer</h3>
+              <form id="outerForm" class="pid-form">
+                <label>P:<input name="p" required></label>
+                <label>D:<input name="d" required></label>
+                <label>I:<input name="i" required></label>
+                <label>SP:<input name="sp" required></label>
+                <label>ROT:<input name="rot" required></label>
+                <button class="button" type="submit">Send</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- AUTO -->
+      <section id="auto" class="tab-content">
+        <div class="card">
+          <h2>Autonomous</h2>
+          <div class="auto-grid">
+            <button class="button" data-mqtt="autonomous" data-payload="FOLLOW">Follow Me</button>
+            <button class="button" data-mqtt="autonomous" data-payload="RETURN_HOME">Return Home</button>
+          </div>
+          <hr>
+          <div class="key-section">
+            <h3>Key Locations</h3>
+            <form id="keyForm" class="key-form">
+              <label>Key:<input name="loc" required></label>
+              <button class="button" type="submit">Assign</button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+    </main>
   </div>
 
+  <!-- TABS & INFO SCRIPT -->
   <script>
-    // MQTT over WebSocket
-    const client = mqtt.connect('ws://' + location.hostname + ':9001');
-
-    client.on('connect', () => {
-      console.log('🔌 MQTT connected');
-      // enable all buttons once connected
-      document.querySelectorAll('button').forEach(btn => btn.disabled = false);
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        const sel = btn.dataset.tab;
+        document.querySelectorAll('.tab-content').forEach(s=>s.classList.remove('active'));
+        document.getElementById(sel).classList.add('active');
+      });
     });
-    client.on('error', err => console.error('MQTT error:', err));
 
-    // Publish utility
-    function publishCommand(topic, message) {
-      if (client.connected) {
-        client.publish(topic, message);
-      } else {
-        alert("MQTT not connected yet.");
-      }
+    // Time & battery
+    function updateTime(){
+      const n=new Date();
+      document.getElementById('time').textContent =
+        n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0');
     }
-
-    // PID submission
-    function submitPID(loopType) {
-      if (!client.connected) {
-        alert("MQTT not connected yet.");
-        return;
-      }
-      const P   = document.getElementById(loopType + 'P').value || '0';
-      const D   = document.getElementById(loopType + 'D').value || '0';
-      const I   = document.getElementById(loopType + 'I').value || '0';
-      const Set = document.getElementById(loopType + 'Set').value || '0';
-      const msg = `${loopType}:${P},${D},${I},${Set}`;
-      client.publish('robot/pid', msg);
+    function updateBatt(){
+      navigator.getBattery?.().then(b=>{
+        document.getElementById('battery').textContent =
+          'Battery: '+Math.round(b.level*100)+'%';
+      });
     }
-
-    // Flash LED via HTTP endpoint
-    function flashLED() {
-      if (!client.connected) {
-      alert("MQTT not connected yet.");
-      return;
-    }
-    client.publish('robot/led', 'flash');
-    }
-
-    // Directional controls
-    function startMove(direction) {
-      publishCommand('robot/serial', direction);
-    }
-    function stopMove() {
-      publishCommand('robot/serial', 'STOP');
-    }
+    updateTime(); updateBatt();
+    setInterval(updateTime,60000);
+    setInterval(updateBatt,60000);
   </script>
 </body>
 </html>

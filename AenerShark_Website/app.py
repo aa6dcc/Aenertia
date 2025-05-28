@@ -1,131 +1,116 @@
 import os
-import subprocess
-import threading
-from pathlib import Path
-
 import serial
-import cv2
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
+import paho.mqtt.publish as publish
+from fastapi import FastAPI, Form, HTTPException
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from camera_stream import gen_frames
-import paho.mqtt.client as mqtt
-import logging
 
-# --- Configuration ---
-MQTT_BROKER     = os.getenv("MQTT_BROKER", "localhost")
-MQTT_PORT       = int(os.getenv("MQTT_PORT", 1883))
-SERIAL_PORT     = os.getenv("SERIAL_PORT", "/dev/ttyUSB0")
-BAUDRATE        = int(os.getenv("BAUDRATE", 115200))
-FLASH_LED_SCRIPT= Path(__file__).parent / "flash_led.py"
-PID_LOG         = Path(__file__).parent / "pid_log.txt"
+# Configuration
+MQTT_HOST   = os.getenv("MQTT_BROKER", "localhost")
+MQTT_PORT   = int(os.getenv("MQTT_PORT", 1883))
+SERIAL_PORT = os.getenv("SERIAL_PORT", "/dev/ttyUSB0")
+BAUDRATE    = int(os.getenv("BAUDRATE", 115200))
 
-# --- Logging Setup ---
-logging.basicConfig(level=logging.INFO,
-                    format="%(asctime)s [%(levelname)s] %(message)s")
-logger = logging.getLogger(__name__)
+# Initialize FastAPI
+app = FastAPI(title="AenerShark Control API")
 
-# --- FastAPI App ---
-app = FastAPI(
-    title="Aenertia Robot Control API",
-    description="REST, MQTT & MJPEG interface for Raspberry Pi robot"
-)
+# Mount static directory
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# --- In-Memory State & Connections ---
-pid_values = {"inner": [], "outer": []}
+# Serve the main HTML page
+@app.get("/", response_class=FileResponse)
+def root():
+    return FileResponse("static/index.html")
+
+
+# Initialize serial connection
 serial_conn = None
-mqtt_client = mqtt.Client()
-
-# --- Serial Initialization ---
-def init_serial():
+@app.on_event("startup")
+def startup_event():
     global serial_conn
     try:
         serial_conn = serial.Serial(SERIAL_PORT, BAUDRATE, timeout=1)
-        logger.info(f"Serial connected on {SERIAL_PORT} @ {BAUDRATE}")
-    except Exception as e:
+    except Exception:
         serial_conn = None
-        logger.warning(f"Serial connection failed: {e}")
-
-# --- MQTT Callbacks ---
-def on_connect(client, userdata, flags, rc):
-    logger.info(f"✅ MQTT connected (rc={rc})")
-    for topic in ("robot/pid", "robot/led", "robot/serial"):
-        client.subscribe(topic)
-        logger.info(f"Subscribed to {topic}")
-
-def on_message(client, userdata, msg):
-    topic = msg.topic
-    payload = msg.payload.decode(errors="ignore")
-    logger.debug(f"MQTT msg on {topic}: {payload}")
-
-    if topic == "robot/pid":
-        try:
-            loop_key, values = payload.split(":", 1)
-            parts = values.split(",")
-            if loop_key in pid_values:
-                pid_values[loop_key].append(parts)
-                with PID_LOG.open("a") as f:
-                    f.write(f"{loop_key}: {values}\n")
-                logger.info(f"Logged PID {loop_key}: {parts}")
-        except Exception as e:
-            logger.error(f"Malformed PID payload: {payload} ({e})")
-
-    elif topic == "robot/led" and payload.strip().lower() == "flash":
-        run_script(FLASH_LED_SCRIPT, sudo=True)
-
-    elif topic == "robot/serial" and serial_conn:
-        serial_conn.write((payload + "\n").encode())
-        logger.info(f"Serial → ESP32: {payload}")
-
-def run_script(script_path: Path, sudo: bool=False):
-    cmd = (["sudo", "python3", str(script_path)]
-           if sudo else ["python3", str(script_path)])
-    try:
-        subprocess.run(cmd, check=True)
-        logger.info(f"Executed script: {' '.join(cmd)}")
-    except subprocess.CalledProcessError as e:
-        logger.error(f"Script error ({script_path}): {e}")
-
-def start_mqtt_loop():
-    mqtt_client.on_connect = on_connect
-    mqtt_client.on_message = on_message
-    mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
-    threading.Thread(target=mqtt_client.loop_forever, daemon=True).start()
-
-# --- FastAPI Startup Event ---
-@app.on_event("startup")
-def startup_event():
-    init_serial()
-    start_mqtt_loop()
 
 
+# Utility: publish single MQTT message
+def mqtt_pub(topic: str, msg: str):
+    publish.single(topic, msg, hostname=MQTT_HOST, port=MQTT_PORT)
 
-@app.get("/video_feed", summary="Live camera stream (MJPEG)")
-def video_feed():
-    return StreamingResponse(
-        gen_frames(),
-        media_type="multipart/x-mixed-replace; boundary=frame"
-    )
 
-# --- API Routes ---
-@app.get("/pid-values", summary="Get all PID tuning values")
-def get_pid_values():
-    return JSONResponse(content=pid_values)
+# --- MQTT-driven endpoints ---
 
-@app.get("/flash-led", summary="Flash the onboard LED")
+@app.get("/led/{id}")
+def control_led(id: int):
+    mapping = {1: "UP", 2: "DOWN", 3: "LEFT", 4: "RIGHT"}
+    cmd = mapping.get(id, "OFF")
+    mqtt_pub("robot/serial", cmd)
+    return {"status": cmd}
+
+@app.get("/led/flash")
 def flash_led():
-    if not FLASH_LED_SCRIPT.exists():
-        raise HTTPException(500, "Flash-LED script not found")
-    run_script(FLASH_LED_SCRIPT, sudo=True)
-    return {"message": "LED flashed successfully"}
+    mqtt_pub("led/control", "FLASH")
+    return {"status": "FLASH"}
 
-@app.get("/send-command", summary="Send raw command to ESP32 via serial")
-def send_command(cmd: str):
-    if not serial_conn:
-        raise HTTPException(503, "Serial connection unavailable")
-    serial_conn.write((cmd + "\n").encode())
-    return {"message": f"Sent: {cmd}"}
+@app.get("/cv/enable")
+def enable_cv():
+    mqtt_pub("cv/control", "ENABLE")
+    return {"status": "CV ON"}
 
-# --- Static File Mounts (after routes!) ---
-app.mount("/assets", StaticFiles(directory="assets"), name="assets")
-app.mount("/",       StaticFiles(directory="static", html=True), name="static")
+@app.get("/cv/disable")
+def disable_cv():
+    mqtt_pub("cv/control", "DISABLE")
+    return {"status": "CV OFF"}
+
+@app.get("/autonomous/follow")
+def autonomous_follow():
+    mqtt_pub("autonomous", "FOLLOW")
+    return {"status": "FOLLOW"}
+
+@app.get("/autonomous/return")
+def autonomous_return():
+    mqtt_pub("autonomous", "RETURN_HOME")
+    return {"status": "RETURN"}
+
+
+# --- Autonomous key locations ---
+
+key_locations = []
+
+@app.post("/autonomous/key_location", response_class=FileResponse)
+def assign_location(loc: str = Form(...)):
+    key_locations.append(loc)
+    mqtt_pub("autonomous", f"KEY:{loc}")
+    return FileResponse("static/index.html")
+
+@app.get("/autonomous/set_key/{loc}")
+def set_existing_location(loc: str):
+    mqtt_pub("autonomous", f"KEY:{loc}")
+    return FileResponse("static/index.html")
+
+
+# --- PID tuning ---
+
+inner_history = []
+outer_history = []
+
+@app.post("/submit_inner", response_class=FileResponse)
+def submit_inner(pg: str = Form(...), dg: str = Form(...),
+                 ig: str = Form(...), sp: str = Form(...)):
+    inner_history.append([pg, dg, ig, sp])
+    return FileResponse("static/index.html")
+
+@app.post("/submit_outer", response_class=FileResponse)
+def submit_outer(pg: str = Form(...), dg: str = Form(...),
+                  ig: str = Form(...), sp: str = Form(...),
+                  rot: str = Form(...)):
+    outer_history.append([pg, dg, ig, sp, rot])
+    return FileResponse("static/index.html")
+
+@app.get("/pid-values")
+def get_pid_values():
+    return JSONResponse(content={
+        "inner": inner_history,
+        "outer": outer_history
+    })

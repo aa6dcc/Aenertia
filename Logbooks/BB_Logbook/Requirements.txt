@@ -1,0 +1,15 @@
+To run the following projects make sure your environment staisfies the following
+
+sudo apt install mosquitto mosquitto-clients
+sudo nano /etc/mosquitto/conf.d/websockets.conf  # with listener 9001 adn allow_anonymous true
+
+sudo systemctl start mosquitto
+
+#Verify with :
+
+sudo netstat -tulpn | grep 9001
+
+
+#The run the main python file. In this case 
+
+python3 mqqt_serial_bridge.py

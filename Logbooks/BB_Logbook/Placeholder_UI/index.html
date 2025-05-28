@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Robot Dashboard (MQTT)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- CSS -->
+  <link rel="stylesheet" href="static/style.css">
+  <!-- MQTT.js client library -->
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js" defer></script>
+  <!-- Your control logic -->
+  <script src="static/mqtt-control.js" defer></script>
+</head>
+<body>
+  <div class="info-bar">
+    <div id="time">--:--</div>
+    <div id="battery">Battery: --%</div>
+  </div>
+
+  <div class="mode-bar-top-left">
+    <button class="button" id="btn-manual">Set Manual</button>
+    <button class="button" id="btn-autonomous">Set Autonomous</button>
+    <button class="button" id="btn-test">Set Test Mode</button>
+  </div>
+
+  <div class="tabs">
+    <button onclick="showTab('pad')">Manual Control</button>
+    <button onclick="showTab('flash')">Test</button>
+    <button onclick="showTab('pid')">PID Values</button>
+    <button onclick="showTab('auto')">Autonomous</button>
+  </div>
+
+  <!-- MANUAL PAD -->
+  <div id="pad" class="tab active">
+    <div class="card">
+      <img src="static/images/logo.png" class="logo" alt="Logo">
+      <h1>Arrow Pad Control</h1>
+      <div class="controller">
+        <div class="arrow up" id="up">↑</div>
+        <div class="arrow stop" id="stop">■</div>
+        <div class="arrow down" id="down">↓</div>
+        <div class="arrow left" id="left">←</div>
+        <div class="arrow right" id="right">→</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEST -->
+  <div id="flash" class="tab">
+    <div class="card">
+      <h1>Flash LED / CV</h1>
+      <button class="button" id="btn-flash-led">Flash LED</button>
+      <button class="button" id="btn-enable-cv">Enable CV</button>
+      <button class="button" id="btn-disable-cv">Disable CV</button>
+    </div>
+  </div>
+
+  <!-- PID -->
+  <div id="pid" class="tab">
+    <div class="card">
+      <h1>PID Values</h1>
+      <h2>Inner Loop</h2>
+      <form id="form-inner">
+        Proportional Gain <input name="pg" type="number"><br>
+        Derivative Gain     <input name="dg" type="number"><br>
+        Integral Gain       <input name="ig" type="number"><br>
+        Setpoint            <input name="sp" type="number"><br>
+        <input type="submit" value="Submit" class="button">
+      </form>
+
+      <h2>Outer Loop</h2>
+      <form id="form-outer">
+        Proportional Gain     <input name="pg" type="number"><br>
+        Derivative Gain       <input name="dg" type="number"><br>
+        Integral Gain         <input name="ig" type="number"><br>
+        Setpoint              <input name="sp" type="number"><br>
+        Rotation Setpoint     <input name="rot" type="number"><br>
+        <input type="submit" value="Submit" class="button">
+      </form>
+    </div>
+  </div>
+
+  <!-- AUTONOMOUS -->
+  <div id="auto" class="tab">
+    <div class="card">
+      <h1>Autonomous Control</h1>
+      <div class="auto-grid">
+        <div class="auto-column">
+          <button class="button" id="btn-follow">Follow Me</button>
+        </div>
+        <div class="auto-column">
+          Assign Key Location:
+          <input id="key-loc" type="text">
+          <button class="button" id="btn-assign-key">Assign</button><br>
+          <button class="button" id="btn-return-key">Return to Key Location</button><br>
+          <button class="button" id="btn-show-keys">Show Key Locations</button>
+          <div id="key-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  function showTab(id) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+  </script>
+</body>
+</html>
