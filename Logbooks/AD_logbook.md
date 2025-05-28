@@ -157,3 +157,9 @@ As of now, our current system can be summarised to:
 ![image](https://github.com/user-attachments/assets/ccdfc337-3624-4e26-b427-b60b2ec572f9)
 
 This allows for a scalable project which can have its values loaded onto an AWS account (via DynamoDB & S3)
+
+## 28/05/2025
+
+Changed the interface to show MQTT status and added the ability to assign to key locations on every tab
+
+![image](https://github.com/user-attachments/assets/a24c22e2-754c-43a4-9f8c-0709c0c26ebb)
