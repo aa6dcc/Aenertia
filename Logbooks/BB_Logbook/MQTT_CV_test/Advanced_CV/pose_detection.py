@@ -15,7 +15,7 @@ from mediapipe.tasks.python.vision import (
 )
 from mediapipe.tasks.python.core.base_options import BaseOptions
 
-def main():
+def pose_detection():
     # 1) Load your .task bundle
     model_path = os.path.expanduser("~/pose_landmarker_lite.task")
     if not os.path.exists(model_path):
@@ -30,7 +30,7 @@ def main():
     landmarker = PoseLandmarker.create_from_options(options)
 
     # 2) Start the PiCamera2 at 640×480 (full FOV)
-    n = 3 # prevents PiCamera zoom
+    n = 2 # prevents PiCamera zoom
     cam = Picamera2()
     cam.configure(cam.create_video_configuration(
         main={"size": (640*n, 480*n), "format": "RGB888"}
@@ -105,4 +105,4 @@ def main():
         cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-    main()
+    pose_detection()

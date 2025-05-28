@@ -2,12 +2,18 @@ import paho.mqtt.client as mqtt
 import serial
 import threading # Threading is a library that allows us to run other tasks that the current one in the background
 from time import sleep
+#import app_video # runs the server to send back the video
+from Advanced_CV.pose_detection import pose_detection
 
 import numpy as np
 import cv2
 
-#Serial config
-SERIAL_PORT = "/dev/ttyUSB0"
+#Serial config (i included many ports just n case we somehow connect to an unexpected port number. It is very unlikely it goes above 1) 
+SERIAL_PORT = [ "/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2","/dev/ttyUSB3", "/dev/ttyUSB5", 
+                "/dev/ttyUSB6", "/dev/ttyUSB7", "/dev/ttyUSB8","/dev/ttyUSB9", "/dev/ttyUSB10", 
+                "/dev/ttyUSB11", "/dev/ttyUSB12", "/dev/ttyUSB13","/dev/ttyUSB14", "/dev/ttyUSB15", 
+                "/dev/ttyUSB15", "/dev/ttyUSB16", "/dev/ttyUSB17","/dev/ttyUSB18", "/dev/ttyUSB19" ]
+
 baud_rate = 115200
 
 #global variables
@@ -50,10 +56,18 @@ def on_connect(client, userdata, flags, rc):
     client.subscribe("robot/cv")
     client.subscribe("robot/manual/command")
 
+    # Run the CV pose detection in the background
+    threading.Thread(target=pose_detection, daemon=True).start() #To fix this we use threading. Threading isolates the code we target and procceeds zith the rest of the code.
+
+
 
 def on_message(client, userdata, msg):
-    global cv_enabled
+    #global cv_enabled
     global mode
+    global HumanDetected
+    global offset
+
+    #MQTT input
     payload = msg.payload.decode()
     topic = msg.topic
     print(f"Topic:{msg.topic} ; Command: {payload}")
@@ -85,7 +99,7 @@ def on_message(client, userdata, msg):
 
     # Autnomous mode code
     elif mode == "autonomous":  
-        ''' 
+        ''' PREVIOUS TEST: CURRENTLY IRRELEVANT
         if topic == "robot/cv":
             if payload == "enable cv":
                 if not cv_enabled:
@@ -97,18 +111,18 @@ def on_message(client, userdata, msg):
                 send_2_esp("LED_OFF")
         '''
         if topic == "robot/auto":
-            #This part of the code will use data from computer vision to decide wether the robot should go forward or backward
+            # In follow mode the robot follors the person around
             if payload == "follow":
                 if HumanDetected:
-                    if abs(offset) < 10: 
+                    if abs(offset) < 100: 
                         send_2_esp("forward")
-                    elif 10 <= offset < 100:
+                    elif 100 <= offset < 700:
                         send_2_esp("forward and right")
-                    elif -10 >= offset > -100:
+                    elif -100 >= offset > -700:
                         send_2_esp("forzard and left")
-                    elif offset >= 100:
+                    elif offset >= 700:
                         send_2_esp("right")
-                    elif offset <= -100:
+                    elif offset <= -700:
                         send_2_esp("left")
                     else: 
                         send_2_esp("stop")
@@ -120,17 +134,20 @@ def on_message(client, userdata, msg):
 
             elif payload == "stop": #To be implemented later
                 send_2_esp("stop")
-            
-
-                    
 
 
 def main():
     #Robot function
     #Telemetry loop
-
     global ser
-    ser = serial.Serial(SERIAL_PORT, baud_rate, timeout=1)
+
+    for port in SERIAL_PORT:
+        try:
+            ser = serial.Serial(port, baud_rate, timeout=1)
+            print(f"Serial connection start using port: {port}")
+            break
+        except FileNotFoundError:
+            print(f"failed to connect to port: {port}")
 
     client = mqtt.Client() # Creat a client object from MQTT
     client.on_connect = on_connect
