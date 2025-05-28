@@ -158,11 +158,11 @@ const formInner = document.getElementById('form-inner');
 if (formInner) formInner.onsubmit = e => {
   e.preventDefault();
   const d = new FormData(e.target);
-  pub('robot/pid/inner', JSON.stringify({ pg:+d.get('pg'), dg:+d.get('dg'), ig:+d.get('ig'), sp:+d.get('sp') }));
+  pub('robot/pid/inner', 'SET_PID_INNER ' + `${d.get('pg')} ${d.get('dg')} ${d.get('ig')} ${d.get('sp')}`);
 };
 const formOuter = document.getElementById('form-outer');
 if (formOuter) formOuter.onsubmit = e => {
   e.preventDefault();
   const d = new FormData(e.target);
-  pub('robot/pid/outer', JSON.stringify({ pg:+d.get('pg'), dg:+d.get('dg'), ig:+d.get('ig'), sp:+d.get('sp'), rot:+d.get('rot') }));
+  pub('robot/pid/outer', 'SET_PID_OUTER ' + `${d.get('pg')} ${d.get('dg')} ${d.get('ig')} ${d.get('sp')} ${d.get('rot')}`);
 };
