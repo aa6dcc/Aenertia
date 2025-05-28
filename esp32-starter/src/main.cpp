@@ -20,48 +20,67 @@ const int ADC_MOSI_PIN      = 23;
 
 // Diagnostic pin for oscilloscope
 const int TOGGLE_PIN        = 32;
-
 const int PRINT_INTERVAL    = 500;
 const int LOOP_INTERVAL     = 10;
 const int STEPPER_INTERVAL_US = 20;
 
 const float kx = 5.0;
 const float VREF = 4.096;
-// PID 控制参数（你可以根据实际表现调节）
-float kp1 = 8848;
-float ki1 = 0;
-float kd1 = 80 ;//800
-float kp2 = -0.003;
-float ki2 = -0.00007;
-// float kp2 = 0;
-// float ki2 = 0;
-float kd2 = 0.0;
+
+// PID parameters
+float kp_i = 8848;
+float ki_i = 0;
+float kd_i = 80;
+
+float kp_o = -0.003;
+float ki_o = -0.00007;
+float kd_o = 0.0;
+
 float kp_turn = 0.0;  
 float ki_turn = 0.0;
 float kd_turn = 0.0;
-float turnIntegral = 0, lastTurnError = 0;
 
 float targetYaw = 0;  // 希望的角度，或者从遥控器获得的转动指令
 
 // PID 状态变量
-static float angleIntegral = 0.0;
-static float lastAngleError = 0.0;
-static float lastAcce=0.0;
-static float speedIntegral = 0.0;
-static float lastSpeedError = 0.0;
-float acce=0.0;
-float targetSpeed=0;
-float motorCommand=0.0;
-float speed = 0.0;
-float targetAngle = 0.0;
-float output = 0.0;
-float  accAngle=0.0;
-float  gyroRate=0.0;
-float dt=0.0;
-float targetAnglebias = 0;
-float lastTargetAngle=0.0;
-float currentYaw=0.0;
+
+
+float lastAcceleration=0.0;
+
+
+float targetSpeed = 0;
+float actualSpeed = 0;
+float speedError = 0;
+float speedIntegral = 0;
+float speedDerivative = 0;
+float lastSpeedError = 0.0;
+
+float gyroRate = 0;
+float tiltx_raw = 0;
+float tiltTarget = 0;
+float tiltTargetBias = 0;
+float tiltError = 0;
+float tiltIntegtal = 0.0;
+float tiltDerivative = 0;
+float lastTiltError = 0.0;
+float lastTiltTarget = 0;
+
+float currentYaw= 0;
+float yawError = 0;
+float yawDerivative = 0;
+float yawIntegral = 0;
+float lastTurnError = 0;
+
 float turnOutput = 0;
+float acceleration = 0;
+
+float motorCommand=0.0;
+float dt=0.0;
+
+
+
+float C = 0.98;
+
 //Global objects
 ESP32Timer ITimer(3);
 Adafruit_MPU6050 mpu;         //Default pins for I2C are SCL: IO22, SDA: IO21
@@ -151,6 +170,8 @@ void loop()
     loopTimer += LOOP_INTERVAL;
     static unsigned long lastTime = 0;
     unsigned long now = millis();
+
+    // Simulate Controller Behavior
     if(now<5000){
       targetSpeed=0;
       targetYaw=0;
@@ -164,102 +185,70 @@ void loop()
       targetSpeed=0;
       //targetYaw=0;
     }
+
+
     dt = (now - lastTime) / 1000.0;
     lastTime = now;
     // Fetch data from MPU6050
-    //targetAngle = 0.0;
     sensors_event_t a, g, temp;
     mpu.getEvent(&a, &g, &temp);
-    //tiltx = a.acceleration.z / 9.67;
-    //accAngle = atan2(a.acceleration.z, a.acceleration.x);
-    accAngle = atan2(a.acceleration.z, sqrt(a.acceleration.x * a.acceleration.x + a.acceleration.y * a.acceleration.y));
+    tiltx_raw = atan2(a.acceleration.z, sqrt(a.acceleration.x * a.acceleration.x + a.acceleration.y * a.acceleration.y));
     gyroRate = g.gyro.y-0.01;
-    float alpha = 0.98;
-    tiltx =( alpha * (tiltx + gyroRate * dt) + (1 - alpha) * accAngle);
-     // === 内环 PID（速度 -> 电机命令）===
-    float actualSpeed = -(step1.getSpeedRad());  // 可替换为更合适的速度估计
-    float speedError = targetSpeed - actualSpeed;
+    tiltx =(C * (tiltx + gyroRate * dt) + (1 - C) * tiltx_raw);
+    currentYaw = g.gyro.z+0.06;
+
+    // Calculate Elements of the Speed Error
+    actualSpeed = (step2.getSpeedRad()-step1.getSpeedRad())/2;
+    speedError = targetSpeed - actualSpeed;
     speedIntegral += speedError * dt;
     speedIntegral = constrain(speedIntegral, -100, 100);
-    float speedDerivative = (speedError - lastSpeedError) / dt;
-    targetAngle= (kp2 * speedError + ki2 * speedIntegral + kd2 * speedDerivative)+targetAnglebias;
-    targetAngle=0.7*targetAngle+0.3*lastTargetAngle;
-    lastTargetAngle=targetAngle;
+    speedDerivative = (speedError - lastSpeedError) / dt;
     lastSpeedError = speedError;
-    // === 外环 PID（角度 -> 目标速度）===
-    float angleError = targetAngle - tiltx;
-    angleIntegral += angleError * dt;
-    angleIntegral = constrain(angleIntegral, -300, 300);  // 防止积分饱和
-    float angleDerivative = (angleError - lastAngleError) / dt;
-    acce = (kp1 * angleError + ki1 * angleIntegral + kd1 * angleDerivative);
-    acce= acce*0.7+lastAcce*0.3;
-    lastAcce=acce;
-    lastAngleError = angleError;
 
-   // ==== 转向 PID 参数 ====
+    // PID calculate target angle
+    tiltTarget= (kp_o * speedError + ki_o * speedIntegral + kd_o * speedDerivative)+tiltTargetBias;
+    tiltTarget = 0.7*tiltTarget + 0.3*lastTiltTarget;
+    tiltTarget = constrain(tiltTarget, -0.035, 0.035);
+    lastTiltTarget=tiltTarget;
+    
+    // Calcualte Elememnts for Tilt Error
+    tiltError = tiltTarget - tiltx;
+    tiltIntegtal += tiltError * dt;
+    tiltIntegtal = constrain(tiltIntegtal, -100, 100);
+    tiltDerivative = (tiltError - lastTiltError) / dt;
+    lastTiltError = tiltError;
 
-// ==== 获取当前 yaw （偏航角速度或角度） ====
-currentYaw = g.gyro.z+0.06;  // 或者集成角度值
+    // PID calculate target acceleration
+    acceleration = (kp_i * tiltError + ki_i * tiltIntegtal + kd_i * tiltDerivative);
+    acceleration= acceleration*0.7+lastAcceleration*0.3;
+    acceleration = constrain(acceleration, -80, 80);
+    lastAcceleration = acceleration;
 
-// ==== 计算 PID ====
-float yawError = targetYaw - currentYaw;
-turnIntegral += yawError * dt;
-float turnDerivative = (yawError - lastTurnError) / dt;
-turnOutput = kp_turn * yawError + ki_turn * turnIntegral + kd_turn * turnDerivative;
-lastTurnError = yawError;
-if(turnOutput < 0.005 && turnOutput > -0.005){
-    turnOutput = 0;
-}
-else{
-    turnOutput = turnOutput;
-}
+    // Calculate Elements for Yaw Error
+    yawError = targetYaw - currentYaw;
+    yawIntegral += yawError * dt;
+    yawDerivative = (yawError - lastTurnError) / dt;
+    turnOutput = kp_turn * yawError + ki_turn * yawIntegral + kd_turn * yawDerivative;
+    lastTurnError = yawError;
+    if(turnOutput < 0.01 && turnOutput > -0.01){
+        turnOutput = 0;
+    }
 
-
-//float error = targetAngle - tiltx;
-
-// 积分项累加
-//integral += error * (LOOP_INTERVAL / 1000.0);  // 注意单位：秒
-
-// 微分项
-//float derivative = (error - lastError) / (LOOP_INTERVAL / 1000.0);
-
-// PID 控制器输出
-//output = (kp1 * error + ki1 * integral + kd1 * derivative)/1000;
-//speed = (kp2 * error + ki2 * integral + kd2 * derivative)/1000;
-//float maxOutput = 10.0;
-//output = constrain(output, -maxOutput, maxOutput);
-
-// 保存上一次误差
-//lastError = error;
-
-    //Calculate Tilt using accelerometer and sin x = x approximation for a small tilt angle
-    //888tiltx = a.acceleration.z/9.67;
-
-    //Set target motor speed proportional to tilt angle
-    //Note: this is for demonstrating accelerometer and motors - it won't work as a balance controller
-    acce = constrain(acce, -80, 80);
-//   step1.setAccelerationRad(abs(acce+turnOutput));
-//   step2.setAccelerationRad(abs(acce-turnOutput));
-  step1.setAccelerationRad(abs(acce));
-  step2.setAccelerationRad(abs(acce));
-  if(acce+turnOutput>0){
+//   step1.setAccelerationRad(abs(acceleration+turnOutput));
+//   step2.setAccelerationRad(abs(acceleration-turnOutput));
+  step1.setAccelerationRad(abs(acceleration));
+  step2.setAccelerationRad(abs(acceleration));
+  if(acceleration+turnOutput>0){
      step1.setTargetSpeedRad(-(20));
   }else {
       step1.setTargetSpeedRad((20));
   }
-  if(acce-turnOutput>0){
+  if(acceleration-turnOutput>0){
      step2.setTargetSpeedRad((20));
   }else {
       step2.setTargetSpeedRad(-(20));
   }
       
-      
-//step1.setAccelerationRad(500.0);
-//step2.setAccelerationRad(500.0);
-//step1.setTargetSpeedRad(-acce);
-//step2.setTargetSpeedRad(acce);
-//step1.setTargetSpeedRad(-motorCommand);
-//step2.setTargetSpeedRad(motorCommand);
 }
   
   //Print updates every PRINT_INTERVAL ms
@@ -268,7 +257,7 @@ else{
     //if (millis() > printTimer) {
   printTimer += PRINT_INTERVAL;
   // Serial.print("ACC Angle: ");
-  // Serial.print(accAngle);
+  // Serial.print(tiltx_raw);
   // Serial.print(" deg\t");
   Serial.print("GYRO Rate: ");
   Serial.print(gyroRate);
@@ -277,12 +266,12 @@ else{
   // Serial.println(" deA/s");
   Serial.print(" | tiltx: ");
   Serial.print(tiltx);  // 原本单位不清，现在你要的话可以换成角度显示
-  // Serial.print(" | targetAngle: ");
-  // Serial.print(targetAngle-targetAnglebias);
+  // Serial.print(" | tiltTarget: ");
+  // Serial.print(tiltTarget-tiltTargetBias);
   // Serial.print(" | error: ");
-  // Serial.print(targetAngle - tiltx);
+  // Serial.print(tiltTarget - tiltx);
   // Serial.print(" | output: ");
-  // Serial.print(acce);
+  // Serial.print(acceleration);
   // Serial.print(" | turnOutput: ");
   // Serial.print(turnOutput);
 //   Serial.print(" | motorSpeed1: ");
