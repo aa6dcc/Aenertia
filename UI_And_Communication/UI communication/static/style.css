@@ -138,3 +138,22 @@ input[type="submit"], .button {
     width: 150px;
     margin-bottom: 20px;
 }
+
+
+.form-row {
+  display: flex;
+  justify-content: start;
+  align-items: center;
+  margin: 8px 0;
+}
+
+.form-row label {
+  width: 150px;
+  text-align: right;
+  margin-right: 10px;
+  font-weight: 500;
+}
+
+.form-row input {
+  flex: 1;
+}
