@@ -184,3 +184,16 @@ input[type="submit"], .button {
 .key-button:hover {
   background-color: #bbdefb;
 }
+
+.key-btn {
+  background: #f0f0f0;
+  border: 1px solid #ccc;
+  padding: 6px 12px;
+  margin: 4px 0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.key-btn:hover {
+  background-color: #cce4ff;
+}

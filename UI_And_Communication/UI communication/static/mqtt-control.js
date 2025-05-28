@@ -1,3 +1,4 @@
+// mqtt-control.js
 const brokerUrl = 'ws://172.20.10.2:9001';  // your Pi (update if needed)
 const opts = { keepalive: 30, reconnectPeriod: 1000 };
 const client = mqtt.connect(brokerUrl, opts);
@@ -17,10 +18,9 @@ client.on('message', (topic, message) => {
   } else if (topic === 'robot/keys') {
     const keys = JSON.parse(msg);
     const keyList = document.getElementById('key-list');
-    keyList.innerHTML =
-      '<ul>' + keys.map(k =>
-        `<li><button class="key-button" onclick="pub('robot/auto/key/set', '${k}')">${k}</button></li>`
-      ).join('') + '</ul>';
+    keyList.innerHTML = '<ul>' + keys.map(k =>
+      `<li><button class="key-button" onclick="assignKeyLocation('${k}')">${k}</button></li>`
+    ).join('') + '</ul>';
   }
 });
 
@@ -39,6 +39,11 @@ client.on('close', () => {
 // ---- Helper to publish ----
 function pub(topic, payload) {
   client.publish(topic, payload);
+}
+
+// ---- Click on location to assign it ----
+function assignKeyLocation(loc) {
+  pub('robot/auto/key/assign', loc);
 }
 
 // ---- Clock update ----
@@ -151,7 +156,7 @@ buttonActions.forEach(({id, topic, payload}) => {
 const assignBtn = document.getElementById('btn-assign-key');
 if (assignBtn) assignBtn.onclick = () => {
   const loc = document.getElementById('key-loc').value;
-  pub('robot/auto/key/assign', loc);
+  if (loc.trim()) pub('robot/auto/key/assign', loc.trim());
 };
 
 // ---- PID Form Handling ----
