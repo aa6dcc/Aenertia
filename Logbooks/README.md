@@ -56,3 +56,39 @@ Full Architecture:
 
 ![image](https://github.com/user-attachments/assets/aeba1356-e19b-4993-99e6-69086c825837)
 
+Database structure:
+
+AenerShark/
+├── server/
+│   ├── database/               # DynamoDB logic & local helpers
+│   │   ├── __init__.py
+│   │   ├── dynamodb.py         # DynamoDB CRUD functions
+│   │   └── utils.py            # Timestamps, file naming, ID gen
+│   │
+│   ├── lambda/                 # All Lambda code
+│   │   └── store_metadata.py   # Triggered after S3 upload
+│   │
+│   ├── mqtt/                   # MQTT config, client, topics
+│   │   └── mqtt_helper.py
+│   │
+│   ├── s3bucket/               # S3 upload logic
+│   │   └── s3_upload.py        # Upload files to S3
+│   │
+│   ├── tuning/                 # PID tuning logic
+│   │   └── pid_handler.py
+│   │
+│   ├── website/                # Static + JS frontend
+│   │   ├── static/
+│   │   │   ├── style.css
+│   │   │   └── control.js
+│   │   └── templates/
+│   │       └── dashboard.html  # (if using Jinja2)
+│   │
+│   ├── main.py                 # FastAPI server.py logic
+│   └── aws_config.py           # AWS session, clients, env
+│
+├── .env                        # (optional) store AWS keys
+├── requirements.txt
+├── README.md
+└── create_db.py                # (optional for initial table setup)
+
