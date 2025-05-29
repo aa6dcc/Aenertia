@@ -4,7 +4,6 @@ import threading # Threading is a library that allows us to run other tasks that
 from time import sleep
 #import app_video # runs the server to send back the video
 from Advanced_CV.pose_detection import pose_detection
-
 import global_var as gv
 
 #Serial config (i included many ports just n case we somehow connect to an unexpected port number. It is very unlikely it goes above 1) 
@@ -18,9 +17,10 @@ baud_rate = 115200
 #global variables
 follow_mode = False
 ser = None
-mode = "manual" #Global var mode initialized to Manual
+mode = "manual"
 # gv.HumanDetected = False
 # gv.offset = 0
+
 
 def send_2_esp(command):
     print(f"Sending to esp: {command}")
@@ -36,7 +36,7 @@ def follow_me():
         print(gv.HumanDetected)
 
         if gv.HumanDetected:
-            print("HUMAN DETECTED")
+            # print("HUMAN DETECTED")
             if abs(gv.offset) < 200: 
                 send_2_esp("forward")
             elif 200 <= gv.offset < 700:
@@ -56,6 +56,10 @@ def follow_me():
 def gotoKeyLocation():
     print("ROS2 works ; Python stays silent")
 
+################################################################## TELEMETRY ##################################################################
+
+def esp_read():
+    pass
 
 def on_connect(client, userdata, flags, rc):
     gv.HumanDetected
@@ -68,7 +72,7 @@ def on_connect(client, userdata, flags, rc):
 
     # Run the CV pose detection in the background
     threading.Thread(target=pose_detection, daemon=True).start() #To fix this we use threading. Threading isolates the code we target and procceeds zith the rest of the code.
-
+    threading.Thread(target=esp_read, daemon=True).start() #Continuously read value from ESP
 
 def on_message(client, userdata, msg):
     #global cv_enabled
