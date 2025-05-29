@@ -193,3 +193,4 @@ We decided to use DynamoDB as a NoSQL database for the course of our project
 | MQTT Integration   |  Via Lambda |  Via SDKs   |  Manual logic |  Manual logic |  Pub/Sub only | No      |
 | AWS Integration    |  Native     |  External  | (RDS/Aurora)  | No              |  (Elasticache) | No      |
 
+My goals for now are to implement a functional (albeit simple for now) database and to use React for the website.
