@@ -8,9 +8,9 @@ import global_var as gv
 import json
 
 #Serial config (i included many ports just n case we somehow connect to an unexpected port number. It is very unlikely it goes above 1) 
-SERIAL_PORT = [ "/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2","/dev/ttyUSB3", "/dev/ttyUSB5", 
-                "/dev/ttyUSB6", "/dev/ttyUSB7", "/dev/ttyUSB8","/dev/ttyUSB9", "/dev/ttyUSB10", 
-                "/dev/ttyUSB11", "/dev/ttyUSB12", "/dev/ttyUSB13","/dev/ttyUSB14", "/dev/ttyUSB15", 
+SERIAL_PORT = [ "/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2","/dev/ttyUSB3", "/dev/ttyUSB4", 
+                "/dev/ttyUSB5", "/dev/ttyUSB6", "/dev/ttyUSB7", "/dev/ttyUSB8","/dev/ttyUSB9", 
+                "/dev/ttyUSB10", "/dev/ttyUSB11", "/dev/ttyUSB12", "/dev/ttyUSB13","/dev/ttyUSB14",
                 "/dev/ttyUSB15", "/dev/ttyUSB16", "/dev/ttyUSB17","/dev/ttyUSB18", "/dev/ttyUSB19" ]
 
 baud_rate = 115200
@@ -60,15 +60,23 @@ def gotoKeyLocation():
 ################################################################## TELEMETRY ##################################################################
 
 def esp_read():
-    if ser.in_waiting > 0:
-        incoming = ser.readline().decode().strip()
-        if incoming[0:3] == "PM:":
-            json_pm = incoming.split()[1]
-            data = json.loads(json_pm)
-            print("Voltage: " + data["voltage"])
-            print("Motor Current : " + data["current_motor"])
-            print("Board Current : " + data["current_board"])
+    print("espppppppppppppp")
 
+    while True:
+        print("is working")
+
+        if ser.in_waiting > 0:
+            print("code stuck1")
+            incoming = ser.readline().decode().strip()
+            print("code stuck2")
+
+            if incoming[0:3] == "PM:":
+                print("code stuck3")
+                json_pm = incoming.split()[1]
+                data = json.loads(json_pm)
+                print("Voltage: " + data["voltage"])
+                print("Motor Current : " + data["current_motor"])
+                print("Board Current : " + data["current_board"])
 
         #PM: output
 
@@ -84,6 +92,8 @@ def on_connect(client, userdata, flags, rc):
     # Run the CV pose detection in the background
     threading.Thread(target=pose_detection, daemon=True).start() #To fix this we use threading. Threading isolates the code we target and procceeds zith the rest of the code.
     threading.Thread(target=esp_read, daemon=True).start() #Continuously read value from ESP
+
+    print("connecteeeeeeeeeeeeeeed")
 
 def on_message(client, userdata, msg):
     #global cv_enabled
@@ -152,8 +162,10 @@ def main():
         try:
             ser = serial.Serial(port, baud_rate, timeout=1)
             print(f"Serial connection start using port: {port}")
+            breaktest = "Hello Jay"
             break
-        except FileNotFoundError:
+
+        except FileNotFoundError or serial.SerialException :
             print(f"failed to connect to port: {port}")
 
     client = mqtt.Client() # Creat a client object from MQTT
@@ -161,6 +173,8 @@ def main():
     client.on_message = on_message
     client.connect("localhost", 1883, 60)
     client.loop_forever()
+    
+
 
 
 if __name__ == "__main__":
