@@ -285,7 +285,7 @@ void loop()
     serializeJson(doc, output);
 
     // Send JSON over custom serial
-    String finalMessage = "PM:" + output; //Identifier
+    String finalMessage = "PM: " + output; //Identifier
     Serial.println(finalMessage);
 
     // For debug on USB serial
