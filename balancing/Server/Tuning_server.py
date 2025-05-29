@@ -2,13 +2,13 @@ from flask import Flask, request, render_template_string
 import serial
 import time
 
-BT_SERIAL_PORT = 'COM8'  # Change to your Bluetooth serial port
-BAUD_RATE = 9600
+BT_SERIAL_PORT = 'COM5'  # Change to your Bluetooth serial port
+BAUD_RATE = 115200
 
 app = Flask(__name__)
 
 # Default values for form fields
-default_values = {
+default_values = { 
     'kp': '85',
     'kd': '0.9',
     'kp_o': '8',
