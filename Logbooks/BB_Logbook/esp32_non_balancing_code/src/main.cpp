@@ -46,6 +46,9 @@ bool TimerHandler(void * timerNo)
 void setup()
 {
   Serial.begin(115200);
+  Serial1.begin(115200, SERIAL_8N1, 9, 10); // RX = GPIO9, TX = GPIO10
+  Serial1.println("Hello from debug port");
+
   pinMode(TOGGLE_PIN,OUTPUT);
 
  
@@ -76,7 +79,7 @@ void loop()
     command.trim();
   
     // We start by checking if the mode was changed
-    
+    Serial1.println("THIS IS ONLY FOR THE ESP")
     if(command == "forward") {
       step1.setTargetSpeedRad(spd);
       step2.setTargetSpeedRad(spd);
