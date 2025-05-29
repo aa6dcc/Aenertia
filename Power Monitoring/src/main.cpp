@@ -2,6 +2,8 @@
 #include <SPI.h>
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
+#include <ArduinoJson.h>
+
 
 //ADC pins
 const int ADC_CS_PIN        = 5;  
@@ -13,6 +15,9 @@ const int change_interval = 500;
 int lastTime = 0;
 int variable = 0;
 int ADC_value = 0;
+
+float sim[16] = {1,2,3,4,5,6,7,8,9,10,1,2,3,4,5,6};
+int loopCount = 0;
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
@@ -42,6 +47,7 @@ void setup() {
 
 // Set the LCD address to 0x27 (sometimes 0x3F)
   Serial.begin(115200);
+  Serial2.begin(115200, SERIAL_8N1, 16, 17);
   lcd.init();
   lcd.backlight();
   lcd.setCursor(0, 0);
@@ -52,11 +58,38 @@ void loop() {
   // put your main code here, to run repeatedly:
   if(millis() > lastTime + change_interval){
     lastTime = millis();
-    ADC_value = (int)readADC(1);
-    lcd.clear();
-    lcd.print("VM: ");
-    lcd.print(ADC_value);
-    variable += 1;
+    float voltage = sim[loopCount];
+    float current_motor = sim[loopCount+3];
+    float current_board = sim[loopCount+6];
+
+    // Create a JSON object
+    StaticJsonDocument<128> doc;
+    doc["voltage"] = voltage;
+    doc["current_motor"] = current_motor;
+    doc["current_board"] = current_board;
+
+    // Serialize JSON to a string
+    String output;
+    serializeJson(doc, output);
+
+    // Send JSON over custom serial
+    String finalMessage = "PM: " + output + "\n"; //Identifier
+    //Serial.println(finalMessage);
+    Serial2.println(finalMessage);
+    // ADC_value = (int)readADC(1);
+    // lcd.clear();
+    // lcd.print("VM: ");
+    // lcd.print(ADC_value);
+    // variable += 1;
+    if(loopCount == 9){
+      loopCount = 0;
+    }else{
+      loopCount += 1;
+    }
+  }
+  if(Serial2.available()){
+    String incomming = Serial2.readStringUntil('\n');
+    Serial.println(incomming);
   }
 }
 
