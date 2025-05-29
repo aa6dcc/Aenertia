@@ -86,7 +86,7 @@ float acceleration = 0;
 float motorCommand=0.0;
 float dt=0.0;
 
-bool DEBUG = true;
+bool DEBUG = false;
 
 
 
@@ -143,6 +143,7 @@ void setup()
       delay(10);
     }
   }
+  
   Serial.println("MPU6050 Found!");
 
   mpu.setAccelerometerRange(MPU6050_RANGE_2_G);
@@ -270,7 +271,7 @@ void loop()
   }
   if (millis() > serialTimer){
     serialTimer += SERIAL_INTERVAL;
-    float voltage = ((readADC(2) * VREF) / 4095.0)*5;
+    float voltage = readADC(2);
     float current_motor = ((readADC(0) * VREF) / 4095.0-0.21)/1.5;
     float current_board = ((readADC(1) * VREF) / 4095.0-0.21)/1.5;
 
@@ -285,7 +286,7 @@ void loop()
     serializeJson(doc, output);
 
     // Send JSON over custom serial
-    String finalMessage = "PM: " + output; //Identifier
+    String finalMessage = "PM:" + output + "\n"; //Identifier
     Serial.println(finalMessage);
 
     // For debug on USB serial
