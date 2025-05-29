@@ -168,5 +168,28 @@ I then reformatted the website so that the show key locations button is next to 
 
 ![image](https://github.com/user-attachments/assets/e1329ded-95c1-4676-809c-ba6502f876b3)
 
+During the UI-backend integration, we decided that FastAPI was no longer necessary:
+
+| **Functionality**           | **FastAPI**     | **Now **                                    |
+| --------------------------- | ----------------------- | ---------------------------------------------- |
+| Serving frontend            | FastAPI routes          | **Static hosting** (e.g., S3, or local server) |
+| Robot → backend data flow   | API endpoints           | **MQTT**                                       |
+| Database writes             | API + FastAPI + boto3   | **AWS Lambda** triggered by S3 / MQTT          |
+| File uploads                | API handling in FastAPI | **S3 direct upload + Lambda post-processing**  |
+| PID / telemetry interaction | API endpoints           | **MQTT topics** (e.g., `robot/pid/inner`)      |
+
+We now have a server-less, event-driven architecture, as we realised we didn't need a formal framework or backend. 
+
 I will start working on implementing the database from here on out.
+
+## 29/05/2025
+
+We decided to use DynamoDB as a NoSQL database for the course of our project 
+
+| Factor             | DynamoDB     | MongoDB      | PostgreSQL      | Firebase        | Redis           | SQLite |
+| ------------------ | ------------ | ------------ | --------------- | --------------- | --------------- | ------ |
+| Serverless         |  Yes        | Via Atlas |  RDS setup    | Yes           | Yes           | No     |
+| Local Dev Friendly | Emulator  |  Yes        |  Yes           |  Emulator      |  Local Redis   | Yes  |
+| MQTT Integration   |  Via Lambda |  Via SDKs   |  Manual logic |  Manual logic |  Pub/Sub only | No      |
+| AWS Integration    |  Native     |  External  | (RDS/Aurora)  | No              |  (Elasticache) | No      |
 
