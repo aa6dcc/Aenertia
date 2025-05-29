@@ -5,6 +5,7 @@ from time import sleep
 #import app_video # runs the server to send back the video
 from Advanced_CV.pose_detection import pose_detection
 import global_var as gv
+import json
 
 #Serial config (i included many ports just n case we somehow connect to an unexpected port number. It is very unlikely it goes above 1) 
 SERIAL_PORT = [ "/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2","/dev/ttyUSB3", "/dev/ttyUSB5", 
@@ -59,7 +60,17 @@ def gotoKeyLocation():
 ################################################################## TELEMETRY ##################################################################
 
 def esp_read():
-    pass
+    if ser.in_waiting > 0:
+        incoming = ser.readline().decode().strip()
+        if incoming[0:3] == "PM:":
+            json_pm = incoming.split()[1]
+            data = json.loads(json_pm)
+            print("Voltage: " + data["voltage"])
+            print("Motor Current : " + data["current_motor"])
+            print("Board Current : " + data["current_board"])
+
+
+        #PM: output
 
 def on_connect(client, userdata, flags, rc):
     gv.HumanDetected
