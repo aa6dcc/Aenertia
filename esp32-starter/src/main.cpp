@@ -86,7 +86,7 @@ float acceleration = 0;
 float motorCommand=0.0;
 float dt=0.0;
 
-bool DEBUG = true;
+bool DEBUG = false;
 
 
 
@@ -137,17 +137,19 @@ void setup()
   pinMode(TOGGLE_PIN,OUTPUT);
 
   // Try to initialize Accelerometer/Gyroscope
-  if (!mpu.begin()) {
+  /*if (!mpu.begin()) {
     Serial.println("Failed to find MPU6050 chip");
     while (1) {
       delay(10);
     }
   }
+  
   Serial.println("MPU6050 Found!");
 
   mpu.setAccelerometerRange(MPU6050_RANGE_2_G);
   mpu.setGyroRange(MPU6050_RANGE_250_DEG);
   mpu.setFilterBandwidth(MPU6050_BAND_44_HZ);
+  */
 
   //Attach motor update ISR to timer to run every STEPPER_INTERVAL_US μs
   if (!ITimer.attachInterruptInterval(STEPPER_INTERVAL_US, TimerHandler)) {
@@ -209,11 +211,11 @@ void loop()
     lastTime = now;
     // Fetch data from MPU6050
     sensors_event_t a, g, temp;
-    mpu.getEvent(&a, &g, &temp);
-    tiltx_raw = atan2(a.acceleration.z, sqrt(a.acceleration.x * a.acceleration.x + a.acceleration.y * a.acceleration.y));
-    gyroRate = g.gyro.y-0.005;
-    tiltx =(C * (tiltx + gyroRate * dt) + (1 - C) * tiltx_raw);
-    currentYaw = g.gyro.z+0.06;
+    // mpu.getEvent(&a, &g, &temp);
+    // tiltx_raw = atan2(a.acceleration.z, sqrt(a.acceleration.x * a.acceleration.x + a.acceleration.y * a.acceleration.y));
+    // gyroRate = g.gyro.y-0.005;
+    // tiltx =(C * (tiltx + gyroRate * dt) + (1 - C) * tiltx_raw);
+    // currentYaw = g.gyro.z+0.06;
 
     // Calculate Elements of the Speed Error
     actualSpeed = (step2.getSpeedRad()-step1.getSpeedRad())/2;
@@ -270,7 +272,7 @@ void loop()
   }
   if (millis() > serialTimer){
     serialTimer += SERIAL_INTERVAL;
-    float voltage = ((readADC(2) * VREF) / 4095.0)*5;
+    float voltage = readADC(2);
     float current_motor = ((readADC(0) * VREF) / 4095.0-0.21)/1.5;
     float current_board = ((readADC(1) * VREF) / 4095.0-0.21)/1.5;
 
@@ -285,7 +287,7 @@ void loop()
     serializeJson(doc, output);
 
     // Send JSON over custom serial
-    String finalMessage = "PM:" + output; //Identifier
+    String finalMessage = "PM:" + output + "\n"; //Identifier
     Serial.println(finalMessage);
 
     // For debug on USB serial

@@ -63,22 +63,21 @@ def esp_read():
     print("espppppppppppppp")
 
     while True:
-        print("is working")
-
         if ser.in_waiting > 0:
             print("code stuck1")
             incoming = ser.readline().decode().strip()
-            print("code stuck2")
-
+            print(incoming)
+            print("1")
+            print(incoming[0:3])
             if incoming[0:3] == "PM:":
-                print("code stuck3")
+                print("2")
                 json_pm = incoming.split()[1]
                 data = json.loads(json_pm)
                 print("Voltage: " + data["voltage"])
                 print("Motor Current : " + data["current_motor"])
                 print("Board Current : " + data["current_board"])
 
-        #PM: output
+        #PM: json
 
 def on_connect(client, userdata, flags, rc):
     gv.HumanDetected
