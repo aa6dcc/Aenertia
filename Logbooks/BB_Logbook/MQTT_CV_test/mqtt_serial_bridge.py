@@ -4,8 +4,12 @@ import threading # Threading is a library that allows us to run other tasks that
 from time import sleep
 #import app_video # runs the server to send back the video
 from Advanced_CV.pose_detection import pose_detection
+from Advanced_CV.pose_detection2 import gen_frames
+from flask import Flask, Response, send_from_directory
 import global_var as gv
 import json
+import cv2
+import os
 
 #Serial config (i included many ports just n case we somehow connect to an unexpected port number. It is very unlikely it goes above 1) 
 SERIAL_PORT = [ "/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2","/dev/ttyUSB3", "/dev/ttyUSB4", 
@@ -22,6 +26,23 @@ mode = "manual"
 # gv.HumanDetected = False
 # gv.offset = 0
 
+# FLASK APP SETUP
+app = Flask(__name__, static_folder='static', static_url_path='')
+
+@app.route('/')
+def index():
+    return send_from_directory('static', 'index.html')
+
+@app.route('/video_feed')
+def video_feed():
+    return Response(
+        gen_frames(),
+        mimetype='multipart/x-mixed-replace; boundary=frame'
+    )
+
+def start_web():
+    """Runs the Flask server for static files + MJPEG stream."""
+    app.run(host='0.0.0.0', port=8001, threaded=True)
 
 def send_2_esp(command):
     print(f"Sending to esp: {command}")
@@ -177,4 +198,5 @@ def main():
 
 
 if __name__ == "__main__":
+    threading.Thread(target=start_web, daemon=True).start()
     main()
