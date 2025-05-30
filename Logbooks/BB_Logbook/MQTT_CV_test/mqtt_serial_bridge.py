@@ -177,15 +177,15 @@ def main():
     #Robot function
     #Telemetry loop
     global ser
+    global SERIAL_PORT
 
     for port in SERIAL_PORT:
         try:
             ser = serial.Serial(port, baud_rate, timeout=1)
             print(f"Serial connection start using port: {port}")
-            breaktest = "Hello Jay"
             break
 
-        except FileNotFoundError or serial.SerialException :
+        except (FileNotFoundError, serial.SerialException):
             print(f"failed to connect to port: {port}")
 
     client = mqtt.Client() # Creat a client object from MQTT

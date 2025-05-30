@@ -108,13 +108,11 @@ def pose_detection():
 
         with frame_lock:
             latest_frame = frame_bgr.copy()
-        print("Hello")
-
             
     #     Display for debugging
-        cv2.imshow("Lower-Body Follow", frame_bgr)
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            break
+        # cv2.imshow("Lower-Body Follow", frame_bgr)
+        # if cv2.waitKey(1) & 0xFF == ord("q"):
+        #     break
 
     # finally:
     #     # 8) Cleanup 
