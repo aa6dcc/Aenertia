@@ -3,8 +3,8 @@ import serial
 import threading # Threading is a library that allows us to run other tasks that the current one in the background
 from time import sleep
 #import app_video # runs the server to send back the video
-from Advanced_CV.pose_detection import pose_detection
-from Advanced_CV.pose_detection2 import gen_frames
+from Advanced_CV.pose_detection import pose_detection, send_frame
+#from Advanced_CV.yolo_detection import gen_frames
 from flask import Flask, Response, send_from_directory
 import global_var as gv
 import json
@@ -27,7 +27,7 @@ mode = "manual"
 # gv.offset = 0
 
 # FLASK APP SETUP
-app = Flask(__name__, static_folder='static', static_url_path='')
+app = Flask(__name__, static_folder='Placeholder_UI/static', static_url_path='')
 
 @app.route('/')
 def index():
@@ -36,7 +36,7 @@ def index():
 @app.route('/video_feed')
 def video_feed():
     return Response(
-        gen_frames(),
+        send_frame(),
         mimetype='multipart/x-mixed-replace; boundary=frame'
     )
 
