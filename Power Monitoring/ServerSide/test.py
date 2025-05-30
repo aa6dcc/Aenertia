@@ -2,7 +2,7 @@ import serial
 import time
 
 # Serial port configuration — change as needed
-PORT = 'COM4'           # Your Arduino/adapter port
+PORT = 'COM16'           # Your Arduino/adapter port
 BAUD = 9600
 TIMEOUT = 2             # seconds to wait for response
 
@@ -22,7 +22,7 @@ def echo_test():
                 if ser.in_waiting:
                     received += ser.read(ser.in_waiting).decode(errors='ignore')
                     if TEST_MESSAGE in received:
-                        print("✅ Echo test passed.")
+                        print("✅ Ech o test passed.")
                         return True
                 time.sleep(0.05)
 

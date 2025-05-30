@@ -287,10 +287,9 @@ void loop()
 
     // Send JSON over custom serial
     String finalMessage = "PM:" + output + "\n"; //Identifier
+    Serial2.println(finalMessage);
     Serial.println(finalMessage);
-
-    // For debug on USB serial
-    //Serial.println(finalMessage);
+    
   }
   
   //Print updates every PRINT_INTERVAL ms
