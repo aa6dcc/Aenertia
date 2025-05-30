@@ -286,7 +286,7 @@ void loop()
     serializeJson(doc, output);
 
     // Send JSON over custom serial
-    String finalMessage = "PM:" + output + "\n"; //Identifier
+    String finalMessage = "PM: " + output + "\n"; //Identifier
     Serial2.println(finalMessage);
     Serial.println(finalMessage);
     
