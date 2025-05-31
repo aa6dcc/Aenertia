@@ -25,7 +25,7 @@ const int ADC_MOSI_PIN      = 23;
 // Diagnostic pin for oscilloscope
 const int TOGGLE_PIN        = 32;
 const int PRINT_INTERVAL    = 500;
-const int SERIAL_INTERVAL   = 1000;
+const int PM_INTERVAL   = 1000;
 const int LOOP_INTERVAL     = 10;
 const int STEPPER_INTERVAL_US = 20;
 
@@ -270,8 +270,8 @@ void loop()
         
   }
   if (millis() > serialTimer){
-    serialTimer += SERIAL_INTERVAL;
-    float voltage = readADC(2);
+    serialTimer += PM_INTERVAL;
+    float voltage = (readADC(2)*VREF)/4095*6.1;
     float current_motor = ((readADC(0) * VREF) / 4095.0-0.21)/1.5;
     float current_board = ((readADC(1) * VREF) / 4095.0-0.21)/1.5;
 
