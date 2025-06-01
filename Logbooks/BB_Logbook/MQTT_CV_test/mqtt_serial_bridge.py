@@ -81,23 +81,22 @@ def gotoKeyLocation():
 ################################################################## TELEMETRY ##################################################################
 
 def esp_read():
-    print("espppppppppppppp")
 
-    while True:
-        if ser.in_waiting > 0:
-            print("code stuck1")
-            incoming = ser.readline().decode().strip()
-            print(incoming)
-            print("1")
-            print(incoming[0:3])
-            if incoming[0:3] == "PM:":
-                print("2")
-                json_pm = incoming.split()[1]
-                data = json.loads(json_pm)
-                print("Voltage: " + data["voltage"])
-                print("Motor Current : " + data["current_motor"])
-                print("Board Current : " + data["current_board"])
-
+    # while True:
+    #     if ser.in_waiting > 0:
+    #         print("code stuck1")
+    #         incoming = ser.readline().decode().strip()
+    #         print(incoming)
+    #         print("1")
+    #         print(incoming[0:3])
+    #         if incoming[0:3] == "PM:":
+    #             print("2")
+    #             json_pm = incoming.split()[1]
+    #             data = json.loads(json_pm)
+    #             print("Voltage: " + data["voltage"])
+    #             print("Motor Current : " + data["current_motor"])
+    #             print("Board Current : " + data["current_board"])
+    pass
         #PM: json
 
 def on_connect(client, userdata, flags, rc):
@@ -112,8 +111,6 @@ def on_connect(client, userdata, flags, rc):
     # Run the CV pose detection in the background
     threading.Thread(target=pose_detection, daemon=True).start() #To fix this we use threading. Threading isolates the code we target and procceeds zith the rest of the code.
     threading.Thread(target=esp_read, daemon=True).start() #Continuously read value from ESP
-
-    print("connecteeeeeeeeeeeeeeed")
 
 def on_message(client, userdata, msg):
     #global cv_enabled
