@@ -82,11 +82,14 @@ def gotoKeyLocation():
 
 def esp_read():
 
-    # while True:
-    #     if ser.in_waiting > 0:
-    #         print("code stuck1")
-    #         incoming = ser.readline().decode().strip()
-    #         print(incoming)
+    while True:
+        if ser.in_waiting > 0:
+    #       print("code stuck1")
+	    try:
+                incoming = ser.readline().decode().strip()
+                print(incoming)
+            except UnicodeDecodeError:
+                print("ESP error")
     #         print("1")
     #         print(incoming[0:3])
     #         if incoming[0:3] == "PM:":
