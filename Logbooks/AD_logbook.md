@@ -201,17 +201,29 @@ Did the interim presentation this morning after some prep work.
 Started filling up the server folder, especially in the database subfolder. 
 
 [Raspberry Pi]
+
     |
+    
     | MQTT publish (sensor data)
+    
     v
+    
 [AWS IoT Core]
+
     |
+    
     | IoT Rule (Trigger)
+    
     v
+    
 [Lambda Function]
+
     |
+    
     | put_item(...)
+    
     v
+    
 [Amazon DynamoDB]
 
 Above is the structure I will use tomorrow to connect the Raspberry Pi in real time with the DynamoDB
