@@ -1,5 +1,5 @@
 // mqtt-control.js
-const brokerUrl = 'ws://172.20.10.2:9001';  // your Pi (update if needed)
+const brokerUrl = 'ws://172.20.10.9:9001';  // your Pi (update if needed)
 const opts = { keepalive: 30, reconnectPeriod: 1000 };
 const client = mqtt.connect(brokerUrl, opts);
 

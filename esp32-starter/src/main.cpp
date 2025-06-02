@@ -117,16 +117,16 @@ bool TimerHandler(void * timerNo)
 }
 
 uint16_t readADC(uint8_t channel) {
-  uint8_t TX0 = 0x06 | (channel >> 2);  // Command Byte 0 = Start bit + single-ended mode + MSB of channel
-  uint8_t txByte1 = (channel & 0x03) << 6;  // Command Byte 1 = Remaining 2 bits of channel
+  uint8_t tx0 = 0x06 | (channel >> 2);  // Command Byte 0 = Start bit + single-ended mode + MSB of channel
+  uint8_t tx1 = (channel & 0x03) << 6;  // Command Byte 1 = Remaining 2 bits of channel
 
   digitalWrite(ADC_CS_PIN, LOW); 
-   SPI.transfer(TX0);                    // Send Command Byte 0
-  uint8_t RX0 = SPI.transfer(TX1);      // Send Command Byte 1 and receive high byte of result
-  uint8_t rxByte1 = SPI.transfer(0x00);     // Send dummy byte and receive low byte of result
+  SPI.transfer(tx0);                    // Send Command Byte 0
+  uint8_t rx0 = SPI.transfer(tx1);      // Send Command Byte 1 and receive high byte of result
+  uint8_t rx1 = SPI.transfer(0x00);     // Send dummy byte and receive low byte of result
 
   digitalWrite(ADC_CS_PIN, HIGH); 
-  uint16_t result = ((RX0 & 0x0F) << 8) | rxByte1; // Combine high and low byte into 12-bit result
+  uint16_t result = ((rx0 & 0x0F) << 8) | rx1; // Combine high and low byte into 12-bit result
   return result;
 }
 
@@ -270,10 +270,10 @@ void loop()
         
   }
   if (millis() > serialTimer){
-    serialTimer += PM_INTERVAL;
-    float voltage = (readADC(2)*VREF)/4095*6.1;
-    float current_motor = ((readADC(0) * VREF) / 4095.0-0.21)/1.5;
-    float current_board = ((readADC(1) * VREF) / 4095.0-0.21)/1.5;
+    serialTimer += SERIAL_INTERVAL;
+    float voltage = ((readADC(2) * VREF) / 4095.0)*6.1;
+    float current_motor = ((readADC(0) * VREF) / 4095.0-0.08)/1.5;
+    float current_board = ((readADC(1) * VREF) / 4095.0-0.08)/1.5;
 
     // Create a JSON object
     StaticJsonDocument<128> doc;
@@ -286,11 +286,10 @@ void loop()
     serializeJson(doc, output);
 
     // Send JSON over custom serial
-    String finalMessage = "PM:" + output + "\n"; //Identifier
+    String finalMessage = "PM: " + output + "\n"; //Identifier
+    Serial2.println(finalMessage);
     Serial.println(finalMessage);
-
-    // For debug on USB serial
-    //Serial.println(finalMessage);
+    
   }
   
   //Print updates every PRINT_INTERVAL ms
