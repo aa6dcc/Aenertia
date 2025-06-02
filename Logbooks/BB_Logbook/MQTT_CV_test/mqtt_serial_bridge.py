@@ -85,7 +85,7 @@ def esp_read():
     while True:
         if ser.in_waiting > 0:
     #       print("code stuck1")
-	    try:
+            try:
                 incoming = ser.readline().decode().strip()
                 print(incoming)
             except UnicodeDecodeError:
