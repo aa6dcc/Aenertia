@@ -6,6 +6,20 @@
 #include <step.h>
 #include <ArduinoJson.h>
 
+enum RobotCommand {
+  STOP,
+  FORWARD,
+  BACKWARD,
+  LEFT,
+  RIGHT,
+  FORWARD_AND_LEFT,
+  FORWARD_AND_RIGHT,
+  BACKWARD_AND_LEFT,
+  BACKWARD_AND_RIGHT
+};
+
+RobotCommand currentCommand = STOP;
+
 #define TXD2 25
 #define RXD2 26
 
@@ -28,6 +42,7 @@ const int PRINT_INTERVAL    = 500;
 const int PM_INTERVAL   = 1000;
 const int LOOP_INTERVAL     = 10;
 const int STEPPER_INTERVAL_US = 20;
+const int SERIAL_INTERVAL = 500;
 
 const float kx = 5.0;
 const float VREF = 4.096;
@@ -85,6 +100,7 @@ float acceleration = 0;
 
 float motorCommand=0.0;
 float dt=0.0;
+int commandTimer = 0;
 
 bool DEBUG = true;
 bool PM = false;
@@ -134,7 +150,6 @@ uint16_t readADC(uint8_t channel) {
 void setup()
 {
   Serial.begin(115200);
-  Serial2.begin(115200, SERIAL_8N1, TXD2, RXD2);
   pinMode(TOGGLE_PIN,OUTPUT);
 
   // Try to initialize Accelerometer/Gyroscope
@@ -201,11 +216,69 @@ void loop()
       targetYaw=0;
     }
 
+    if (millis() - commandTimer > 500) {
+      currentCommand = STOP;
+    }
+
+    // Translate command state into target values
+    switch (currentCommand) {
+      case FORWARD:
+        targetSpeed = speed_max;
+        targetYaw = 0;
+        break;
+      case BACKWARD:
+        targetSpeed = -speed_max;
+        targetYaw = 0;
+        break;
+      case LEFT:
+        targetSpeed = 0;
+        targetYaw = yaw_max;
+        break;
+      case RIGHT:
+        targetSpeed = 0;
+        targetYaw = -yaw_max;
+        break;
+      case FORWARD_AND_LEFT:
+        targetSpeed = speed_max;
+        targetYaw = yaw_max;
+        break;
+      case FORWARD_AND_RIGHT:
+        targetSpeed = speed_max;
+        targetYaw = -yaw_max;
+        break;
+      case BACKWARD_AND_LEFT:
+        targetSpeed = -speed_max;
+        targetYaw = -yaw_max;
+        break;
+      case BACKWARD_AND_RIGHT:
+        targetSpeed = -speed_max;
+        targetYaw = yaw_max;
+        break;
+      case STOP:
+      default:
+        targetSpeed = 0;
+        targetYaw = 0;
+        break;
+    }
+
+    if(now<5000){
+      currentCommand = STOP;
+    }else if (now<9000){
+      currentCommand = FORWARD;
+    }else if(now<13000){
+      currentCommand = BACKWARD;
+      //targetYaw=-0.1;
+    }else if(now > 13000 && now < 14000){
+      currentCommand = STOP;
+    }
+
+    
+
+
     targetSpeed = 0.5*lastTargetSpeed + 0.5*targetSpeed;
     lastTargetSpeed = targetSpeed;
     targetYaw = 0.5*lastTargetYaw + 0.5*targetYaw;
     lastTargetYaw = targetYaw;
-
 
     dt = (now - lastTime) / 1000.0;
     lastTime = now;
@@ -216,6 +289,7 @@ void loop()
     gyroRate = g.gyro.y-0.005;
     tiltx =(C * (tiltx + gyroRate * dt) + (1 - C) * tiltx_raw);
     currentYaw = g.gyro.z-0.002;
+
 
     // Calculate Elements of the Speed Error
     actualSpeed = (step2.getSpeedRad()-step1.getSpeedRad())/2;
@@ -270,6 +344,11 @@ void loop()
       step2.setTargetSpeedRad((20));
     }else {
       step2.setTargetSpeedRad(-(20));
+    }
+
+    if(millis()-commandTimer > 500){
+      targetSpeed = 0;
+      targetYaw = 0;
     }
         
   }
@@ -341,48 +420,40 @@ void loop()
     Serial.println(targetYaw);
   }
 
-  if(Serial.available()) {
+  if (Serial.available()) {
     String command = Serial.readStringUntil('\n');
     command.trim();
-    // We start by checking if the mode was changed
-    
+    Serial.println(command);
+
     if(command == "forward") {
-      targetSpeed = speed_max;
-      Serial.println(targetSpeed);
-      targetYaw = 0;
+      currentCommand = FORWARD;
     }
     else if (command == "backward") {
-      targetSpeed = -speed_max;
-      targetYaw = 0;
+      currentCommand = BACKWARD;
     }
     else if (command == "left") {
-      targetSpeed = 0;
-      targetYaw = yaw_max;
+      currentCommand = LEFT;
     }
     else if (command == "right") {
-      targetSpeed = 0;
-      targetYaw = -yaw_max;
+      currentCommand = RIGHT;
     }
-
-    else if(command == "forwardANDleft") {
-      targetSpeed = speed_max;
-      targetYaw = yaw_max;
+    else if (command == "forwardANDleft") {
+      currentCommand = FORWARD_AND_LEFT;
     }
     else if (command == "forwardANDright") {
-      targetSpeed = speed_max;
-      targetYaw = -yaw_max;
+      currentCommand = FORWARD_AND_RIGHT;
     }
     else if (command == "backwardANDleft") {
-      targetSpeed = -speed_max;
-      targetYaw = -yaw_max;
+      currentCommand = BACKWARD_AND_LEFT;
     }
     else if (command == "backwardANDright") {
-      targetSpeed = -speed_max;
-      targetYaw = yaw_max;
+      currentCommand = BACKWARD_AND_RIGHT;
     }
     else if (command == "stop") {
-      targetSpeed = 0;
-      targetYaw = 0;
+      currentCommand = STOP;
     }
+
+    commandTimer = millis();
   }
+
 }
