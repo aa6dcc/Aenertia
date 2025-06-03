@@ -33,15 +33,15 @@ const float kx = 5.0;
 const float VREF = 4.096;
 
 // PID parameters
-float kp_i = 5000;
+float kp_i = 2000;
 float ki_i = 0;
-float kd_i = 80;
+float kd_i = 50;
 
 float kp_o = -0.003;
 float ki_o = -0.00007;
 float kd_o = 0.0;
 
-float kp_turn = -15;  
+float kp_turn = -15.0;  
 float ki_turn = 0.0;
 float kd_turn = 0.0;
 
@@ -52,7 +52,7 @@ float targetYaw = 0;  // 希望的角度，或者从遥控器获得的转动指�
 
 float lastAcceleration=0.0;
 
-float speed_max = 3;
+float speed_max = 8;
 float yaw_max = 0.1;
 
 float targetSpeed = 0;
@@ -67,14 +67,15 @@ float lastTargetYaw = 0.0;
 float gyroRate = 0;
 float tiltx_raw = 0;
 float tiltTarget = 0;
-float tiltTargetBias = 0.01;
+float tiltTargetBias = 0.05;
 float tiltError = 0;
 float tiltIntegtal = 0.0;
 float tiltDerivative = 0;
 float lastTiltError = 0.0;
 float lastTiltTarget = 0;
 
-float currentYaw= 0;
+float currentYaw = 0;
+
 float yawError = 0;
 float yawDerivative = 0;
 float yawIntegral = 0;
@@ -85,6 +86,9 @@ float acceleration = 0;
 
 float motorCommand=0.0;
 float dt=0.0;
+float yaw_list[100];
+int yaw_count = 0;
+float yaw_bias;
 
 bool DEBUG = true;
 bool PM = false;
@@ -186,16 +190,16 @@ void loop()
     static unsigned long lastTime = 0;
     unsigned long now = millis();
 
-    //Simulate Controller Behavior
+    // Simulate Controller Behavior
     if(now<5000){
       targetSpeed=0;
       targetYaw=0;
     }else if (now<9000){
-      targetSpeed=8;
-      //targetYaw=0.1;
+      //targetSpeed=8;
+      targetYaw=0.1;
     }else if(now<13000){
-      targetSpeed=-8;
-      //targetYaw=-0.1;
+      //targetSpeed=-8;
+      targetYaw=-0.1;
     }else{
       targetSpeed=0;
       targetYaw=0;
@@ -215,7 +219,15 @@ void loop()
     tiltx_raw = atan2(a.acceleration.z, sqrt(a.acceleration.x * a.acceleration.x + a.acceleration.y * a.acceleration.y));
     gyroRate = g.gyro.y-0.005;
     tiltx =(C * (tiltx + gyroRate * dt) + (1 - C) * tiltx_raw);
-    currentYaw = g.gyro.z-0.002;
+    static float lastYaw = 0;
+    currentYaw = 0.8 * lastYaw + 0.2 * (g.gyro.z)-yaw_bias;;
+    lastYaw = currentYaw;
+    if(yaw_count < 100){
+      yaw_list[yaw_count] = g.gyro.z;
+    }
+    yaw_count += 1;
+
+    
 
     // Calculate Elements of the Speed Error
     actualSpeed = (step2.getSpeedRad()-step1.getSpeedRad())/2;
@@ -249,6 +261,7 @@ void loop()
     if(abs(yawError) < 0.01){
       yawError = 0;
     }
+    
     yawIntegral += yawError * dt;
     yawDerivative = (yawError - lastTurnError) / dt;
     turnOutput = kp_turn * yawError + ki_turn * yawIntegral + kd_turn * yawDerivative;
@@ -257,22 +270,35 @@ void loop()
         turnOutput = 0;
     }
 
-    step1.setAccelerationRad(abs(acceleration+turnOutput));
-    step2.setAccelerationRad(abs(acceleration-turnOutput));
-    // step1.setAccelerationRad(abs(acceleration));
-    // step2.setAccelerationRad(abs(acceleration));
-    if(acceleration+turnOutput>0){
-      step1.setTargetSpeedRad(-(20));
-    }else {
-      step1.setTargetSpeedRad((20));
+    
+    if (millis() == 1000){
+      float yaw_sum = 0;
+      Serial.println("Test");
+      yaw_bias = 0;
+      for(int i = 0; i<100; i++){
+        yaw_sum += yaw_list[i];
+      }
+      yaw_bias = yaw_sum/100;
     }
-    if(acceleration-turnOutput>0){
-      step2.setTargetSpeedRad((20));
-    }else {
-      step2.setTargetSpeedRad(-(20));
+    
+    if(millis() > 1000){
+      step1.setAccelerationRad(abs(acceleration+turnOutput));
+      step2.setAccelerationRad(abs(acceleration-turnOutput));
+      // step1.setAccelerationRad(abs(acceleration));
+      // step2.setAccelerationRad(abs(acceleration));
+      if(acceleration+turnOutput>0){
+        step1.setTargetSpeedRad(-(20));
+      }else {
+          step1.setTargetSpeedRad((20));
+      }
+      if(acceleration-turnOutput>0){
+        step2.setTargetSpeedRad((20));
+      }else {
+          step2.setTargetSpeedRad(-(20));
+      }
     }
-        
   }
+
   if (millis() > serialTimer && PM){
     serialTimer += SERIAL_INTERVAL;
     float voltage = ((readADC(2) * VREF) / 4095.0)*6.1;
@@ -304,15 +330,15 @@ void loop()
     // Serial.print("ACC Angle: ");
     // Serial.print(tiltx_raw);
     // Serial.print(" deg\t");
-    // Serial.print("GYRO Rate: ");
-    // Serial.print(gyroRate);
+    Serial.print("GYRO Rate: ");
+    Serial.print(gyroRate);
     // Serial.print(" dt: ");
     // Serial.print(dt, 4);
     // Serial.println(" deA/s");
     Serial.print(" | tiltx: ");
-    Serial.print(tiltx);
-    Serial.print(" | tiltTarget: ");
-    Serial.print(tiltTarget-tiltTargetBias);
+    Serial.print(tiltx);  // 原本单位不清，现在你要的话可以换成角度显示
+    // Serial.print(" | tiltTarget: ");
+    // Serial.print(tiltTarget-tiltTargetBias);
     // Serial.print(" | error: ");
     // Serial.print(tiltTarget - tiltx);
     // Serial.print(" | output: ");
@@ -325,64 +351,73 @@ void loop()
   //   Serial.print(step2.getSpeedRad());
     Serial.print(" | targetSpeed: ");
     Serial.print(targetSpeed);
-    Serial.print(" | Speed Error: ");
-    Serial.print(speedError);
     Serial.print(" |gyro.z: ");
-    Serial.print(currentYaw,6);
+    Serial.print(currentYaw);
     // Serial.print(" | position1: ");
     // Serial.print(step1.getPosition());
     // Serial.print(" | position2: ");
     // Serial.print(step2.getPosition());
     //Serial.print(" | millis: ");
     //Serial.print(millis());
-    // Serial.print(" | ADC(A0): ");
-    // Serial.println(((readADC(0) * VREF) / 4095.0-0.21)/1.5);
-    Serial.print(" | TargetYaw: ");
-    Serial.println(targetYaw);
+    Serial.print(" | ADC(A0): ");
+    Serial.println(((readADC(0) * VREF) / 4095.0-0.21)/1.5);
+  //   Serial.print(" | TargetYaw: ");
+  //   Serial.println(targetYaw);
   }
 
-  if(Serial.available()) {
-    String command = Serial.readStringUntil('\n');
+  if(Serial2.available()) {
+    String command = Serial2.readStringUntil('\n');
     command.trim();
+  
     // We start by checking if the mode was changed
     
     if(command == "forward") {
       targetSpeed = speed_max;
-      Serial.println(targetSpeed);
       targetYaw = 0;
+      Serial.println("forward");
     }
     else if (command == "backward") {
       targetSpeed = -speed_max;
       targetYaw = 0;
+      Serial.println("backward");
     }
     else if (command == "left") {
       targetSpeed = 0;
       targetYaw = yaw_max;
+      Serial.println("left");
     }
     else if (command == "right") {
       targetSpeed = 0;
       targetYaw = -yaw_max;
+      Serial.println("right");
     }
 
     else if(command == "forwardANDleft") {
       targetSpeed = speed_max;
       targetYaw = yaw_max;
+      Serial.println("Forward and left");
+
     }
     else if (command == "forwardANDright") {
       targetSpeed = speed_max;
       targetYaw = -yaw_max;
+      Serial.println("Forward and right");
     }
     else if (command == "backwardANDleft") {
       targetSpeed = -speed_max;
       targetYaw = -yaw_max;
+      Serial.println("Backward and left");
     }
     else if (command == "backwardANDright") {
       targetSpeed = -speed_max;
       targetYaw = yaw_max;
+      Serial.println("Backward and right");
     }
     else if (command == "stop") {
       targetSpeed = 0;
       targetYaw = 0;
+      Serial.println("Stop");
     }
+  
   }
 }
