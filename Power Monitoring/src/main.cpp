@@ -11,10 +11,13 @@ const int ADC_SCK_PIN       = 18;
 const int ADC_MISO_PIN      = 19;
 const int ADC_MOSI_PIN      = 23;
 
-const int change_interval = 500;
+const int change_interval = 50;
 int lastTime = 0;
 int variable = 0;
 int ADC_value = 0;
+int readADC_count = 0;
+String output;
+String finalOutput = "";
 
 float sim[16] = {1,2,3,4,5,6,7,8,9,10,1,2,3,4,5,6};
 int loopCount = 0;
@@ -69,31 +72,30 @@ void loop() {
     doc["current_board"] = current_board;
 
     // Serialize JSON to a string
-    String output;
     serializeJson(doc, output);
-
     // Send JSON over custom serial
-    String finalMessage = "PM: " + output + "\n"; //Identifier
-    //Serial.println(finalMessage);
-    Serial2.println(finalMessage);
+
     // ADC_value = (int)readADC(1);
     // lcd.clear();
     // lcd.print("VM: ");
     // lcd.print(ADC_value);
     // variable += 1;
+    if(readADC_count >= 3){
+      String finalMessage = "PM: " + finalOutput + "\n"; //Identifier
+      Serial.println("Message Sent");
+      Serial.println(finalMessage);
+      finalOutput = "";
+      readADC_count = 0;
+    }else 
+    {
+      finalOutput = finalOutput + output+" ";
+      readADC_count += 1;
+    }
+
     if(loopCount == 9){
       loopCount = 0;
     }else{
       loopCount += 1;
     }
   }
-  if(Serial2.available()){
-    String incomming = Serial2.readStringUntil('\n');
-    Serial.println(incomming);
-  }
-}
-
-// put function definitions here:
-int myFunction(int x, int y) {
-  return x + y;
 }

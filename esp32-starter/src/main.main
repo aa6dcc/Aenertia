@@ -189,20 +189,26 @@ void loop()
     if(now<5000){
       targetSpeed=0;
       targetYaw=0;
-    }else if (now<9000){
-      //targetSpeed=8;
+    }else if (now<8000){
+      targetSpeed=0;
       targetYaw=0.1;
-    }else if(now<13000){
-      //targetSpeed=-8;
+    }else if(now<11000){
+      targetSpeed=0;
       targetYaw=-0.1;
+    }else if(now<14000){
+      targetSpeed = 8;
+      targetYaw = 0;
+    }else if(now<17000){
+      targetSpeed = -8;
+      targetYaw = 0;
     }else{
       targetSpeed=0;
       targetYaw=0;
     }
 
-    targetSpeed = 0.9*lastTargetSpeed + 0.1*targetSpeed;
+    targetSpeed = 0.5*lastTargetSpeed + 0.5*targetSpeed;
     lastTargetSpeed = targetSpeed;
-    targetYaw = 0.8*lastTargetYaw + 0.2*targetYaw;
+    targetYaw = 0.5*lastTargetYaw + 0.5*targetYaw;
     lastTargetYaw = targetYaw;
 
 

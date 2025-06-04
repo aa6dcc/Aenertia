@@ -213,18 +213,23 @@ void loop()
     tilt_last_error = tilt_error;
     tilt_integral = clamp(tilt_integral, 100, -100);
 
+    
+
     corrected_a = kp * tilt_error + kd * tilt_derivative;
+    step1.setAccelerationRad(corrected_a);
+    step2.setAccelerationRad(corrected_a);
+    target_speed = corrected_a/abs(corrected_a)*15;
+    step1.setTargetSpeedRad(target_speed);
+    step2.setTargetSpeedRad(-target_speed);
+
     corrected_a = clamp(corrected_a, max_acc, -max_acc);
 
     target_speed = 0.7 * kv * tilt_error + 0.3 * last_speed;
     target_speed = clamp(target_speed, max_speed, -max_speed);
     last_speed = target_speed;
 
-    step1.setTargetSpeedRad(target_speed);
-    step2.setTargetSpeedRad(-target_speed);
 
-    step1.setAccelerationRad(corrected_a);
-    step2.setAccelerationRad(corrected_a);
+
   }
 
   if (millis() > printTimer) {
