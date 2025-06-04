@@ -53,6 +53,14 @@ body {
   font-size: 1.25rem;
 }
 
+.voice-button {
+  background-color: #333;
+  color: white;
+  border-radius: 8px;
+  padding: 8px 16px;
+  margin-top: 10px;
+}
+
 /* ── Arrow Pad ── */
 .controller {
     display: grid;

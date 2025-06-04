@@ -64,7 +64,7 @@ def follow_me():
             elif 200 <= gv.offset < 700:
                 send_2_esp("forwardANDright")
             elif -200 >= gv.offset > -700:
-                send_2_esp("forardANDleft")
+                send_2_esp("forwardANDleft")
             elif gv.offset >= 700:
                 send_2_esp("right")
             elif gv.offset <= -700:
