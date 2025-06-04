@@ -184,3 +184,40 @@ if (formOuter) formOuter.onsubmit = e => {
     rot: +d.get('rot')
   }));
 };
+
+// === VOICE RECOGNITION ===
+const recognition = new window.webkitSpeechRecognition();
+recognition.lang = 'en-US';
+recognition.continuous = false;
+
+document.getElementById('start-voice').onclick = () => {
+  recognition.start();
+};
+
+recognition.onresult = function(event) {
+  const transcript = event.results[0][0].transcript;
+  console.log("Heard:", transcript);
+  sendToChatGPT(transcript);
+};
+
+function sendToChatGPT(commandText) {
+  fetch('/interpret', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ command: commandText })
+  })
+  .then(res => res.json())
+  .then(data => {
+    const cmd = data.result;
+    console.log("Interpreted:", cmd);
+
+    // Send via MQTT just like buttons
+    if (cmd === "follow" || cmd === "return" || cmd === "stop") {
+      client.publish("robot/auto", cmd);
+    } else if (cmd === "manual" || cmd === "autonomous") {
+      client.publish("robot/mode", cmd);
+    } else {
+      alert("Sorry, I couldn't understand that command.");
+    }
+  });
+}
