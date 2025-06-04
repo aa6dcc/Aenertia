@@ -4,17 +4,15 @@
   <meta charset="UTF-8">
   <title>Robot Dashboard (MQTT)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- CSS -->
   <link rel="stylesheet" href="static/style.css">
-  <!-- MQTT.js client library -->
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js" defer></script>
-  <!-- Your control logic -->
   <script src="static/mqtt-control.js" defer></script>
 </head>
 <body>
   <div class="info-bar">
     <div id="time">--:--</div>
     <div id="battery">Battery: --%</div>
+    <div id="mqtt-status">MQTT: --</div>
   </div>
 
   <div class="mode-bar-top-left">
@@ -24,7 +22,7 @@
   </div>
 
   <div class="tabs">
-    <button onclick="showTab('pad')">Manual Control</button>
+    <button onclick="showTab('pad')" class="active">Manual Control</button>
     <button onclick="showTab('flash')">Test</button>
     <button onclick="showTab('pid')">PID Values</button>
     <button onclick="showTab('auto')">Autonomous</button>
@@ -32,15 +30,25 @@
 
   <!-- MANUAL PAD -->
   <div id="pad" class="tab active">
-    <div class="card">
-      <img src="static/images/logo.png" class="logo" alt="Logo">
-      <h1>Arrow Pad Control</h1>
-      <div class="controller">
-        <div class="arrow up" id="up">↑</div>
-        <div class="arrow stop" id="stop">■</div>
-        <div class="arrow down" id="down">↓</div>
-        <div class="arrow left" id="left">←</div>
-        <div class="arrow right" id="right">→</div>
+    <div class="card video-layout">
+      <div class="video-container">
+        <h2>Live Camera</h2>
+        <img
+          id="videoStream"
+          class="live-video"
+          src="http://172.20.10.10:8001/video_feed"
+          alt="Live Camera Feed"
+        />
+      </div>
+      <div class="controls-container">
+        <h2>Arrow Pad Control</h2>
+        <div class="controller">
+          <div class="arrow up"    id="up">↑</div>
+          <div class="arrow stop"  id="stop">■</div>
+          <div class="arrow down"  id="down">↓</div>
+          <div class="arrow left"  id="left">←</div>
+          <div class="arrow right" id="right">→</div>
+        </div>
       </div>
     </div>
   </div>
@@ -61,20 +69,47 @@
       <h1>PID Values</h1>
       <h2>Inner Loop</h2>
       <form id="form-inner">
-        Proportional Gain <input name="pg" type="number"><br>
-        Derivative Gain     <input name="dg" type="number"><br>
-        Integral Gain       <input name="ig" type="number"><br>
-        Setpoint            <input name="sp" type="number"><br>
+        <div class="form-row">
+          <label for="pg">Proportional Gain</label>
+          <input name="pg" type="number">
+        </div>
+        <div class="form-row">
+          <label for="dg">Derivative Gain</label>
+          <input name="dg" type="number">
+        </div>
+        <div class="form-row">
+          <label for="ig">Integral Gain</label>
+          <input name="ig" type="number">
+        </div>
+        <div class="form-row">
+          <label for="sp">Setpoint</label>
+          <input name="sp" type="number">
+        </div>
         <input type="submit" value="Submit" class="button">
       </form>
 
       <h2>Outer Loop</h2>
       <form id="form-outer">
-        Proportional Gain     <input name="pg" type="number"><br>
-        Derivative Gain       <input name="dg" type="number"><br>
-        Integral Gain         <input name="ig" type="number"><br>
-        Setpoint              <input name="sp" type="number"><br>
-        Rotation Setpoint     <input name="rot" type="number"><br>
+        <div class="form-row">
+          <label for="pg">Proportional Gain</label>
+          <input name="pg" type="number">
+        </div>
+        <div class="form-row">
+          <label for="dg">Derivative Gain</label>
+          <input name="dg" type="number">
+        </div>
+        <div class="form-row">
+          <label for="ig">Integral Gain</label>
+          <input name="ig" type="number">
+        </div>
+        <div class="form-row">
+          <label for="sp">Setpoint</label>
+          <input name="sp" type="number">
+        </div>
+        <div class="form-row">
+          <label for="rot">Rotation Setpoint</label>
+          <input name="rot" type="number">
+        </div>
         <input type="submit" value="Submit" class="button">
       </form>
     </div>
@@ -82,29 +117,46 @@
 
   <!-- AUTONOMOUS -->
   <div id="auto" class="tab">
-    <div class="card">
-      <h1>Autonomous Control</h1>
-      <div class="auto-grid">
-        <div class="auto-column">
-          <button class="button" id="btn-follow">Follow Me</button>
-        </div>
-        <div class="auto-column">
-          Assign Key Location:
-          <input id="key-loc" type="text">
-          <button class="button" id="btn-assign-key">Assign</button><br>
-          <button class="button" id="btn-return-key">Return to Key Location</button><br>
-          <button class="button" id="btn-show-keys">Show Key Locations</button>
-          <div id="key-list"></div>
+    <div class="card video-layout">
+      <div class="video-container">
+        <h2>Live Camera</h2>
+        <img
+          id="videoStreamAuto"
+          class="live-video"
+          src="http://172.20.10.9:8001/video_feed"
+          alt="Live Camera Feed"
+        />
+      </div>
+      <div class="controls-container">
+        <h2>Autonomous Control</h2>
+        <div class="auto-grid">
+          <div class="auto-column">
+            <button class="button" id="btn-follow">Follow Me</button><br>
+            <button class="button" id="btn-return-key">Return to Key Location</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- Assign Key Location (persistent on all tabs) -->
+  <div class="assign-key-container">
+    <div class="assign-box">
+      <label for="key-loc">Assign Key Location:</label>
+      <input id="key-loc" type="text">
+      <button class="button" id="btn-assign-key">Assign</button>
+      <button class="button" id="btn-show-keys">Show Key Locations</button>
+      <div id="key-list"></div>
+    </div>
+  </div>
+
   <script>
-  function showTab(id) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-  }
+    function showTab(id) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+      document.querySelector(`.tabs button[onclick="showTab('${id}')"]`)?.classList.add('active');
+      document.getElementById(id).classList.add('active');
+    }
   </script>
 </body>
 </html>

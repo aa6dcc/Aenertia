@@ -18,7 +18,7 @@ const int TOGGLE_PIN        = 32;
 const int PRINT_INTERVAL    = 300;
 const int LOOP_INTERVAL     = 10;
 const int STEPPER_INTERVAL_US = 20;
-float spd = 8.0;
+float spd = 4.0;
 String mode = "manual";
 
 //Global objects
@@ -46,6 +46,9 @@ bool TimerHandler(void * timerNo)
 void setup()
 {
   Serial.begin(115200);
+  Serial1.begin(115200, SERIAL_8N1, 9, 10); // RX = GPIO9, TX = GPIO10
+  Serial1.println("Hello from debug port");
+
   pinMode(TOGGLE_PIN,OUTPUT);
 
  
@@ -76,7 +79,6 @@ void loop()
     command.trim();
   
     // We start by checking if the mode was changed
-    
     if(command == "forward") {
       step1.setTargetSpeedRad(spd);
       step2.setTargetSpeedRad(spd);
@@ -99,7 +101,7 @@ void loop()
     }
 
     else if(command == "forwardANDleft") {
-      step1.setTargetSpeedRad(4*spd/11);
+      step1.setTargetSpeedRad(2*spd/11);
       step2.setTargetSpeedRad(spd);
 
       Serial.println("Forward and left");
@@ -107,18 +109,18 @@ void loop()
     }
     else if (command == "forwardANDright") {
       step1.setTargetSpeedRad(spd);
-      step2.setTargetSpeedRad(4*spd/11);
+      step2.setTargetSpeedRad(2*spd/11);
 
       Serial.println("Forward and right");
     }
     else if (command == "backwardANDleft") {
-      step1.setTargetSpeedRad(-4*spd/11);
+      step1.setTargetSpeedRad(-2*spd/11);
       step2.setTargetSpeedRad(-spd);
       Serial.println("Backward and left");
     }
     else if (command == "backwardANDright") {
       step1.setTargetSpeedRad(-spd);
-      step2.setTargetSpeedRad(-4*spd/11);
+      step2.setTargetSpeedRad(-2*spd/11);
       Serial.println("Backward and right");
     }
     else if (command == "stop") {
