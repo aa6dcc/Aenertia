@@ -190,17 +190,24 @@ const recognition = new window.webkitSpeechRecognition();
 recognition.lang = 'en-US';
 recognition.continuous = false;
 
-document.getElementById('start-voice').onclick = () => {
+const voiceBtn = document.getElementById('start-voice');
+voiceBtn.onmousedown = () => {
+  console.log('Voice button pressed → start recognition');
   recognition.start();
+};
+voiceBtn.onmouseup = () => {
+  console.log('Voice button released → stop recognition');
+  recognition.stop();
 };
 
 recognition.onresult = function(event) {
   const transcript = event.results[0][0].transcript;
-  console.log("Heard:", transcript);
+  console.log("Voice result received:", transcript);
   sendToChatGPT(transcript);
 };
 
 function sendToChatGPT(commandText) {
+  console.log("Sending to Flask server:", commandText);
   fetch('/interpret', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -209,15 +216,21 @@ function sendToChatGPT(commandText) {
   .then(res => res.json())
   .then(data => {
     const cmd = data.result;
-    console.log("Interpreted:", cmd);
+    console.log("GPT Interpreted:", cmd);
 
     // Send via MQTT just like buttons
     if (cmd === "follow" || cmd === "return" || cmd === "stop") {
+      console.log(`Publishing ${cmd} to robot/auto`);
       client.publish("robot/auto", cmd);
     } else if (cmd === "manual" || cmd === "autonomous") {
+      console.log(`Publishing ${cmd} to robot/mode`);
       client.publish("robot/mode", cmd);
     } else {
       alert("Sorry, I couldn't understand that command.");
+      console.warn("GPT returned unrecognized command:", cmd);
     }
+  })
+  .catch(err => {
+    console.error("[DEBUG] Error contacting GPT API:", err);
   });
 }
