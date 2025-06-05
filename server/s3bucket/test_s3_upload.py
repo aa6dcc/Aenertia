@@ -1,15 +1,19 @@
+import sys
 import os
+
+# Add project root to sys.path so imports work
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+
 from server.s3bucket.s3_upload import upload_file_to_s3
 
-# Use cross-platform temp directory
-tmp_dir = os.path.join(os.getcwd(), "tmp")
-os.makedirs(tmp_dir, exist_ok=True)
+# Upload the file
+file_to_upload = os.path.join(os.path.dirname(__file__), "my_test.txt")
+s3_key = "uploads/my_test.txt"  # You can change the key if needed
 
-test_file_path = os.path.join(tmp_dir, "s3_test_file.txt")
+print("📤 Uploading to S3...")
+result = upload_file_to_s3(file_to_upload, s3_key=s3_key)
 
-# Create a dummy file
-with open(test_file_path, "w") as f:
-    f.write("This is a test upload to S3.")
-
-# Upload
-upload_file_to_s3(test_file_path, bucket_name="aener-shark-uploads", s3_key="test/s3_test_file.txt")
+if result:
+    print(f"✅ Upload complete! File is at: {result}")
+else:
+    print("❌ Upload failed.")
