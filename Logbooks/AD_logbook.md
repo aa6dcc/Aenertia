@@ -228,3 +228,30 @@ Started filling up the server folder, especially in the database subfolder.
 
 Above is the structure I will use tomorrow to connect the Raspberry Pi in real time with the DynamoDB
 
+## 05/06/2025
+
+Successfully connected the group repo to S3 by using a test file called test_s3_upload.py, linked to the main s3_upload.py file. 
+
+![image](https://github.com/user-attachments/assets/9118ad09-95ce-4e50-bb58-8fca672f7215)
+
+After granting my user and bucket the appropriate permissions (and naming the bucket correctly, as it needs a unique global name), I can see the test file appearing in the aenershark-uploads bucket in AWS S3. 
+
+![image](https://github.com/user-attachments/assets/f377ed1c-4bc0-4e40-aff2-1eca85bd7444)
+
+
+Within the bucket, we have
+
+![image](https://github.com/user-attachments/assets/88c65729-ef32-475f-9df0-f6db87630c07)
+
+and within the folder, we have
+
+![image](https://github.com/user-attachments/assets/3459819e-a354-41e1-a1fc-f7b7a16cce53)
+
+which we can then open to get:
+
+![image](https://github.com/user-attachments/assets/102a4446-097b-480f-86e7-c064bf072844)
+
+
+
+
+
