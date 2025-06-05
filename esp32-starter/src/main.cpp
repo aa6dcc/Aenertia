@@ -403,9 +403,9 @@ void loop()
   
   }
 
-  if(millis()-commandTimer > 1000){
-      targetSpeed = 0;
-      targetYaw = 0;
-      Serial.println("Stop");
-  }
+  // if(millis()-commandTimer > 1000){
+  //     targetSpeed = 0;
+  //     targetYaw = 0;
+  //     Serial.println("Stop");
+  // }
 }
