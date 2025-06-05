@@ -251,7 +251,53 @@ which we can then open to get:
 
 ![image](https://github.com/user-attachments/assets/102a4446-097b-480f-86e7-c064bf072844)
 
+We were able to implement this via the s3_upload.py file
 
+```py
+s3 = session.client("s3")
+BUCKET_NAME = "aenershark-uploads"  
+
+def upload_file_to_s3(local_path, bucket_name=BUCKET_NAME, s3_key=None):
+    import os
+    from botocore.exceptions import ClientError
+
+    if not os.path.isfile(local_path):
+        print(f"❌ File does not exist: {local_path}")
+        return None
+
+    if not s3_key:
+        s3_key = os.path.basename(local_path)
+
+    try:
+        s3.upload_file(local_path, bucket_name, s3_key)
+        print(f"✅ Uploaded {local_path} to s3://{bucket_name}/{s3_key}")
+        return f"s3://{bucket_name}/{s3_key}"
+    except ClientError as e:
+        print(f"❌ Upload failed: {e}")
+        return None
+```
+
+which is imported by the test_s3_upload.py file
+
+```py
+import sys
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+
+from server.s3bucket.s3_upload import upload_file_to_s3
+
+file_to_upload = os.path.join(os.path.dirname(__file__), "my_test.txt")
+s3_key = "uploads/my_test.txt" 
+
+print("📤 Uploading to S3...")
+result = upload_file_to_s3(file_to_upload, s3_key=s3_key)
+
+if result:
+    print(f"✅ Upload complete! File is at: {result}")
+else:
+    print("❌ Upload failed.")
+```
 
 
 
