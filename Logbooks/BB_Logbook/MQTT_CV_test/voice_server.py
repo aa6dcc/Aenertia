@@ -1,9 +1,12 @@
 # voice_server.py
+
 from flask import Flask, request, jsonify
+from flask_cors import CORS       # ← import Flask-CORS
 import openai
 import os
 
 app = Flask(__name__)
+CORS(app)  # ← allow cross‐origin requests from your front end
 
 # Load your OpenAI key from environment variable
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -12,6 +15,7 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 def interpret():
     user_input = request.json.get("command", "")
     print(f"Received voice command: {user_input}")
+
     prompt = (
         "You are a robot assistant. Convert the command into one of: "
         "'follow', 'return', 'stop', 'manual', 'autonomous'.\n"
@@ -20,7 +24,9 @@ def interpret():
     try:
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.0,
+            max_tokens=4
         )
         result = response.choices[0].message.content.strip().lower()
         print(f"GPT interpreted as: {result}")
