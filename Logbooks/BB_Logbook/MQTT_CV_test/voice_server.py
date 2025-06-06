@@ -1,26 +1,40 @@
 # voice_server.py
+
 from flask import Flask, request, jsonify
-import openai
+from flask_cors import CORS
+from dotenv import load_dotenv
+from openai import OpenAI
 import os
 
-app = Flask(__name__)
+load_dotenv()
 
-# Load your OpenAI key from environment variable
-openai.api_key = os.getenv("OPENAI_API_KEY")
+api_key = os.getenv("OPENAI_API_KEY")
+if not api_key:
+    raise RuntimeError("Error: OPENAI_API_KEY is not set in the environment. "
+                       "Please create a .env file with OPENAI_API_KEY=sk-...")
+
+client = OpenAI(api_key=api_key)
+
+app = Flask(__name__)
+CORS(app)
 
 @app.route("/interpret", methods=["POST"])
 def interpret():
     user_input = request.json.get("command", "")
     print(f"Received voice command: {user_input}")
+
     prompt = (
         "You are a robot assistant. Convert the command into one of: "
         "'follow', 'return', 'stop', 'manual', 'autonomous'.\n"
         f"Command: {user_input}"
     )
+
     try:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.0,
+            max_tokens=4
         )
         result = response.choices[0].message.content.strip().lower()
         print(f"GPT interpreted as: {result}")

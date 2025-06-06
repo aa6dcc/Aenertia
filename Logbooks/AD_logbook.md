@@ -228,3 +228,141 @@ Started filling up the server folder, especially in the database subfolder.
 
 Above is the structure I will use tomorrow to connect the Raspberry Pi in real time with the DynamoDB
 
+## 05/06/2025
+
+Successfully connected the group repo to S3 by using a test file called test_s3_upload.py, linked to the main s3_upload.py file. 
+
+![image](https://github.com/user-attachments/assets/9118ad09-95ce-4e50-bb58-8fca672f7215)
+
+After granting my user and bucket the appropriate permissions (and naming the bucket correctly, as it needs a unique global name), I can see the test file appearing in the aenershark-uploads bucket in AWS S3. 
+
+![image](https://github.com/user-attachments/assets/f377ed1c-4bc0-4e40-aff2-1eca85bd7444)
+
+
+Within the bucket, we have
+
+![image](https://github.com/user-attachments/assets/88c65729-ef32-475f-9df0-f6db87630c07)
+
+and within the folder, we have
+
+![image](https://github.com/user-attachments/assets/3459819e-a354-41e1-a1fc-f7b7a16cce53)
+
+which we can then open to get:
+
+![image](https://github.com/user-attachments/assets/102a4446-097b-480f-86e7-c064bf072844)
+
+We were able to implement this via the s3_upload.py file
+
+```py
+s3 = session.client("s3")
+BUCKET_NAME = "aenershark-uploads"  
+
+def upload_file_to_s3(local_path, bucket_name=BUCKET_NAME, s3_key=None):
+    import os
+    from botocore.exceptions import ClientError
+
+    if not os.path.isfile(local_path):
+        print(f"❌ File does not exist: {local_path}")
+        return None
+
+    if not s3_key:
+        s3_key = os.path.basename(local_path)
+
+    try:
+        s3.upload_file(local_path, bucket_name, s3_key)
+        print(f"✅ Uploaded {local_path} to s3://{bucket_name}/{s3_key}")
+        return f"s3://{bucket_name}/{s3_key}"
+    except ClientError as e:
+        print(f"❌ Upload failed: {e}")
+        return None
+```
+
+which is imported by the test_s3_upload.py file
+
+```py
+import sys
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+
+from server.s3bucket.s3_upload import upload_file_to_s3
+
+file_to_upload = os.path.join(os.path.dirname(__file__), "my_test.txt")
+s3_key = "uploads/my_test.txt" 
+
+print("📤 Uploading to S3...")
+result = upload_file_to_s3(file_to_upload, s3_key=s3_key)
+
+if result:
+    print(f"✅ Upload complete! File is at: {result}")
+else:
+    print("❌ Upload failed.")
+```
+
+I also managed to successfully add and test a Lambda function to my AWS:
+
+![image](https://github.com/user-attachments/assets/06dac3bb-54cf-4029-8d89-607931f08ced)
+
+I set the handler to store_metadata.lambda_handler.
+
+After zipping some test data and deploying it to the Lambda function I created, I created two test functions in the event editor:
+
+1) BatteryLowTest
+
+![image](https://github.com/user-attachments/assets/d62c720d-4634-4169-a01c-6eaaeecb24a2)
+
+2) BatteryOkayTest
+
+![image](https://github.com/user-attachments/assets/894252ce-2749-4c69-99a1-e7b0cede0151)
+
+This shows that with a battery level under 10%, we get a warning message, but above 10% we don't, thus the lambda function is able to run properly. 
+
+I then added a trigger aenershark-uploads which makes storeMetaDataLambda to automatically trigger when a new file is added to the S3 bucket
+
+![image](https://github.com/user-attachments/assets/60bd5a20-7f70-4bde-b4d5-f305e9c1ef02)
+
+Inside the lambda folder on the repo, I added store_metadata.py:
+
+```py
+import json
+
+def lambda_handler(event, context):
+    print("📦 Event received:", json.dumps(event, indent=2))
+
+    if "Records" in event and event["Records"][0]["eventSource"] == "aws:s3":
+        record = event["Records"][0]
+        bucket = record["s3"]["bucket"]["name"]
+        key = record["s3"]["object"]["key"]
+        s3_path = f"s3://{bucket}/{key}"
+        print(f"🚀 Triggered by upload: {s3_path}")
+        return {
+            "statusCode": 200,
+            "body": json.dumps(f"Processed upload: {s3_path}")
+        }
+
+    try:
+        battery_level = event["metadata"]["battery_level"]
+        if battery_level < 10:
+            return {
+                "statusCode": 200,
+                "body": json.dumps(f"⚠️ WARNING: Battery low ({battery_level}%)")
+            }
+        else:
+            return {
+                "statusCode": 200,
+                "body": json.dumps("✅ Battery level OK")
+            }
+    except (KeyError, TypeError):
+        return {
+            "statusCode": 400,
+            "body": json.dumps("Invalid input format.")
+        }
+```
+
+and inside CloudWatch, we can see that (after editing the code in the lambda function) when we re-run python server/s3bucket/test_s3_upload.py in our terminal, we see that the lambda trigger is successfully activated:
+
+![image](https://github.com/user-attachments/assets/2e31538e-1453-49da-9aa9-0331ff120378)
+
+
+
+

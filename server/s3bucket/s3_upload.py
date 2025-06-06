@@ -8,7 +8,7 @@ from server.aws_config import session
 
 # Set up S3 client
 s3 = session.client("s3")
-BUCKET_NAME = "aener-shark-uploads"  
+BUCKET_NAME = "aenershark-uploads"  
 
 # ----------- SLAM MAP SUPPORT -----------
 
@@ -33,12 +33,10 @@ def upload_slam_map(map_path):
         print(f"❌ SLAM upload failed: {e}")
         return None
 
-# ----------- GENERIC FILE UPLOAD -----------
-
 def upload_file_to_s3(local_path, bucket_name=BUCKET_NAME, s3_key=None):
-    """
-    Upload any file to S3 at a specific key.
-    """
+    import os
+    from botocore.exceptions import ClientError
+
     if not os.path.isfile(local_path):
         print(f"❌ File does not exist: {local_path}")
         return None
