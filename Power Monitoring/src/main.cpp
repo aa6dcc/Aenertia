@@ -11,7 +11,7 @@ const int ADC_SCK_PIN       = 18;
 const int ADC_MISO_PIN      = 19;
 const int ADC_MOSI_PIN      = 23;
 
-const int change_interval = 50;
+const int change_interval = 500;
 int lastTime = 0;
 int variable = 0;
 int ADC_value = 0;
@@ -62,14 +62,16 @@ void loop() {
   if(millis() > lastTime + change_interval){
     lastTime = millis();
     float voltage = sim[loopCount];
+    float v5 = sim[loopCount + 5];
     float current_motor = sim[loopCount+3];
     float current_board = sim[loopCount+6];
 
     // Create a JSON object
     StaticJsonDocument<128> doc;
-    doc["voltage"] = voltage;
-    doc["current_motor"] = current_motor;
-    doc["current_board"] = current_board;
+    doc["VB"] = voltage;
+    doc["V5"] = v5;
+    doc["CM"] = current_motor;
+    doc["CB"] = current_board;
 
     // Serialize JSON to a string
     serializeJson(doc, output);
@@ -78,19 +80,11 @@ void loop() {
     ADC_value = (int)readADC(1);
     lcd.clear();
     lcd.print("VM: ");
-    lcd.print(ADC_value);
+    lcd.print(voltage);
     variable += 1;
-    if(readADC_count >= 3){
-      String finalMessage = "PM: " + finalOutput + "\n"; //Identifier
-      Serial.println("Message Sent");
-      Serial.println(finalMessage);
-      finalOutput = "";
-      readADC_count = 0;
-    }else 
-    {
-      finalOutput = finalOutput + output+" ";
-      readADC_count += 1;
-    }
+    // Serial.println("Message Sent");
+    Serial.print("PM: ");
+    Serial.println(output);
 
     if(loopCount == 9){
       loopCount = 0;
