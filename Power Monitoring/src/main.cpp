@@ -75,11 +75,11 @@ void loop() {
     serializeJson(doc, output);
     // Send JSON over custom serial
 
-    // ADC_value = (int)readADC(1);
-    // lcd.clear();
-    // lcd.print("VM: ");
-    // lcd.print(ADC_value);
-    // variable += 1;
+    ADC_value = (int)readADC(1);
+    lcd.clear();
+    lcd.print("VM: ");
+    lcd.print(ADC_value);
+    variable += 1;
     if(readADC_count >= 3){
       String finalMessage = "PM: " + finalOutput + "\n"; //Identifier
       Serial.println("Message Sent");

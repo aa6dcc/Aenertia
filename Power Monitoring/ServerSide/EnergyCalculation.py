@@ -4,7 +4,7 @@ import os
 import csv
 
 # === CONFIGURATION ===
-SERIAL_PORT = '/dev/serial0'      # Change to your actual serial port
+SERIAL_PORT = '/dev/ttyUSB0'      # Change to your actual serial port
 BAUD_RATE = 115200                # Match the baud rate with your device
 CSV_FILE = 'power_log.csv'
 # ======================
