@@ -41,7 +41,7 @@ float kp_o = -0.003;
 float ki_o = -0.00007;
 float kd_o = 0.0;
 
-float kp_turn = 15.0;  
+float kp_turn = 25.0;  
 float ki_turn = 0.0;
 float kd_turn = 0.0;
 
@@ -53,7 +53,7 @@ float targetYaw = 0;  // 希望的角度，或者从遥控器获得的转动指�
 float lastAcceleration=0.0;
 
 float speed_max = 12;
-float yaw_max = 0.1;
+float yaw_max = 0.15;
 
 float targetSpeed = 0;
 float actualSpeed = 0;
@@ -67,7 +67,7 @@ float lastTargetYaw = 0.0;
 float gyroRate = 0;
 float tiltx_raw = 0;
 float tiltTarget = 0;
-float tiltTargetBias = 0;
+float tiltTargetBias = -0.02;
 float tiltError = 0;
 float tiltIntegtal = 0.0;
 float tiltDerivative = 0;
@@ -208,8 +208,8 @@ void loop()
 
     targetSpeed = 0.5*lastTargetSpeed + 0.5*targetSpeed;
     lastTargetSpeed = targetSpeed;
-    targetYaw = 0.5*lastTargetYaw + 0.5*targetYaw;
-    lastTargetYaw = targetYaw;
+    // targetYaw = 0.2*lastTargetYaw + 0.8*targetYaw;
+    // lastTargetYaw = targetYaw;
 
 
     dt = (now - lastTime) / 1000.0;
@@ -233,7 +233,7 @@ void loop()
     // PID calculate target angle
     tiltTarget= (kp_o * speedError + ki_o * speedIntegral + kd_o * speedDerivative)+tiltTargetBias;
     tiltTarget = 0.7*tiltTarget + 0.3*lastTiltTarget;
-    tiltTarget = constrain(tiltTarget, -0.035, 0.035);
+    tiltTarget = constrain(tiltTarget, -0.035+tiltTargetBias, 0.035+tiltTargetBias);
     lastTiltTarget=tiltTarget;
     
     // Calcualte Elememnts for Tilt Error
