@@ -21,6 +21,8 @@ baud_rate = 115200
 
 #global variables
 follow_mode = False
+manual_mode = False
+payload = "stop"
 ser = None
 mode = "manual"
 # gv.HumanDetected = False
@@ -49,6 +51,28 @@ def send_2_esp(command):
     if ser and ser.is_open:
         ser.write((command + "\n").encode())
 
+def manual_control():
+    while manual_mode:
+        if payload == "up":
+            send_2_esp("forward")
+        elif payload == "down":
+            send_2_esp("backward")
+        elif payload == "right":
+            send_2_esp("right")
+        elif payload == "left":
+            send_2_esp("left")
+        elif payload == "up-right":
+            send_2_esp("forwardANDright")
+        elif payload == "up-left":
+            send_2_esp("forwardANDleft")
+        elif payload == "down-right":
+            send_2_esp("backwardANDright")
+        elif payload == "down-left":
+            send_2_esp("backwardANDleft")
+        else:
+            send_2_esp("stop")
+
+        sleep(0.1)
 
 def follow_me():
     gv.HumanDetected
@@ -59,20 +83,18 @@ def follow_me():
 
         if gv.HumanDetected:
             # print("HUMAN DETECTED")
-            if abs(gv.offset) < 200: 
+            if abs(gv.offset) < 50: 
                 send_2_esp("forward")
-            elif 200 <= gv.offset < 700:
+            elif 50 <= gv.offset < 700:
                 send_2_esp("forwardANDright")
-            elif -200 >= gv.offset > -700:
-                send_2_esp("forardANDleft")
-            elif gv.offset >= 700:
-                send_2_esp("right")
-            elif gv.offset <= -700:
-                send_2_esp("left")
+            elif -50 >= gv.offset > -700:
+                send_2_esp("forwardANDleft")
             else: 
                 send_2_esp("stop")
         else:
             send_2_esp("stop")
+        
+        sleep(0.1)
 
 
 def gotoKeyLocation():
@@ -119,6 +141,8 @@ def on_message(client, userdata, msg):
     #global cv_enabled
     global mode
     global follow_mode
+    global manual_mode
+    global payload
     gv.HumanDetected
     gv.offset
 
@@ -138,33 +162,20 @@ def on_message(client, userdata, msg):
 
     # Manual mode code
     if mode == "manual":
-        if payload == "up":
-            send_2_esp("forward")
-        elif payload == "down":
-            send_2_esp("backward")
-        elif payload == "right":
-            send_2_esp("right")
-        elif payload == "left":
-            send_2_esp("left")
-        elif payload == "up-right":
-            send_2_esp("forwardANDright")
-        elif payload == "up-left":
-            send_2_esp("forwardANDleft")
-        elif payload == "down-right":
-            send_2_esp("backwardANDright")
-        elif payload == "down-left":
-            send_2_esp("backwardANDleft")
-        else:
-            send_2_esp("stop")
+        if manual_mode == False:
+            manual_mode = True
+            threading.Thread(target=manual_control, daemon=True).start() # Runs manual mode until disabled
 
     # Autnomous mode code
     elif mode == "autonomous":  
+        manual_mode = False
         if topic == "robot/auto":
 
             # In follow mode the robot follows the person around
             if payload == "follow":  
-                follow_mode = True
-                threading.Thread(target=follow_me, daemon=True).start() # Runs follow_me unless follow_mode is disabled
+                if follow_mode == False:
+                    follow_mode = True
+                    threading.Thread(target=follow_me, daemon=True).start() # Runs follow_me unless follow_mode is disabled
 
             elif payload == "return": # This should be GoToKeyLocation Instead of return 
                 gotoKeyLocation()
