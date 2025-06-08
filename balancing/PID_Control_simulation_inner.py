@@ -12,7 +12,7 @@ t = [i*timescale for i in range(0,time*f_s)]
 #Definition of variables in the simulation
 k_p = 50
 k_i = 0
-k_d = 0
+k_d = 1
 
 e_i = 0
 e_d = 0
@@ -32,7 +32,7 @@ r = 0.05
 max_w = 20
 
 #Definition of Initial Values of the simulation
-theta_init = radians(5)
+theta_init = radians(2)
 torque = [0]
 omega = [0]
 correction_angle = [0]

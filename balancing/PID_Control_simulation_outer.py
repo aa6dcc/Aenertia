@@ -12,14 +12,14 @@ k_i = 0.01
 k_d = 4
 
 k_p_vel = 0.015  # 建议初始值
-k_d_vel = 0.0005
+k_d_vel = 0
 
 e_v = 0
 
 e_i = 0
 e_d = 0
 theta_d = radians(0)
-velocity_desired = 1
+velocity_desired = 0
 e_theta = 0
 sensor_bias = radians(0)
 delay_sensor_ms = 0
@@ -43,15 +43,17 @@ motor_torque = [0]
 velocity = [0]
 distance = [0]
 theta_desired = [0]
+desired_velocity = [0]
+acc = [0]
 
 
 #Simulation Loop
 for i in range(1,time*f_s):
 
-    # if((int(i/(time*f_s/3)))%2==0):
-    #     velocity_desired = 1
-    # else:
-    #     velocity_desired = -1
+    if((int(i/(time*f_s/3)))%2==0):
+        velocity_desired = 1
+    else:
+        velocity_desired = -1
 
     # Outer Loop
     e_d_v = e_v
@@ -79,7 +81,22 @@ for i in range(1,time*f_s):
     
     motor_torque_new = -(k_p*e_theta + k_i*e_i + k_d*e_d)
     acc_new = motor_torque_new/(mass*r**2+1/2*0.05*r**2)
+    if(acc_new > 10):
+        acc_new = 10
+    elif(acc_new < -10):
+        acc_new = -10
+    else:
+        acc_new = acc_new
+
     w_new = w[i-1]+acc_new*timescale
+    if(w_new > 20):
+        w_new = 20
+    elif(w_new < -20):
+        w_new = -20
+    else:
+        w_new = w_new
+
+    
 
     if(i-delay_t < 0):
         torque_control = 0
@@ -121,6 +138,8 @@ for i in range(1,time*f_s):
     velocity.append(velocity_new)
     distance.append(distance_new)
     theta_desired.append(theta_d)
+    desired_velocity.append(velocity_desired)
+    acc.append(acc_new)
     
 
 plt.plot(t[100:-1], theta[100:-1])
@@ -130,7 +149,7 @@ plt.xlabel("Time (s)")
 plt.grid()
 plt.show()
 
-plt.plot(t[100:-1], w[100:-1])
+plt.plot(t[100:-1], acc[100:-1])
 plt.title("Wheel Angular Velocity (rad/s)")
 plt.xlabel("Time (s)")
 plt.grid()
@@ -143,6 +162,7 @@ plt.grid()
 plt.show()
 
 plt.plot(t[100:-1], velocity[100:-1])
+plt.plot(t[100:-1], desired_velocity[100:-1])
 plt.title("Linear Velocity (m/s)")
 plt.xlabel("Time (s)")
 plt.grid()
