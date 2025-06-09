@@ -53,6 +53,11 @@ CORS(app)
 def interpret():
     user_input = request.json.get("command", "").strip()
     print(f"Received voice command: {user_input}")
+    
+    lower = user_input.lower()
+    if "control" in lower or "drive" in lower:
+        print("Pre-mapped via keyword to: manual")
+        return jsonify(result="manual")
 
     # System prompt now allows 'unrecognized'
     system_msg = (
