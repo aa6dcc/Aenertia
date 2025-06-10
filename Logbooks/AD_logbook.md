@@ -367,14 +367,12 @@ and inside CloudWatch, we can see that (after editing the code in the lambda fun
 
 | **Feature**           | **Node.js**<br>(Initial Stage) | **Flask**<br>(Intermediate Stage) | **FastAPI**<br>(Final Backend) | **Static Website + MQTT**<br>(Current UI Layer) |
 | --------------------- | ------------------------------ | --------------------------------- | ------------------------------ | ----------------------------------------------- |
-| **Type**              | Runtime + web framework        | Python web framework              | Python web framework (async)   | Frontend + real-time messaging                  |
-| **Language**          | JavaScript / TypeScript        | Python                            | Python                         | HTML / JS                                |
+| **Type**              | Runtime + web framework        | Python web framework              | Python web framework   | Frontend + real-time messaging                  |
+| **Language**          | JavaScript       | Python                            | Python                         | HTML / JS                                |
 | **Performance**       | High                           | Moderate                          | Very high                      | Dependent on MQTT backend / browser             |
 | **Ease of Use**       | Moderate                       | Very high                         | High                           | Very high                                       |
-| **Community Support** | Massive                        | Mature                            | Rapidly growing                | Large (JS + MQTT community)                     |
 | **Built-in Routing**  | Yes (via Express, etc.)        | Yes                               | Yes                            | No (static routing + JS logic)                  |
 | **Scalability**       | Excellent                      | Limited                           | Good                           | Good (serverless-ready)                         |
-| **Use Case at Stage** | Prototype backend, REST APIs   | Lightweight Python transition     | Production-ready async backend | Lightweight static UI with MQTT control         |
-| **Why Moved On**      | Better Python integration      | Needed async + type hints         | Switched to static frontend    | Reduced backend load, improved responsiveness   |
+
 
 
