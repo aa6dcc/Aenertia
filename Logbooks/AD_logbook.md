@@ -365,7 +365,7 @@ and inside CloudWatch, we can see that (after editing the code in the lambda fun
 
 ## 10/06/2025
 
-| **Feature**           | **Node.js**<br>(Initial Stage) | **Flask**<br>(Intermediate Stage) | **FastAPI**<br>(Final Backend) | **Static Website + MQTT**<br>(Current UI Layer) |
+| **Feature**           | **Node.js**<br>| **Flask**<br> | **FastAPI**<br> | **Static Website + MQTT**<br> |
 | --------------------- | ------------------------------ | --------------------------------- | ------------------------------ | ----------------------------------------------- |
 | **Type**              | Runtime + web framework        | Python web framework              | Python web framework   | Frontend + real-time messaging                  |
 | **Language**          | JavaScript       | Python                            | Python                         | HTML / JS                                |
