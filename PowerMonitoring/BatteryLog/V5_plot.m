@@ -44,6 +44,7 @@ end
 
 % 绘图
 figure;
+hold on;
 plot(Energy_avg, Voltage_avg, 'LineWidth', 1.5);
 plot(Energy_avg, V5_avg, 'LineWidth', 1.5);
 xlabel('Energy Used (Joules)');
