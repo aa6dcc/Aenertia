@@ -363,6 +363,16 @@ and inside CloudWatch, we can see that (after editing the code in the lambda fun
 
 ![image](https://github.com/user-attachments/assets/2e31538e-1453-49da-9aa9-0331ff120378)
 
+## 10/06/2025
+
+| **Feature**           | **Node.js**<br>| **Flask**<br> | **FastAPI**<br> | **Static Website + MQTT**<br> |
+| --------------------- | ------------------------------ | --------------------------------- | ------------------------------ | ----------------------------------------------- |
+| **Type**              | Runtime + web framework        | Python web framework              | Python web framework   | Frontend + real-time messaging                  |
+| **Language**          | JavaScript       | Python                            | Python                         | HTML / JS                                |
+| **Performance**       | High                           | Moderate                          | Very high                      | Dependent on MQTT backend / browser             |
+| **Ease of Use**       | Moderate                       | Very high                         | High                           | Very high                                       |
+| **Built-in Routing**  | Yes (via Express, etc.)        | Yes                               | Yes                            | No (static routing + JS logic)                  |
+| **Scalability**       | Excellent                      | Limited                           | Good                           | Good (serverless-ready)                         |
 
 
 
