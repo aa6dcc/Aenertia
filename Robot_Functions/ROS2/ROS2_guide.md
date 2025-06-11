@@ -1,3 +1,17 @@
+DISCLAIMER!!!
+
+I had a lot of trouble getting this to work. Be very careful of getting the WSL to work correctly.
+To do so creat a file ".wslconfig" in c:/users/(username)/. using notpad.
+
+Then in that file add two lines: 
+
+```
+[wsl2]
+networkingMode=mirrored
+```
+
+This allows connectivity between the pi and wsl. I tried every possible thing to make it work otherwise this is the only single fix. 
+
 ## Initial ROS setup
 
 FIgure out how to dowload ROS Jazzy Slam_toolbox and Nav2 yourself it is well documented
@@ -30,6 +44,9 @@ source ~/ws_lidar/install/setup.bash
 # On the laptop for Rviz
 source /opt/ros/jazzy/setup.bas
 ```
+
+Then run ``source ~/.bashrc`` to apply changes
+
 
 It is useful to verify 
 
