@@ -10,9 +10,10 @@ CSV_FILE = 'battery_log.csv'
 # ======================
 E_max = 92289
 Ev_last = E_max
+Ei_last = E_max
+Et_last = E_max
+Percentage = 100
 # ======================
-
-
 
 def initialize_csv_file():
     if not os.path.exists(CSV_FILE):
@@ -26,6 +27,7 @@ def append_to_csv(VB, EU):
         writer.writerow([VB, EU])
 
 def main():
+    global Ev_last, Ei_last, Et_last, Percentage
     initialize_csv_file()
     with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1) as ser:
         print("Listening for serial input...")
@@ -60,8 +62,16 @@ def main():
                         Ev = Ev_last
                     Ev_last = Ev
 
-                    percentage = Ev/E_max
-                    print("Energy = ",Ev,"\nPercentage = ", int(percentage*100), "%")
+                    Ei = Et_last-EU
+                    if(percentage < 84 and percentage > 22):
+                        Et = 0.7*Ei + 0.3*Ev
+                    else:
+                        Et = 0.3*Ei + 0.7*Ev
+
+                    Et_last = Et
+                    
+                    percentage = Et/E_max
+                    print("Energy = ",Et,"\nPercentage = ", int(percentage*100), "%")
 
             except json.JSONDecodeError:
                 print("Invalid JSON received.")
