@@ -302,7 +302,7 @@ void loop()
       current_board = 0;
     }
 
-    energy_used += PM_INTERVAL*((current_board*v5)+(current_motor)*voltage);
+    energy_used += PM_INTERVAL/1000.0*((current_board*v5)+(current_motor)*voltage);
     voltage_sum += voltage;
     
 

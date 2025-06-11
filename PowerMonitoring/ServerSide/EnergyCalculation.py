@@ -8,6 +8,11 @@ SERIAL_PORT = '/dev/ttyUSB0'      # Change to your actual serial port
 BAUD_RATE = 115200                # Match the baud rate with your device
 CSV_FILE = 'battery_log.csv'
 # ======================
+E_max = 92289
+Ev_last = E_max
+# ======================
+
+
 
 def initialize_csv_file():
     if not os.path.exists(CSV_FILE):
@@ -41,6 +46,22 @@ def main():
                         print(f"Logged: {VB}, {EU}")
                     else:
                         print("Missing one or more required keys in JSON.")
+                    
+                    if(VB > 14.8):
+                        Ev = 13009*VB - 115094
+                    elif(VB > 14.2):
+                        Ev = 96166*VB - 1346076
+                    elif(VB > 12.77):
+                        Ev = 12606*VB - 159533
+                    else:
+                        Ev = 314*VB - 2460
+
+                    if Ev > Ev_last:
+                        Ev = Ev_last
+                    Ev_last = Ev
+
+                    percentage = Ev/E_max
+                    print("Energy = ",Ev,"\nPercentage = ", int(percentage*100), "%")
 
             except json.JSONDecodeError:
                 print("Invalid JSON received.")
