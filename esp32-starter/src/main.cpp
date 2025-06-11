@@ -26,6 +26,7 @@ const int ADC_MOSI_PIN      = 23;
 const int TOGGLE_PIN        = 32;
 const int PRINT_INTERVAL    = 500;
 const int SERIAL_INTERVAL   = 1000;
+const int PM_INTERVAL = 100;
 const int LOOP_INTERVAL     = 10;
 const int STEPPER_INTERVAL_US = 20;
 
@@ -67,7 +68,7 @@ float lastTargetYaw = 0.0;
 float gyroRate = 0;
 float tiltx_raw = 0;
 float tiltTarget = 0;
-float tiltTargetBias = -0.02;
+float tiltTargetBias = 0.025;
 float tiltError = 0;
 float tiltIntegtal = 0.0;
 float tiltDerivative = 0;
@@ -83,11 +84,16 @@ float lastTurnError = 0;
 float turnOutput = 0;
 float acceleration = 0;
 
+float energy_used = 0;
+float voltage_sum = 0;
+float samplePerSerial = 10;
+
 float motorCommand=0.0;
 float dt=0.0;
 int commandTimer = 0;
 
 bool DEBUG = false;
+bool PM = true;
 
 
 
@@ -175,6 +181,7 @@ void loop()
     //Static variables are initialised once and then the value is remembered betweeen subsequent calls to this function
     static unsigned long printTimer = 0;  //time of the next print
     static unsigned long serialTimer = 0;
+    static unsigned long PMTimer = 0;
     static unsigned long loopTimer = 0;   //time of the next control update
     static float tiltx = 0.0;             //current tilt angle
     
@@ -278,25 +285,59 @@ void loop()
     }
         
   }
-  if (millis() > serialTimer){
-    serialTimer += SERIAL_INTERVAL;
+  if (millis() > PMTimer && PM){
+    PMTimer += PM_INTERVAL;
     float voltage = ((readADC(2) * VREF) / 4095.0)*6.1;
-    float current_motor = ((readADC(0) * VREF) / 4095.0-0.08)/1.5;
-    float current_board = ((readADC(1) * VREF) / 4095.0-0.08)/1.5;
+    float v5 = ((readADC(3) * VREF) / 4095.0)*2;
+    float current_motor = ((readADC(0) * VREF) / 4095.0)/1.6;
+    float current_board = ((readADC(1) * VREF) / 4095.0)*0.3;
 
-    // Create a JSON object
-    StaticJsonDocument<128> doc;
-    doc["voltage"] = voltage;
-    doc["current_motor"] = current_motor;
-    doc["current_board"] = current_board;
+    if(v5 < 0.05){
+      v5 = 0;
+    }
+    if(current_motor < 0.05){
+      current_motor = 0;
+    }
+    if(current_board < 0.05){
+      current_board = 0;
+    }
+
+    energy_used += PM_INTERVAL*((current_board*v5)+(current_motor)*voltage);
+    voltage_sum += voltage;
+    
+
+    if(millis() > serialTimer){
+      serialTimer += samplePerSerial*PM_INTERVAL;
+
+      String output;
+      StaticJsonDocument<128> doc;
+
+      doc["VB"] = voltage_sum/samplePerSerial;
+      doc["EU"] = energy_used;
+
+      // Serialize JSON to a string
+      serializeJson(doc, output);
+      Serial.print("PM: ");
+      Serial.println(output);
+
+      voltage_sum = 0;
+      energy_used = 0;
+    }
+    
 
     // Serialize JSON to a string
-    String output;
-    serializeJson(doc, output);
+    // String output;
 
-    // Send JSON over custom serial
-    String finalMessage = "PM: " + output + "\n"; //Identifier
-    Serial.println(finalMessage);
+    // StaticJsonDocument<128> doc;
+    // doc["VB"] = voltage;
+    // doc["V5"] = v5;
+    // doc["CM"] = current_motor;
+    // doc["CB"] = current_board;
+
+    // // Serialize JSON to a string
+    // serializeJson(doc, output);
+    // Serial.print("PM: ");
+    // Serial.println(output);
     
   }
   
