@@ -23,17 +23,12 @@ You want to source the following:
 
 Change the line at the end by doing 
 ```
-export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
-# Needed because of connectivity issues I had
-
-# export ROS_DOMAIN_ID=42
-# Only do the above if needed (When we have many nodes)
-
-# Source the ROS 2 installation
+# On the PI
 source /opt/ros/jazzy/setup.bash
-
-# Source the ws_lidar workspace (where rplidar_ros & slam_toolbox live)
 source ~/ws_lidar/install/setup.bash
+
+# On the laptop for Rviz
+source /opt/ros/jazzy/setup.bas
 ```
 
 It is useful to verify 
