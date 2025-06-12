@@ -11,9 +11,7 @@ while(True):
     else:
         Ev = 314*voltage - 2460
     
-    if Ev > Ev_last:
-        Ev = Ev_last
-    Ev_last = Ev
+
     
     percentage = Ev/E_max
     print("Energy = ",Ev,"\nPercentage = ", int(percentage*100), "%")

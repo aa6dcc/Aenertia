@@ -63,14 +63,14 @@ def main():
                     Ev_last = Ev
 
                     Ei = Et_last-EU
-                    if(percentage < 84 and percentage > 22):
+                    if(Percentage < 84 and Percentage > 22):
                         Et = 0.7*Ei + 0.3*Ev
                     else:
                         Et = 0.3*Ei + 0.7*Ev
 
                     Et_last = Et
                     
-                    percentage = Et/E_max
+                    Percentage = Et/E_max
                     print("Energy = ",Et,"\nPercentage = ", int(percentage*100), "%")
 
             except json.JSONDecodeError:

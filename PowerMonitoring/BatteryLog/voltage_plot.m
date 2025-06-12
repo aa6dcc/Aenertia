@@ -9,9 +9,9 @@ Current_Motor = data.Current_Motor;
 Current_Board = data.Current_Board;
 
 % 时间间隔
-dt = 0.01; % 10 毫秒
+dt = 0.1; % 100 毫秒
 
-Current_Motor = 0.8 * (Current_Motor ~= 0);
+Current_Motor = 0.1*Current_Motor + 0.7 * (Current_Motor ~= 0);
 
 % 总电流
 Total_Current = Current_Motor + Current_Board;
