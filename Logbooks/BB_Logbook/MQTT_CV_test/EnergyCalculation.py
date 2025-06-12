@@ -60,4 +60,4 @@ def calculate_percentage(VB: float, EU: float) -> int:
     Percentage = Et / E_max
 
     # 6) Return as integer percent
-    return int(Percentage * 100)
+    return int(Percentage * 100), Et

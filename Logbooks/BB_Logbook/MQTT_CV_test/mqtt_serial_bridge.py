@@ -345,11 +345,12 @@ def esp_read_loop():
             append_to_csv(VB, EU)
 
             # 2) compute battery percentage
-            pct = calculate_percentage(VB, EU)
+            pct, Et = calculate_percentage(VB, EU)
             print(f"[Battery] {pct}%")
 
             # 3) publish to MQTT
             mqtt_client.publish('robot/battery', str(pct))
+            mqtt_client.publish('robot/energy', f"{Et:.1f}")
 
         except Exception as e:
             print("[ESP] Error parsing PM:", e)
