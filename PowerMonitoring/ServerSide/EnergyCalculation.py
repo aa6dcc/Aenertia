@@ -71,7 +71,7 @@ def main():
                     Et_last = Et
                     
                     Percentage = Et/E_max
-                    print("Energy = ",Et,"\nPercentage = ", int(percentage*100), "%")
+                    print("Energy = ",Et,"\nPercentage = ", int(Percentage*100), "%")
 
             except json.JSONDecodeError:
                 print("Invalid JSON received.")
