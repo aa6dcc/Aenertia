@@ -34,15 +34,15 @@ const float kx = 5.0;
 const float VREF = 4.096;
 
 // PID parameters
-float kp_i = 2000;
+float kp_i = 3000;
 float ki_i = 0;
-float kd_i = 80;
+float kd_i = 35;
 
-float kp_o = -0.003;
-float ki_o = -0.00007;
-float kd_o = 0.0;
+float kp_o = -0.002;
+float ki_o = 0;
+float kd_o = 0;
 
-float kp_turn = 25.0;  
+float kp_turn = -25;  
 float ki_turn = 0.0;
 float kd_turn = 0.0;
 
@@ -68,7 +68,7 @@ float lastTargetYaw = 0.0;
 float gyroRate = 0;
 float tiltx_raw = 0;
 float tiltTarget = 0;
-float tiltTargetBias = 0.025;
+float tiltTargetBias = 0;
 float tiltError = 0;
 float tiltIntegtal = 0.0;
 float tiltDerivative = 0;
@@ -93,7 +93,8 @@ float dt=0.0;
 int commandTimer = 0;
 
 bool DEBUG = false;
-bool PM = true;
+bool PM = false;
+bool TILT = true;
 
 
 
@@ -227,7 +228,7 @@ void loop()
     tiltx_raw = atan2(a.acceleration.z, sqrt(a.acceleration.x * a.acceleration.x + a.acceleration.y * a.acceleration.y));
     gyroRate = g.gyro.y-0.005;
     tiltx =(C * (tiltx + gyroRate * dt) + (1 - C) * tiltx_raw);
-    currentYaw = g.gyro.z+0.06;
+    currentYaw = g.gyro.z;
 
     // Calculate Elements of the Speed Error
     actualSpeed = (step2.getSpeedRad()-step1.getSpeedRad())/2;
@@ -282,6 +283,19 @@ void loop()
       step2.setTargetSpeedRad((20));
     }else {
         step2.setTargetSpeedRad(-(20));
+    }
+
+    if(TILT){
+      String output;
+      StaticJsonDocument<128> doc;
+
+      doc["tilt"] = tiltx;
+      doc["time"] = millis();
+
+      // Serialize JSON to a string
+      serializeJson(doc, output);
+      Serial.print("TILT: ");
+      Serial.println(output);
     }
         
   }
