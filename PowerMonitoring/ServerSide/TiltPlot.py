@@ -34,8 +34,8 @@ def main():
                 if line[0:5] == "TILT:":
                     line = line.split()[1]
                     data = json.loads(line)
-                    TILT = data.get("TILT")
-                    TIME = data.get("TIME")
+                    TILT = data.get("tilt")
+                    TIME = data.get("time")
 
                     if TILT is not None and TIME is not None:
                         append_to_csv(TILT, TIME)
