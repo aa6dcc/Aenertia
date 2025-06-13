@@ -332,34 +332,56 @@ def esp_read_loop():
             continue
 
         raw = ser.readline().decode(errors='ignore').strip()
-        if not raw.startswith("PM:"):
-            continue
+        if raw.startswith("PM:"):
+            try:
+                payload_json = raw.split(None, 1)[1]
+                data = json.loads(payload_json)
+                VB = data.get("VB")
+                EU = data.get("EU")
 
-        try:
-            payload_json = raw.split(None, 1)[1]
-            data = json.loads(payload_json)
-            VB = data.get("VB")
-            EU = data.get("EU")
+                if VB is None or EU is None:
+                    print("[ESP] PM: missing VB/EU")
+                    continue
 
-            if VB is None or EU is None:
-                print("[ESP] PM: missing VB/EU")
-                continue
+                # 1) log raw values
+                append_to_csv(VB, EU)
+                
+                mqtt_client.publish('robot/vb', str(VB))
+                mqtt_client.publish('robot/eu', str(EU))
 
-            # 1) log raw values
-            append_to_csv(VB, EU)
-            
-            mqtt_client.publish('robot/vb', str(VB))
-            mqtt_client.publish('robot/eu', str(EU))
+                # 2) compute battery percentage
+                pct, Et = calculate_percentage(VB, EU)
+                print(f"[Battery] {pct}%")
 
-            # 2) compute battery percentage
-            pct, Et = calculate_percentage(VB, EU)
-            print(f"[Battery] {pct}%")
+                # 3) publish to MQTT
+                mqtt_client.publish('robot/battery', str(pct))
 
-            # 3) publish to MQTT
-            mqtt_client.publish('robot/battery', str(pct))
+            except Exception as e:
+                print("[ESP] Error parsing PM:", e)
 
-        except Exception as e:
-            print("[ESP] Error parsing PM:", e)
+        elif raw.startswith("IMUODO:"):
+            try:
+                payload_json = raw.split("IMUODO:")[1].strip()
+                data = json.loads(payload_json)
+                # Publish each field to its own MQTT topic (or bundle as JSON)
+                mqtt_client.publish('robot/imu/ax', str(data['ax']))
+                mqtt_client.publish('robot/imu/ay', str(data['ay']))
+                mqtt_client.publish('robot/imu/az', str(data['az']))
+                mqtt_client.publish('robot/imu/gx', str(data['gx']))
+                mqtt_client.publish('robot/imu/gy', str(data['gy']))
+                mqtt_client.publish('robot/imu/gz', str(data['gz']))
+
+                # Wheel odometry: step counts pos1, pos2
+                p1 = data['pos1']
+                p2 = data['pos2']
+                mqtt_client.publish('robot/odom/pos1', str(p1))
+                mqtt_client.publish('robot/odom/pos2', str(p2))
+
+                # If you want to compute velocity here, you could track prev_pos and dt
+                print(f"[ESP] IMUODO received pos1={p1}, pos2={p2}")
+
+            except Exception as e:
+                print("[ESP] Error parsing IMUODO:", e)
 
         sleep(0.05)
 
