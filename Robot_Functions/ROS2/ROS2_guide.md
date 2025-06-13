@@ -14,7 +14,23 @@ This allows connectivity between the pi and wsl. I tried every possible thing to
 
 ## Initial ROS setup
 
-FIgure out how to dowload ROS Jazzy Slam_toolbox and Nav2 yourself it is well documented
+Start the docker
+```
+docker run -it --rm \
+  --name ros_humble \
+  --platform linux/arm64/v8 \
+  --network host \
+  --privileged \
+  -v /dev/ttyUSB0:/dev/ttyUSB0 \
+  ros:humble-ros-base \
+  bash
+```
+
+Then on any terminal using ROS use:
+
+```docker exec -it ros_humble bash```
+
+Figure out how to dowload ROS humnle Slam_toolbox and Nav2 yourself it is well documented
 
 Now you need to create a working directory such as "ws_lidar". We clone the RPLIDAR packages  for ROS2 in it
 
