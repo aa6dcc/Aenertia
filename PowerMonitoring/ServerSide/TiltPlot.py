@@ -3,10 +3,11 @@ import json
 import os
 import csv
 
+plotnum = input("Plot Number: ")
 # === CONFIGURATION ===
 SERIAL_PORT = '/dev/ttyUSB0'      # Change to your actual serial port
 BAUD_RATE = 115200                # Match the baud rate with your device
-CSV_FILE = 'tilt_log.csv'
+CSV_FILE = 'tilt_log_'+plotnum+'.csv'
 # ======================
 
 
