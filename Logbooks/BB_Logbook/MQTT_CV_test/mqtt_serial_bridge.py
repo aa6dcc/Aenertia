@@ -371,8 +371,11 @@ def on_connect(client, userdata, flags, rc):
     client.subscribe("robot/auto")
     client.subscribe("robot/manual/command")
 
-    # start background loops
-    threading.Thread(target=pose_detection, daemon=True).start()
+    # start background loops REMOVE TRY LATER/::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    if cv_enabled:
+        threading.Thread(target=pose_detection, daemon=True).start()
+    else:
+        print("No camera for now")
     threading.Thread(target=esp_read_loop, daemon=True).start()
 
 def on_message(client, userdata, msg):
