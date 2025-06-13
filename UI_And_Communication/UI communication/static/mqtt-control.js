@@ -10,14 +10,23 @@ client.on('connect', () => {
   console.log('[MQTT] Connected to broker:', brokerUrl);
   document.getElementById('mqtt-status').innerText = 'MQTT: Connected';
   client.subscribe('robot/battery');
+  client.subscribe('robot/vb');
+  client.subscribe('robot/eu');
   client.subscribe('robot/keys');
 });
 
 client.on('message', (topic, message) => {
   const msg = message.toString();
-  if (topic === 'robot/battery') {
+  if (topic === 'robot/vb') {
+    document.getElementById('vb').innerText = `VB: ${msg}`;
+  }
+  else if (topic === 'robot/eu') {
+    document.getElementById('eu').innerText = `EU: ${msg}`;
+  }
+  else if (topic === 'robot/battery') {
     document.getElementById('battery').innerText = `Battery: ${msg}%`;
-  } else if (topic === 'robot/keys') {
+  }
+  else if (topic === 'robot/keys') {
     let keys = [];
     try {
       keys = JSON.parse(msg);
