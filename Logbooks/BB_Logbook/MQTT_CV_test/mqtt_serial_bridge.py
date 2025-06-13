@@ -222,8 +222,12 @@ from time import sleep
 
 import paho.mqtt.client as mqtt
 from flask import Flask, Response, send_from_directory
-
-from Advanced_CV.pose_detection import pose_detection, send_frame
+try:
+    from Advanced_CV.pose_detection import pose_detection, send_frame
+    cv_enabled = True
+except ModuleNotFoundError:
+    print("⚠️ Picamera2 not available — stubbing out CV functions")
+    cv_enabled = False
 import global_var as gv
 
 # === energycal helpers ===
