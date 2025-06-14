@@ -359,30 +359,20 @@ def esp_read_loop():
             except Exception as e:
                 print("[ESP] Error parsing PM:", e)
 
-        elif raw.startswith("IMUODO:"):
+        elif raw.startswith("ODO:"):
             try:
-                payload_json = raw.split("IMUODO:")[1].strip()
-                data = json.loads(payload_json)
-                # Publish each field to its own MQTT topic (or bundle as JSON)
-                mqtt_client.publish('robot/imu/ax', str(data['ax']))
-                mqtt_client.publish('robot/imu/ay', str(data['ay']))
-                mqtt_client.publish('robot/imu/az', str(data['az']))
-                mqtt_client.publish('robot/imu/gx', str(data['gx']))
-                mqtt_client.publish('robot/imu/gy', str(data['gy']))
-                mqtt_client.publish('robot/imu/gz', str(data['gz']))
+                payload_raw = raw.split("ODO:")[1].strip()
+                pos1_str, pos2_str = payload_raw.split(",")
+                pos1 = int(pos1_str)
+                pos2 = int(pos2_str)
+                if abs(pos1) > 5 or abs(pos2) > 5:  # seuil à ajuster selon ton tick size
+                    mqtt_client.publish('robot/odom/pos1', str(pos1))
+                    mqtt_client.publish('robot/odom/pos2', str(pos2))
 
-                # Wheel odometry: step counts pos1, pos2
-                p1 = data['pos1']
-                p2 = data['pos2']
-                mqtt_client.publish('robot/odom/pos1', str(p1))
-                mqtt_client.publish('robot/odom/pos2', str(p2))
-
-                # If you want to compute velocity here, you could track prev_pos and dt
-                print(f"[ESP] IMUODO received pos1={p1}, pos2={p2}")
+                print(f"[ESP] ODO received pos1={pos1}, pos2={pos2}")
 
             except Exception as e:
-                print("[ESP] Error parsing IMUODO:", e)
-
+                print("[ESP] Error parsing ODO:", e)
         sleep(0.05)
 
 # === MQTT CALLBACKS ===
